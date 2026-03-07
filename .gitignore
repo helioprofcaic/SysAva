@@ -1,0 +1,23 @@
+# Ambiente Virtual
+.venv/
+venv/
+
+# Arquivos de Cache do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Arquivos de Segredos e Configuração Local
+.env
+.streamlit/secrets.toml
+data/Turmas/*/*.txt
+data/Turmas/*.txt
+docs/*.txt
+
+
+# Arquivos de IDEs e Editores
+.vscode/
+.idea/
+*.swp
+*.swo
