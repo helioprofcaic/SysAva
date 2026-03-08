@@ -71,6 +71,9 @@ def show_page():
                 if user_answer == correct_answer:
                     score += 1
             
+            # Registra no histórico
+            db.add_user_history(st.session_state.get('username'), f"Concluiu Quiz: {quiz_data['title']} ({score}/{total})")
+
             # Salva o resultado na sessão para evitar que o aluno refaça o teste
             st.session_state[session_key_submitted] = True
             st.session_state[f"quiz_{quiz_id}_score"] = score

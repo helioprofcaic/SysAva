@@ -92,6 +92,7 @@ def show_student_view(class_id):
             st.subheader(f"Aulas de {selected_subject_name}")
             for lesson in lessons:
                 if st.button(lesson['title'], key=f"lesson_{lesson['id']}", use_container_width=True):
+                    db.add_user_history(st.session_state.get('username'), f"Acessou a aula: {lesson['title']}")
                     st.session_state.selected_lesson = lesson
                     st.session_state.view_mode = 'detail'
                     st.rerun()

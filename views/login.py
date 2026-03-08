@@ -22,6 +22,10 @@ def show_page():
                         # Armazena o username (RA) para consultas de matrícula
                         st.session_state['username'] = user
                         st.session_state['role'] = user_data.get('role', 'student')
+                        db.add_user_history(user, "Realizou login")
+                        session_id = auth.create_session(user, st.session_state['role'], st.session_state['usuario'])
+                        st.query_params["session_id"] = session_id
+                        st.session_state.page = 'Home'
                         st.rerun()
                     else:
                         st.error("Usuário ou senha incorretos.")
@@ -35,6 +39,9 @@ def show_page():
                     # Armazena o username para consistência
                     st.session_state['username'] = "admin"
                     st.session_state['role'] = "admin"
+                    session_id = auth.create_session("admin", "admin", "Administrador (Offline)")
+                    st.query_params["session_id"] = session_id
+                    st.session_state.page = 'Home'
                     st.rerun()
                 else:
                     st.error("Login offline: use admin/admin")

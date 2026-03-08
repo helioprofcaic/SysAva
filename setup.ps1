@@ -51,11 +51,13 @@ Write-Host "Instalando/Atualizando dependências..."
 # Executa o PyInstaller
 Write-Host "Iniciando o processo de build com PyInstaller. Isso pode levar alguns minutos..."
 
-& "$venvDir\Scripts\pyinstaller.exe" --name "SysAva" --noconfirm --clean `
-    --add-data "views;views" `
-    --add-data "services;services" `
-    --add-data "data;data" `
-    app.py
+$pyinstaller_cmd = & "$venvDir\Scripts\pyinstaller.exe" --clean SysAva.spec --noconfirm
+
+$pyinstaller_cmd += " --hidden-import streamlit"
+$pyinstaller_cmd += " --hidden-import streamlit.components.v1"
+$pyinstaller_cmd += " --collect-all streamlit"
+
+$pyinstaller_cmd
 
 Write-Host "`n"
 Write-Host "--------------------------------------------------" -ForegroundColor Green

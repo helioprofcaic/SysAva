@@ -27,6 +27,7 @@ def show_page():
                 if error:
                     st.error(f"Erro: {error}")
                 else:
+                    db.add_user_history(st.session_state.get('username'), "Enviou mensagem no fórum")
                     st.success("Mensagem enviada!")
                     time.sleep(1)
                     st.rerun()

@@ -18,6 +18,8 @@ data/Turmas/*/*.md
 data/Turmas/*/*/*.md
 data/Turmas/*/*/*/*.md
 docs/*.txt
+dist/*
+build/*
 
 
 # Arquivos de IDEs e Editores

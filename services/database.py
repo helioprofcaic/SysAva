@@ -36,6 +36,36 @@ def create_user(username: str, hashed_password: str, name: str, ra: str, role: s
     except Exception as e:
         return None, str(e)
 
+def delete_user(username: str):
+    """Remove um usuário do banco de dados."""
+    if not is_db_connected(): return None, "Banco de dados não conectado"
+    try:
+        response = supabase.table("app_users").delete().eq("username", username).execute()
+        return response.data, None
+    except Exception as e:
+        return None, str(e)
+
+# --- Funções de Histórico do Usuário ---
+def add_user_history(username: str, activity: str):
+    """Adiciona uma entrada ao histórico do usuário."""
+    if not is_db_connected(): return None, "Banco de dados não conectado"
+    try:
+        response = supabase.table("user_history").insert({
+            "username": username, "activity": activity
+        }).execute()
+        return response.data, None
+    except Exception as e:
+        return None, str(e)
+
+def get_user_history(username: str):
+    """Busca o histórico de um usuário."""
+    if not is_db_connected(): return []
+    try:
+        response = supabase.table("user_history").select("*").eq("username", username).order("timestamp", desc=True).execute()
+        return response.data
+    except Exception as e:
+        return []
+
 def upsert_user(username: str, hashed_password: str, name: str, ra: str):
     """Cria ou atualiza um usuário (útil para scripts de importação em massa)."""
     if not is_db_connected(): return None, "Banco de dados não conectado"
@@ -108,6 +138,16 @@ def upsert_class(name: str, code: str, school_id: int):
         return res.data[0]['id']
     res = supabase.table("classes").insert({"name": name, "code": code, "school_id": school_id}).execute()
     return res.data[0]['id']
+
+def get_classes():
+    """Busca todas as turmas cadastradas."""
+    if not is_db_connected(): return []
+    try:
+        response = supabase.table("classes").select("*").order("name").execute()
+        return response.data
+    except Exception as e:
+        print(f"Erro ao buscar turmas: {e}")
+        return []
 
 def get_class_by_code(code: str):
     if not is_db_connected(): return None
@@ -247,12 +287,12 @@ def get_quiz_questions(quiz_id: int):
         print(f"Erro ao buscar questões do quiz {quiz_id}: {e}")
         return []
 
-def create_lesson(title: str, description: str, video_url: str):
+def create_lesson(title: str, subject_id: int, description: str, video_url: str):
     """Cria uma nova aula no banco."""
     if not is_db_connected(): return None, "Banco de dados não conectado"
     try:
         response = supabase.table("lessons").insert({
-            "title": title, "description": description, "video_url": video_url
+            "title": title, "subject_id": subject_id, "description": description, "video_url": video_url
         }).execute()
         return response.data, None
     except Exception as e:
@@ -294,3 +334,73 @@ def create_quiz_question(quiz_id: int, question_text: str, options: list, correc
         return response.data, None
     except Exception as e:
         return None, str(e)
+
+# --- Funções de Avaliações (MN1, MN2, MN3, RM) ---
+
+def get_assessments_by_subject(subject_id: int):
+    """Busca todas as avaliações de uma disciplina."""
+    if not is_db_connected(): return []
+    try:
+        response = supabase.table("assessments").select("*").eq("subject_id", subject_id).order("type").execute()
+        return response.data
+    except Exception as e:
+        print(f"Erro ao buscar avaliações: {e}")
+        return []
+
+def create_assessment(subject_id: int, type: str, title: str):
+    """Cria uma nova avaliação (MN1, MN2, MN3, RM)."""
+    if not is_db_connected(): return None, "Banco de dados não conectado"
+    try:
+        response = supabase.table("assessments").insert({
+            "subject_id": subject_id, "type": type, "title": title
+        }).execute()
+        return response.data, None
+    except Exception as e:
+        return None, str(e)
+
+def get_assessment_questions(assessment_id: int):
+    """Busca as questões de uma avaliação."""
+    if not is_db_connected(): return []
+    try:
+        response = supabase.table("assessment_questions").select("*").eq("assessment_id", assessment_id).order("id").execute()
+        return response.data
+    except Exception as e:
+        return []
+
+def create_assessment_question(assessment_id: int, question_text: str, question_type: str, options: list, correct_index: int):
+    """Cria uma questão para avaliação (Objetiva ou Subjetiva)."""
+    try:
+        data = {
+            "assessment_id": assessment_id,
+            "question_text": question_text,
+            "question_type": question_type, # 'objective' ou 'subjective'
+            "options": options,
+            "correct_option_index": correct_index
+        }
+        response = supabase.table("assessment_questions").insert(data).execute()
+        return response.data, None
+    except Exception as e:
+        return None, str(e)
+
+def get_all_quiz_questions_for_subject(subject_id: int):
+    """Busca todas as questões de quizzes associados a uma disciplina (via aulas)."""
+    if not is_db_connected(): return []
+    try:
+        # 1. Buscar IDs das aulas da disciplina
+        lessons_res = supabase.table("lessons").select("id").eq("subject_id", subject_id).execute()
+        lesson_ids = [l['id'] for l in lessons_res.data]
+        
+        if not lesson_ids: return []
+
+        # 2. Buscar IDs dos quizzes dessas aulas
+        quizzes_res = supabase.table("quizzes").select("id").in_("lesson_id", lesson_ids).execute()
+        quiz_ids = [q['id'] for q in quizzes_res.data]
+        
+        if not quiz_ids: return []
+
+        # 3. Buscar questões desses quizzes
+        questions_res = supabase.table("quiz_questions").select("*").in_("quiz_id", quiz_ids).execute()
+        return questions_res.data
+    except Exception as e:
+        print(f"Erro ao buscar banco de questões: {e}")
+        return []
