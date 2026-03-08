@@ -7,7 +7,9 @@ def show_page():
     lesson_id = st.session_state.get('context_lesson_id')
 
     if lesson_id:
-        st.header("💬 Fórum da Aula")
+        lesson = db.get_lesson_by_id(lesson_id)
+        lesson_title = f": {lesson['title']}" if lesson else ""
+        st.header(f"💬 Fórum{lesson_title}")
         if st.button("⬅️ Voltar para as Aulas"):
             st.session_state.page = 'Aulas'
             st.rerun()

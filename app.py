@@ -31,15 +31,27 @@ def main():
                 opcoes_menu.append("Admin")
             opcoes_menu.append("Sair")
             
-            # O radio do sidebar agora controla o st.session_state.page
+            # Identifica qual opção deve estar marcada no menu
             current_page = st.session_state.get('page', 'Aulas')
+            try:
+                index_menu = opcoes_menu.index(current_page)
+            except ValueError:
+                # Se a página atual não está no menu (ex: Quiz), marca a primeira opção (Aulas)
+                index_menu = 0
+            
             menu_selection = st.radio(
-                "Menu", opcoes_menu
+                "Menu", opcoes_menu, index=index_menu
             )
             
             # Se a seleção do menu mudou, atualiza a página e limpa contextos antigos
             if menu_selection != current_page:
                 st.session_state.page = menu_selection
+                
+                # Limpa contextos específicos ao navegar pelo menu principal
+                keys_to_clear = ['context_lesson_id', 'context_quiz_id', 'view_mode', 'selected_lesson']
+                for key in keys_to_clear:
+                    if key in st.session_state: del st.session_state[key]
+                
                 st.rerun()
             
             if st.session_state.page == "Sair":

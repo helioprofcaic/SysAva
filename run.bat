@@ -35,20 +35,6 @@ if not exist ".env" (
     goto start_app
 )
 
-:ask_seed
-echo.
-set /p "seed_choice=Voce deseja popular o banco de dados com dados iniciais (escola, turmas, alunos)? (s/n): "
-if /i "%seed_choice%"=="s" (
-    goto seed_database
-)
-if /i "%seed_choice%"=="n" (
-    goto start_app
-)
-echo Resposta invalida. Por favor, digite 's' para sim ou 'n' para nao.
-goto ask_seed
-
-
-:seed_database
 REM Popula o banco de dados com a estrutura da escola
 echo.
 echo Populando o banco de dados com a estrutura da escola (turmas e disciplinas)...
@@ -60,6 +46,29 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
+REM Popula o banco de dados com as aulas
+echo.
+echo Populando o banco de dados com as aulas em lote...
+python scripts/seed_lessons.py
+if %errorlevel% neq 0 (
+    echo AVISO: Houve erros na importacao de aulas. Verifique o log acima.
+    pause
+)
+echo.
+
+:ask_students
+echo.
+set /p "seed_choice=Voce deseja popular o banco de dados com os ALUNOS? (s/n): "
+if /i "%seed_choice%"=="s" (
+    goto seed_students
+)
+if /i "%seed_choice%"=="n" (
+    goto start_app
+)
+echo Resposta invalida. Por favor, digite 's' para sim ou 'n' para nao.
+goto ask_students
+
+:seed_students
 REM Popula o banco de dados com os alunos
 echo.
 echo Populando o banco de dados com os alunos...
@@ -69,6 +78,7 @@ if %errorlevel% neq 0 (
     pause
 )
 echo.
+
 goto start_app
 
 :start_app

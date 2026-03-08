@@ -1,6 +1,7 @@
 import streamlit as st
 from services import database as db
 
+
 def show_page():
     st.header("📺 Sala de Aula Virtual")
 
@@ -13,14 +14,30 @@ def show_page():
         st.warning("Nenhuma aula cadastrada.")
         return
 
+    # Agrupa as aulas por disciplina para exibição
+    subjects = db.get_subjects()
+    subject_map = {s['id']: s['name'] for s in subjects}
+    
+    lessons_by_subject = {}
+    for lesson in lessons:
+        subject_id = lesson.get('subject_id')
+        if subject_id not in lessons_by_subject:
+            lessons_by_subject[subject_id] = []
+        lessons_by_subject[subject_id].append(lesson)
+
     # --- VISTA DA LISTA DE AULAS ---
     if st.session_state.view_mode == 'list':
         st.subheader("Selecione uma aula para começar")
-        for lesson in lessons:
-            if st.button(lesson['title'], key=f"lesson_{lesson['id']}", use_container_width=True):
-                st.session_state.selected_lesson = lesson
-                st.session_state.view_mode = 'detail'
-                st.rerun()
+        
+        # Exibe um expander para cada disciplina que tem aulas
+        for subject_id, subject_lessons in lessons_by_subject.items():
+            subject_name = subject_map.get(subject_id, "Outras Aulas")
+            with st.expander(f"**{subject_name}**"):
+                for lesson in subject_lessons:
+                    if st.button(lesson['title'], key=f"lesson_{lesson['id']}", use_container_width=True):
+                        st.session_state.selected_lesson = lesson
+                        st.session_state.view_mode = 'detail'
+                        st.rerun()
 
     # --- VISTA DETALHADA DA AULA ---
     elif st.session_state.view_mode == 'detail':

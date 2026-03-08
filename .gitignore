@@ -13,6 +13,9 @@ __pycache__/
 .streamlit/secrets.toml
 data/Turmas/*.txt
 data/Turmas/*/*.txt
+data/Turmas/*/*.md
+data/Turmas/*/*/*.md
+data/Turmas/*/*/*/*.md
 docs/*.txt
 
 

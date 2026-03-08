@@ -11,6 +11,9 @@ def show_page():
         
         if st.button("Entrar"):
             if db.is_db_connected():
+                # Remove espaços extras que podem causar erro
+                user = user.strip()
+
                 user_data = db.get_user(user)
                 if user_data:
                     if auth.check_password(password, user_data['password']):

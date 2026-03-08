@@ -26,11 +26,11 @@ def get_user(username: str):
     response = supabase.table("app_users").select("username, password, name, role").eq("username", username).execute()
     return response.data[0] if response.data else None
 
-def create_user(username: str, hashed_password: str, name: str, ra: str):
+def create_user(username: str, hashed_password: str, name: str, ra: str, role: str = 'student'):
     if not is_db_connected(): return None, "Banco de dados não conectado"
     try:
         response = supabase.table("app_users").insert({
-            "username": username, "password": hashed_password, "name": name, "ra": ra, "role": "student"
+            "username": username, "password": hashed_password, "name": name, "ra": ra, "role": role
         }).execute()
         return response.data, None
     except Exception as e:
@@ -129,6 +129,15 @@ def link_subject_to_class(class_id: int, subject_id: int):
     if not res.data:
         supabase.table("class_subjects").insert({"class_id": class_id, "subject_id": subject_id}).execute()
 
+def get_subjects():
+    """Busca todas as disciplinas."""
+    if not is_db_connected(): return []
+    try:
+        response = supabase.table("subjects").select("*").execute()
+        return response.data
+    except Exception:
+        return []
+
 def enroll_student(username: str, class_id: int):
     """Matricula um aluno em uma turma."""
     if not is_db_connected(): return None, "Banco de dados não conectado"
@@ -140,6 +149,17 @@ def enroll_student(username: str, class_id: int):
     except Exception as e:
         return None, str(e)
 
+def get_subject_by_name(name: str):
+    if not is_db_connected(): return None
+    # Tenta busca exata
+    res = supabase.table("subjects").select("id").eq("name", name).execute()
+    if res.data:
+        return res.data[0]
+    
+    # Tenta busca case-insensitive (ignora maiúsculas/minúsculas)
+    res = supabase.table("subjects").select("id").ilike("name", name).execute()
+    return res.data[0] if res.data else None
+
 # --- Funções de Aulas e Conteúdo ---
 def get_lessons():
     if not is_db_connected(): return []
@@ -149,6 +169,14 @@ def get_lessons():
     except Exception as e:
         print(f"Erro ao buscar aulas (verifique se a tabela 'lessons' existe): {e}")
         return []
+
+def get_lesson_by_id(lesson_id: int):
+    if not is_db_connected(): return None
+    try:
+        response = supabase.table("lessons").select("*").eq("id", lesson_id).execute()
+        return response.data[0] if response.data else None
+    except Exception:
+        return None
 
 def get_quiz_for_lesson(lesson_id: int):
     if not is_db_connected(): return None
@@ -165,3 +193,51 @@ def get_quiz_questions(quiz_id: int):
         return response.data
     except Exception:
         return []
+
+def create_lesson(title: str, description: str, video_url: str):
+    """Cria uma nova aula no banco."""
+    if not is_db_connected(): return None, "Banco de dados não conectado"
+    try:
+        response = supabase.table("lessons").insert({
+            "title": title, "description": description, "video_url": video_url
+        }).execute()
+        return response.data, None
+    except Exception as e:
+        return None, str(e)
+
+def upsert_lesson(title: str, subject_id: int, description: str, video_url: str):
+    """Cria ou atualiza uma aula. Retorna o ID da aula."""
+    if not is_db_connected(): return None
+    try:
+        lesson_data = {
+            "title": title,
+            "subject_id": subject_id,
+            "description": description,
+            "video_url": video_url
+        }
+        # on_conflict usa as colunas com a constraint UNIQUE para fazer o upsert
+        response = supabase.table("lessons").upsert(lesson_data, on_conflict="subject_id,title").execute()
+        return response.data[0]['id']
+    except Exception as e:
+        print(f"Erro ao fazer upsert da aula '{title}': {e}")
+        return None
+
+def create_quiz(lesson_id: int, title: str):
+    """Cria um novo quiz associado a uma aula."""
+    if not is_db_connected(): return None, "Banco de dados não conectado"
+    try:
+        response = supabase.table("quizzes").insert({"lesson_id": lesson_id, "title": title}).execute()
+        return response.data, None
+    except Exception as e:
+        return None, str(e)
+
+def create_quiz_question(quiz_id: int, question_text: str, options: list, correct_index: int):
+    """Cria uma nova questão para um quiz."""
+    if not is_db_connected(): return None, "Banco de dados não conectado"
+    try:
+        response = supabase.table("quiz_questions").insert({
+            "quiz_id": quiz_id, "question_text": question_text, "options": options, "correct_option_index": correct_index
+        }).execute()
+        return response.data, None
+    except Exception as e:
+        return None, str(e)
