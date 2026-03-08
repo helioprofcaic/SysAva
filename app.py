@@ -71,7 +71,7 @@ def main():
 
             # O Quiz agora é acessado via Aulas, então removemos do menu principal
             opcoes_menu = ["Home", "Aulas", "Fórum", "Avaliações"]
-            if st.session_state.get('role') == 'admin':
+            if st.session_state.get('role') in ['admin', 'teacher']:
                 opcoes_menu.append("Admin")
             
             # Identifica qual opção deve estar marcada no menu

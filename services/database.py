@@ -66,6 +66,15 @@ def get_user_history(username: str):
     except Exception as e:
         return []
 
+def get_all_history(limit: int = 200):
+    """Busca o histórico global de atividades (para relatórios)."""
+    if not is_db_connected(): return []
+    try:
+        response = supabase.table("user_history").select("*").order("timestamp", desc=True).limit(limit).execute()
+        return response.data
+    except Exception as e:
+        return []
+
 def upsert_user(username: str, hashed_password: str, name: str, ra: str):
     """Cria ou atualiza um usuário (útil para scripts de importação em massa)."""
     if not is_db_connected(): return None, "Banco de dados não conectado"
@@ -382,15 +391,39 @@ def create_assessment_question(assessment_id: int, question_text: str, question_
     except Exception as e:
         return None, str(e)
 
-def get_all_quiz_questions_for_subject(subject_id: int):
-    """Busca todas as questões de quizzes associados a uma disciplina (via aulas)."""
+def get_all_quiz_questions_for_subject(subject_id: int, assessment_type: str = None, workload: int = 40):
+    """Busca questões de quizzes filtradas pelo tipo de avaliação (MN1, MN2, etc)."""
     if not is_db_connected(): return []
     try:
-        # 1. Buscar IDs das aulas da disciplina
-        lessons_res = supabase.table("lessons").select("id").eq("subject_id", subject_id).execute()
-        lesson_ids = [l['id'] for l in lessons_res.data]
+        # 1. Buscar IDs das aulas da disciplina ordenadas por ID (assumindo ordem de criação/semanas)
+        lessons_res = supabase.table("lessons").select("id").eq("subject_id", subject_id).order("id").execute()
+        all_lessons = lessons_res.data
         
-        if not lesson_ids: return []
+        if not all_lessons: return []
+
+        # Filtragem por tipo de avaliação (baseado em semanas/blocos de aulas)
+        # 40h: 8 aulas/semana | 80h: 10 aulas/semana
+        lessons_per_week = 10 if workload == 80 else 8
+        
+        # MN1: Semanas 1 e 2
+        mn1_limit = lessons_per_week * 2
+        
+        # MN2: Semanas 3 e 4
+        mn2_start = mn1_limit
+        mn2_limit = mn2_start + (lessons_per_week * 2)
+        
+        # MN3/RM: Todas (Cumulativo, pois MN3 foca na S05 mas pode conter anteriores)
+        target_lessons = []
+        if assessment_type == 'MN1':
+            target_lessons = all_lessons[:mn1_limit]
+        elif assessment_type == 'MN2':
+            target_lessons = all_lessons[mn2_start:mn2_limit]
+        else:
+            target_lessons = all_lessons
+
+        if not target_lessons: return []
+
+        lesson_ids = [l['id'] for l in target_lessons]
 
         # 2. Buscar IDs dos quizzes dessas aulas
         quizzes_res = supabase.table("quizzes").select("id").in_("lesson_id", lesson_ids).execute()
@@ -552,3 +585,21 @@ def update_submission_score(submission_id: int, new_score: float):
         return response.data, None
     except Exception as e:
         return None, str(e)
+
+def get_students_by_class(class_id: int):
+    """Busca todos os alunos matriculados em uma turma específica."""
+    if not is_db_connected(): return []
+    try:
+        # 1. Buscar os usernames dos alunos na turma
+        enrollments_res = supabase.table("student_enrollments").select("user_username").eq("class_id", class_id).execute()
+        if not enrollments_res.data:
+            return []
+        
+        usernames = [e['user_username'] for e in enrollments_res.data]
+        
+        # 2. Buscar os detalhes desses alunos
+        users_res = supabase.table("app_users").select("username, name, ra, role").in_("username", usernames).execute()
+        return users_res.data
+    except Exception as e:
+        print(f"Erro ao buscar alunos da turma {class_id}: {e}")
+        return []

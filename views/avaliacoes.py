@@ -259,7 +259,7 @@ def show_student_view():
 
 def show_page():
     st.header("📊 Avaliações e Provas")
-    if st.session_state.get('role') == 'admin':
+    if st.session_state.get('role') in ['admin', 'teacher']:
         show_admin_view()
     else:
         show_student_view()

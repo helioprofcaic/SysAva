@@ -2,6 +2,7 @@ import streamlit as st
 from services import database as db
 from services import auth
 import json
+import pandas as pd
 
 def show_page():
     st.header("🛡️ Painel Administrativo")
@@ -10,7 +11,7 @@ def show_page():
         st.warning("Funcionalidade disponível apenas com banco de dados conectado.")
         return
 
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Gerenciar Usuários", "Gerenciar Aulas", "Gerenciar Quizzes", "Gerenciar Avaliações", "🤖 Simulador"])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Gerenciar Usuários", "Gerenciar Aulas", "Gerenciar Quizzes", "Gerenciar Avaliações", "🤖 Simulador", "📊 Relatórios"])
 
     with tab1:
         with st.expander("➕ Cadastrar Novo Usuário", expanded=False):
@@ -22,7 +23,7 @@ def show_page():
                     new_ra = st.text_input("RA (Registro Acadêmico)")
                 with col_b:
                     new_pass = st.text_input("Senha", type="password")
-                    new_role = st.selectbox("Função", ["student", "admin"], format_func=lambda x: "Aluno" if x == "student" else "Administrador")
+                    new_role = st.selectbox("Função", ["student", "teacher", "admin"], format_func=lambda x: {"student": "Aluno", "teacher": "Professor", "admin": "Administrador"}.get(x, x))
                 
                 if st.form_submit_button("Cadastrar"):
                     if new_name and new_user and new_pass and new_ra:
@@ -36,8 +37,39 @@ def show_page():
                     else:
                         st.warning("Preencha todos os campos.")
 
+        st.divider()
+        st.subheader("Filtros de Usuários")
+
+        # --- FILTROS ---
+        col_f1, col_f2 = st.columns(2)
+        
+        role_map_filter = {"Todos": None, "Alunos": "student", "Professores": "teacher", "Administradores": "admin"}
+        selected_role_key = col_f1.selectbox("Filtrar por Função", list(role_map_filter.keys()))
+        
+        selected_class_id = None
+        if selected_role_key == "Alunos":
+            classes = db.get_classes()
+            class_options = {"Todas as Turmas": None}
+            class_options.update({c['name']: c['id'] for c in classes})
+            
+            selected_class_name = col_f2.selectbox("Filtrar por Turma", list(class_options.keys()))
+            selected_class_id = class_options[selected_class_name]
+
+        # --- LÓGICA DE BUSCA E EXIBIÇÃO ---
         st.subheader("Usuários Cadastrados")
-        users = db.get_all_users()
+        users = []
+        if selected_role_key == "Alunos" and selected_class_id is not None:
+            # Caso específico: Alunos de uma turma
+            users = db.get_students_by_class(selected_class_id)
+        else:
+            # Outros casos: buscar todos e filtrar em memória
+            all_users = db.get_all_users()
+            target_role = role_map_filter[selected_role_key]
+            if target_role:
+                users = [u for u in all_users if u.get('role') == target_role]
+            else:
+                users = all_users
+
         if users:
             # Cabeçalho da tabela customizada
             col_h1, col_h2, col_h3, col_h4 = st.columns([0.3, 0.3, 0.2, 0.2])
@@ -51,7 +83,8 @@ def show_page():
                 c1, c2, c3, c4 = st.columns([0.3, 0.3, 0.2, 0.2])
                 c1.write(u['name'])
                 c2.write(u['username'])
-                c3.write("Admin" if u['role'] == 'admin' else "Aluno")
+                role_map = {"student": "Aluno", "teacher": "Professor", "admin": "Administrador"}
+                c3.write(role_map.get(u['role'], u['role']))
                 
                 # Impede que o usuário exclua a si mesmo
                 if u['username'] != st.session_state.get('username'):
@@ -65,24 +98,57 @@ def show_page():
                 else:
                     c4.caption("Atual")
                 st.divider()
+        else:
+            st.info("Nenhum usuário encontrado com os filtros selecionados.")
 
     with tab2:
         st.subheader("Aulas")
         
+        with st.expander("➕ Criar Nova Turma"):
+            with st.form("new_class_form", clear_on_submit=True):
+                class_name = st.text_input("Nome da Turma (ex: 3º Ano A - 2024)")
+                class_code = st.text_input("Código Único da Turma (ex: 3A2024)")
+                submitted_class = st.form_submit_button("Criar Turma")
+                if submitted_class and class_name and class_code:
+                    # Use a default school for simplicity, as school management is not a primary UI feature
+                    school_id = db.upsert_school("Escola Padrão", "N/A")
+                    if school_id:
+                        new_class_id = db.upsert_class(class_name, class_code, school_id)
+                        if new_class_id:
+                            st.success(f"Turma '{class_name}' criada com sucesso!")
+                            st.rerun()
+                        else:
+                            st.error("Erro ao criar a turma. O código pode já existir.")
+                    else:
+                        st.error("Erro ao acessar a escola padrão.")
+        
         # Seletor de Turma
         classes = db.get_classes()
         class_options = {c['name']: c['id'] for c in classes}
-        selected_class_name = st.selectbox("Selecione a Turma", options=["-- Selecione --"] + list(class_options.keys()))
+        selected_class_name = st.selectbox("Selecione a Turma para gerenciar", options=["-- Selecione --"] + list(class_options.keys()))
 
         if selected_class_name != "-- Selecione --":
             class_id = class_options[selected_class_name]
+            
+            with st.expander("➕ Criar Nova Disciplina e Vincular a esta Turma"):
+                with st.form("new_subject_form", clear_on_submit=True):
+                    subject_name = st.text_input("Nome da Disciplina (ex: Programação com Python)")
+                    submitted_subject = st.form_submit_button("Criar e Vincular Disciplina")
+                    if submitted_subject and subject_name:
+                        subject_id = db.upsert_subject(subject_name)
+                        if subject_id:
+                            db.link_subject_to_class(class_id, subject_id)
+                            st.success(f"Disciplina '{subject_name}' vinculada à turma '{selected_class_name}'!")
+                            st.rerun()
+                        else:
+                            st.error("Erro ao criar a disciplina.")
             
             # Seletor de Disciplina (baseado na turma)
             subjects = db.get_subjects_for_class(class_id)
             subject_options = {s['name']: s['id'] for s in subjects}
             
             if not subjects:
-                st.warning("Esta turma não possui disciplinas vinculadas.")
+                st.warning("Esta turma não possui disciplinas vinculadas. Crie e vincule uma no formulário acima.")
             else:
                 selected_subject_name = st.selectbox("Selecione a Disciplina", options=list(subject_options.keys()))
                 subject_id = subject_options[selected_subject_name]
@@ -244,11 +310,16 @@ def show_page():
                         
                         # --- Importação de Questões de Quizzes ---
                         with st.expander("📂 Importar do Banco de Questões (Quizzes)", expanded=False):
-                            st.caption("Abaixo estão listadas todas as questões cadastradas nos Quizzes das aulas desta disciplina.")
-                            quiz_questions = db.get_all_quiz_questions_for_subject(subject_id_av)
+                            st.caption(f"Questões disponíveis para {assessment['type']} (filtradas por semana/conteúdo).")
+                            
+                            # Seletor de Carga Horária para definir o filtro de aulas
+                            workload_opt = st.radio("Carga Horária da Disciplina:", ["40h (8 aulas/sem)", "80h (10 aulas/sem)"], horizontal=True, key=f"wl_{assessment['id']}")
+                            workload_val = 80 if "80h" in workload_opt else 40
+                            
+                            quiz_questions = db.get_all_quiz_questions_for_subject(subject_id_av, assessment['type'], workload_val)
                             
                             if not quiz_questions:
-                                st.info("Nenhuma questão encontrada nos quizzes desta disciplina.")
+                                st.info(f"Nenhuma questão encontrada nos quizzes correspondentes à {assessment['type']}.")
                             else:
                                 for q in quiz_questions:
                                     col_q, col_btn = st.columns([0.8, 0.2])
@@ -348,3 +419,33 @@ def show_page():
                             _, err = db.reset_student_data(selected_student_username)
                             if err: st.error(f"Erro ao zerar dados: {err}")
                             else: st.rerun()
+
+    with tab6:
+        st.subheader("📊 Relatórios de Atividades")
+        st.markdown("Visualize as ações recentes dos usuários na plataforma.")
+
+        # Filtros
+        users = db.get_all_users()
+        user_options = ["Todos"] + [u['username'] for u in users]
+        selected_user_filter = st.selectbox("Filtrar por Usuário", user_options)
+
+        # Busca dados
+        if selected_user_filter != "Todos":
+            history_data = db.get_user_history(selected_user_filter)
+        else:
+            history_data = db.get_all_history(limit=500)
+
+        if history_data:
+            # Exibe tabela
+            st.dataframe(history_data, use_container_width=True, column_config={
+                "username": "Usuário",
+                "activity": "Ação Realizada",
+                "timestamp": "Data/Hora"
+            })
+
+            # Botão de Exportação
+            df = pd.DataFrame(history_data)
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button("📥 Baixar Relatório Completo (CSV)", data=csv, file_name="relatorio_atividades.csv", mime="text/csv")
+        else:
+            st.info("Nenhuma atividade registrada com os filtros atuais.")
