@@ -1,6 +1,7 @@
 # Ambiente Virtual
 .venv/
 venv/
+.sysenv/
 
 # Arquivos de Cache do Python
 __pycache__/

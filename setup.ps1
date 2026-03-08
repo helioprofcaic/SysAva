@@ -31,7 +31,7 @@ catch {
     exit 1
 }
 
-$venvDir = ".\.venv"
+$venvDir = ".\.sysenv"
 
 # Verifica se o ambiente virtual existe e cria se necessario
 if (-not (Test-Path -Path "$venvDir\Scripts\Activate.ps1")) {

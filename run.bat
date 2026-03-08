@@ -1,29 +1,34 @@
-
 @echo off
+chcp 65001 > nul
 setlocal
 
-set "VENV_DIR=.venv"
+REM Converte para caminho absoluto do Windows
+set "PYTHON_EXECUTABLE=C:\Local\Apps\Python\Python312\python.exe"
+set "VENV_DIR=.sysenv"
 
-REM Verifica se o Python esta instalado
-where python >nul 2>&1
-if %errorlevel% neq 0 (
-    echo Python nao encontrado. Por favor instale o Python.
-    pause
-    exit /b 1
+
+if not defined VENV_PATH (
+  for %%a in ("%CD%\%VENV_DIR%") do set "VENV_PATH=%%~fa"
 )
 
-REM Verifica se o ambiente virtual existe
-if not exist "%VENV_DIR%" (
+REM Cria o ambiente virtual usando script Python
+if not exist "%VENV_PATH%\Scripts\python.exe" (
+    python create_venv.py
+)
+
+REM Verifica se o ambiente virtual existe corretamente
+if not exist "%VENV_PATH%\Scripts\python.exe" (
     echo Criando ambiente virtual...
-    python -m venv "%VENV_DIR%"
+    "%PYTHON_EXECUTABLE%" -m venv "%VENV_PATH%"
 )
 
-REM Ativa o ambiente virtual
-call "%VENV_DIR%\Scripts\activate"
+echo Atualizando o Pip...
+"%VENV_PATH%\Scripts\python.exe" -m pip install --upgrade pip
 
 REM Instala/Atualiza dependencias
 echo Verificando dependencias...
-pip install -r requirements.txt
+"%VENV_PATH%\Scripts\pip.exe" install --upgrade pip -r requirements.txt 
+
 
 REM Verifica se o .env existe antes de popular o banco
 if not exist ".env" (
@@ -37,8 +42,8 @@ if not exist ".env" (
 
 REM Popula o banco de dados com a estrutura da escola
 echo.
-echo Populando o banco de dados com a estrutura da escola (turmas e disciplinas)...
-python scripts/seed_data.py
+echo Populando o banco de dados com a estrutura da escola (turmas e disciplinas)... 
+"%VENV_DIR%\Scripts\python.exe" scripts/seed_data.py
 if %errorlevel% neq 0 (
     echo.
     echo FALHA CRITICA ao popular estrutura da escola. Verifique a conexao com o Supabase e se as tabelas foram criadas.
@@ -48,8 +53,8 @@ if %errorlevel% neq 0 (
 
 REM Popula o banco de dados com as aulas
 echo.
-echo Populando o banco de dados com as aulas em lote...
-python scripts/seed_lessons.py
+echo Populando o banco de dados com as aulas em lote... 
+"%VENV_DIR%\Scripts\python.exe" scripts/seed_lessons.py
 if %errorlevel% neq 0 (
     echo AVISO: Houve erros na importacao de aulas. Verifique o log acima.
     pause
@@ -58,7 +63,7 @@ echo.
 
 :ask_students
 echo.
-set /p "seed_choice=Voce deseja popular o banco de dados com os ALUNOS? (s/n): "
+set /p seed_choice=Voce deseja popular o banco de dados com os ALUNOS? (s/n): 
 if /i "%seed_choice%"=="s" (
     goto seed_students
 )
@@ -72,7 +77,7 @@ goto ask_students
 REM Popula o banco de dados com os alunos
 echo.
 echo Populando o banco de dados com os alunos...
-python scripts/seed_students.py
+"%VENV_DIR%\Scripts\python.exe" scripts/seed_students.py
 if %errorlevel% neq 0 (
     echo AVISO: Houve erros na importacao de alunos. Verifique o log acima.
     pause
@@ -80,7 +85,6 @@ if %errorlevel% neq 0 (
 echo.
 
 goto start_app
-
 :start_app
 REM Forca o modo local ignorando o secrets.toml
 set FORCE_LOCAL_MODE=1
@@ -88,5 +92,5 @@ set FORCE_LOCAL_MODE=1
 REM Executa a aplicacao
 echo.
 echo Iniciando o SysAva CETI Raldir...
-streamlit run app.py
+call "%VENV_DIR%\Scripts\streamlit.exe" run app.py
 pause
