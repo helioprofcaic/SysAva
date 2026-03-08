@@ -29,10 +29,17 @@ def main():
             opcoes_menu = ["Aulas", "Fórum", "Avaliações"]
             if st.session_state.get('role') == 'admin':
                 opcoes_menu.append("Admin")
-            opcoes_menu.append("Sair")
             
             # Identifica qual opção deve estar marcada no menu
             current_page = st.session_state.get('page', 'Aulas')
+
+            # Se a página atual (ex: Quiz) não está no menu padrão, adicionamos ela temporariamente.
+            # Isso impede que o st.radio force a seleção para o índice 0 ('Aulas') e cause redirect.
+            if current_page not in opcoes_menu and current_page != "Sair":
+                opcoes_menu.append(current_page)
+
+            opcoes_menu.append("Sair")
+            
             try:
                 index_menu = opcoes_menu.index(current_page)
             except ValueError:

@@ -70,11 +70,14 @@ def get_forum_posts(lesson_id: int = None):
 
 def add_forum_post(user_name: str, message: str, lesson_id: int = None):
     if not is_db_connected(): return None, "Banco de dados não conectado"
-    post_data = {"user_name": user_name, "message": message}
-    if lesson_id:
-        post_data['lesson_id'] = lesson_id
-    response, error = supabase.table("forum_posts").insert(post_data).execute()
-    return response, error
+    try:
+        post_data = {"user_name": user_name, "message": message}
+        if lesson_id:
+            post_data['lesson_id'] = lesson_id
+        response = supabase.table("forum_posts").insert(post_data).execute()
+        return response.data, None
+    except Exception as e:
+        return None, str(e)
 
 def delete_forum_post(post_id: int):
     if not is_db_connected(): return None, "Banco de dados não conectado"
@@ -160,6 +163,35 @@ def get_subject_by_name(name: str):
     res = supabase.table("subjects").select("id").ilike("name", name).execute()
     return res.data[0] if res.data else None
 
+def get_user_enrollment(username: str):
+    """Busca a matrícula (turma) de um usuário."""
+    if not is_db_connected(): return None
+    try:
+        # O username do app é o user_username na tabela de matrículas
+        response = supabase.table("student_enrollments").select("class_id").eq("user_username", username).limit(1).execute()
+        return response.data[0] if response.data else None
+    except Exception as e:
+        print(f"Erro ao buscar matrícula do usuário '{username}': {e}")
+        return None
+
+def get_subjects_for_class(class_id: int):
+    """Busca todas as disciplinas associadas a uma turma."""
+    if not is_db_connected(): return []
+    try:
+        # 1. Buscar os subject_ids da tabela de junção
+        response = supabase.table("class_subjects").select("subject_id").eq("class_id", class_id).execute()
+        if not response.data:
+            return []
+        
+        subject_ids = [item['subject_id'] for item in response.data]
+        
+        # 2. Buscar os detalhes das disciplinas com base nos IDs
+        subjects_response = supabase.table("subjects").select("*").in_("id", subject_ids).order("name").execute()
+        return subjects_response.data
+    except Exception as e:
+        print(f"Erro ao buscar disciplinas da turma {class_id}: {e}")
+        return []
+
 # --- Funções de Aulas e Conteúdo ---
 def get_lessons():
     if not is_db_connected(): return []
@@ -168,6 +200,16 @@ def get_lessons():
         return response.data
     except Exception as e:
         print(f"Erro ao buscar aulas (verifique se a tabela 'lessons' existe): {e}")
+        return []
+
+def get_lessons_for_subject(subject_id: int):
+    """Busca todas as aulas de uma disciplina específica."""
+    if not is_db_connected(): return []
+    try:
+        response = supabase.table("lessons").select("*").eq("subject_id", subject_id).order("id").execute()
+        return response.data
+    except Exception as e:
+        print(f"Erro ao buscar aulas da disciplina {subject_id}: {e}")
         return []
 
 def get_lesson_by_id(lesson_id: int):
@@ -183,7 +225,17 @@ def get_quiz_for_lesson(lesson_id: int):
     try:
         response = supabase.table("quizzes").select("id, title").eq("lesson_id", lesson_id).limit(1).execute()
         return response.data[0] if response.data else None
-    except Exception:
+    except Exception as e:
+        print(f"Erro ao buscar quiz da aula {lesson_id}: {e}")
+        return None
+
+def get_quiz_by_id(quiz_id: int):
+    if not is_db_connected(): return None
+    try:
+        response = supabase.table("quizzes").select("*").eq("id", quiz_id).limit(1).execute()
+        return response.data[0] if response.data else None
+    except Exception as e:
+        print(f"Erro ao buscar quiz por ID {quiz_id}: {e}")
         return None
 
 def get_quiz_questions(quiz_id: int):
@@ -191,7 +243,8 @@ def get_quiz_questions(quiz_id: int):
     try:
         response = supabase.table("quiz_questions").select("*").eq("quiz_id", quiz_id).execute()
         return response.data
-    except Exception:
+    except Exception as e:
+        print(f"Erro ao buscar questões do quiz {quiz_id}: {e}")
         return []
 
 def create_lesson(title: str, description: str, video_url: str):

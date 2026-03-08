@@ -19,6 +19,8 @@ def show_page():
                     if auth.check_password(password, user_data['password']):
                         st.session_state['logado'] = True
                         st.session_state['usuario'] = user_data.get('name', user)
+                        # Armazena o username (RA) para consultas de matrícula
+                        st.session_state['username'] = user
                         st.session_state['role'] = user_data.get('role', 'student')
                         st.rerun()
                     else:
@@ -30,6 +32,8 @@ def show_page():
                 if user == "admin" and password == "admin":
                     st.session_state['logado'] = True
                     st.session_state['usuario'] = "Administrador (Offline)"
+                    # Armazena o username para consistência
+                    st.session_state['username'] = "admin"
                     st.session_state['role'] = "admin"
                     st.rerun()
                 else:

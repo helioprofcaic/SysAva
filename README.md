@@ -24,10 +24,10 @@ SysAva/
 │   └── secrets.toml      # Segredos para rodar localmente
 ├── data/
 │   └── Turmas/
-│       └── Escola.txt    # Dados brutos para popular o banco
+│       └── Escola.txt    # Dados brutos para popular o banco (seeding)
 ├── docs/
 │   ├── ARCHITECTURE.md   # Documentação da arquitetura
-│   └── DATABASE_SETUP.md # Comandos SQL para o banco
+│   └── DATABASE_MODEL.md # Comandos SQL para o banco
 ├── views/                # Camada de Apresentação (UI)
 │   ├── __init__.py
 │   ├── admin.py
@@ -50,7 +50,7 @@ SysAva/
 
 ## 🚀 Como Executar
 
-1.  **Configure o Banco de Dados:** Siga as instruções em `docs/DATABASE_SETUP.md` para criar as tabelas no Supabase.
+1.  **Configure o Banco de Dados:** Siga as instruções em `docs/DATABASE_MODEL.md` para criar as tabelas no Supabase.
 2.  **Instale as Dependências:** `pip install -r requirements.txt`
 3.  **Configure as Credenciais:**
     -   Crie o arquivo `.streamlit/secrets.toml` para o app Streamlit.
