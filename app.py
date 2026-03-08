@@ -5,16 +5,20 @@ import argparse
 from views import home, aulas, forum, quiz, avaliacoes, admin, login, register
 from services import database, auth
 
+# Configuração da Página (deve ser o primeiro comando Streamlit)
+st.set_page_config(page_title="Plataforma de Ensino", layout="wide", page_icon="🎓")
+
 # Define o tema da aplicação
 st.markdown(
     """
     <style>
-    [data-testid="stAppViewContainer"] {background-color: #333333;}
+    /* Força o fundo escuro e a cor do texto branca para todo o app */
+    html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
+        background-color: #333333;
+        color: white;
+    }
     </style>
     """, unsafe_allow_html=True)
-# Configuração da Página
-st.set_page_config(page_title="Plataforma de Ensino", layout="wide", page_icon="🎓")
-
 
 
 # --- Lógica Principal (Roteamento) ---
