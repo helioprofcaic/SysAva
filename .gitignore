@@ -20,7 +20,12 @@ data/Turmas/*/*/*/*.md
 docs/*.txt
 dist/*
 build/*
-
+scripts/*
+!scripts/seed_data.py
+!scripts/seed_lessons.py
+!scripts/seed_students.py
+!scripts/fix_gabaritos.py
+!scripts/fix_quizzes.py
 
 # Arquivos de IDEs e Editores
 .vscode/

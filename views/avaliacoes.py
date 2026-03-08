@@ -161,9 +161,13 @@ def show_student_view():
                 submission = db.get_student_submission(username, assessment['id'])
                 
                 if submission:
+                    score = submission.get('score')
                     with col2:
-                        st.success("✅ Concluída")
-                    st.caption("Você já realizou esta avaliação. Aguarde a correção.")
+                        if score is not None:
+                            st.success(f"Nota: {score}")
+                        else:
+                            st.success("✅ Concluída")
+                    st.caption("Avaliação corrigida." if score is not None else "Você já realizou esta avaliação. Aguarde a correção.")
                 else:
                     # Lógica de Bloqueio MN1
                     is_locked = False

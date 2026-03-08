@@ -603,3 +603,23 @@ def get_students_by_class(class_id: int):
     except Exception as e:
         print(f"Erro ao buscar alunos da turma {class_id}: {e}")
         return []
+
+# --- Funções de Cronogramas (Gerador de Aulas) ---
+
+def create_schedule(subject_id: int, content: str):
+    """Salva um texto de cronograma para uma disciplina."""
+    if not is_db_connected(): return None, "Offline"
+    try:
+        response = supabase.table("schedules").insert({"subject_id": subject_id, "content": content}).execute()
+        return response.data, None
+    except Exception as e:
+        return None, str(e)
+
+def get_latest_schedule(subject_id: int):
+    """Busca o último cronograma salvo para a disciplina."""
+    if not is_db_connected(): return None
+    try:
+        response = supabase.table("schedules").select("content").eq("subject_id", subject_id).order("created_at", desc=True).limit(1).execute()
+        return response.data[0]['content'] if response.data else None
+    except Exception:
+        return None

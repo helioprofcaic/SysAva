@@ -3,3 +3,6 @@ supabase
 bcrypt
 python-dotenv
 pyinstaller
+customtkinter
+google-generativeai
+google-auth-oauthlib

@@ -54,8 +54,10 @@ if %errorlevel% neq 0 (
 REM Popula o banco de dados com as aulas
 echo.
 echo Populando o banco de dados com as aulas em lote... 
-"%VENV_DIR%\Scripts\python.exe" scripts/seed_lessons.py
-if %errorlevel% neq 0 (
+"%VENV_DIR%\Scripts\python.exe" scripts/seed_lessons.py > populated_lessons.log 2>&1
+set SEED_EXIT_CODE=%errorlevel%
+type populated_lessons.log
+if %SEED_EXIT_CODE% neq 0 (
     echo AVISO: Houve erros na importacao de aulas. Verifique o log acima.
     pause
 )
