@@ -56,4 +56,14 @@ SysAva/
     -   Crie o arquivo `.streamlit/secrets.toml` para o app Streamlit.
     -   Crie o arquivo `.env` para o script de `seed`.
 4.  **Popule o Banco (Opcional):** `python scripts/seed_data.py`
-5.  **Execute a Aplicação:** No Windows, simplesmente execute o arquivo `run.bat`. Ele cuidará da criação do ambiente virtual, instalação de dependências, população do banco e inicialização do app.
+5.  **Execute a Aplicação (Modo Desenvolvimento):** No Windows, simplesmente execute o arquivo `run.bat`. Ele cuidará da criação do ambiente virtual, instalação de dependências, população do banco e inicialização do app.
+
+## 📦 Gerando um Executável Standalone
+
+Para criar uma versão "standalone" do aplicativo (um arquivo `.exe` que pode ser distribuído), você pode usar o script PowerShell `setup.ps1`.
+
+1.  Abra um terminal PowerShell.
+2.  (Primeira vez) Permita a execução de scripts: `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`
+3.  Navegue até a pasta do projeto e execute: `.\setup.ps1`
+
+O script irá criar uma pasta `dist/SysAva` contendo o executável e todos os arquivos necessários. Siga as instruções no final do processo de build para copiar os arquivos de configuração (`.env` e `.streamlit/`) para a pasta de destino antes de executar.

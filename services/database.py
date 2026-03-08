@@ -1,6 +1,7 @@
 # services/database.py
 from supabase import create_client, Client
 import streamlit as st
+import httpx
 
 @st.cache_resource
 def init_connection():
@@ -52,14 +53,27 @@ def get_all_users():
     return response.data
 
 # --- Funções do Fórum ---
-def get_forum_posts():
+def get_forum_posts(lesson_id: int = None):
     if not is_db_connected(): return []
-    response = supabase.table("forum_posts").select("*").order("created_at", desc=True).execute()
-    return response.data
+    try:
+        query = supabase.table("forum_posts").select("*").order("created_at", desc=True)
+        if lesson_id:
+            query = query.eq("lesson_id", lesson_id)
+        else:
+            # Fórum geral mostra posts sem aula associada
+            query = query.is_("lesson_id", "null")
+        response = query.execute()
+        return response.data
+    except Exception as e:
+        print(f"Erro ao buscar posts do fórum: {e}")
+        return []
 
-def add_forum_post(user_name: str, message: str):
+def add_forum_post(user_name: str, message: str, lesson_id: int = None):
     if not is_db_connected(): return None, "Banco de dados não conectado"
-    response, error = supabase.table("forum_posts").insert({"user_name": user_name, "message": message}).execute()
+    post_data = {"user_name": user_name, "message": message}
+    if lesson_id:
+        post_data['lesson_id'] = lesson_id
+    response, error = supabase.table("forum_posts").insert(post_data).execute()
     return response, error
 
 def delete_forum_post(post_id: int):
@@ -72,12 +86,16 @@ def delete_forum_post(post_id: int):
 def upsert_school(name: str, gre: str):
     """Insere ou atualiza uma escola. Retorna o ID da escola."""
     if not is_db_connected(): return None
-    # A cláusula 'on_conflict' e 'update' é específica do PostgreSQL. Usamos um select/insert para simplicidade.
-    res = supabase.table("schools").select("id").eq("name", name).execute()
-    if res.data:
+    try:
+        # A cláusula 'on_conflict' e 'update' é específica do PostgreSQL. Usamos um select/insert para simplicidade.
+        res = supabase.table("schools").select("id").eq("name", name).execute()
+        if res.data:
+            return res.data[0]['id']
+        res = supabase.table("schools").insert({"name": name, "gre": gre}).execute()
         return res.data[0]['id']
-    res = supabase.table("schools").insert({"name": name, "gre": gre}).execute()
-    return res.data[0]['id']
+    except Exception as e:
+        print(f"Erro ao acessar tabela 'schools': {e}")
+        return None
 
 def upsert_class(name: str, code: str, school_id: int):
     """Insere ou atualiza uma turma. Retorna o ID da turma."""
@@ -121,3 +139,29 @@ def enroll_student(username: str, class_id: int):
         return response.data, None
     except Exception as e:
         return None, str(e)
+
+# --- Funções de Aulas e Conteúdo ---
+def get_lessons():
+    if not is_db_connected(): return []
+    try:
+        response = supabase.table("lessons").select("*").order("id").execute()
+        return response.data
+    except Exception as e:
+        print(f"Erro ao buscar aulas (verifique se a tabela 'lessons' existe): {e}")
+        return []
+
+def get_quiz_for_lesson(lesson_id: int):
+    if not is_db_connected(): return None
+    try:
+        response = supabase.table("quizzes").select("id, title").eq("lesson_id", lesson_id).limit(1).execute()
+        return response.data[0] if response.data else None
+    except Exception:
+        return None
+
+def get_quiz_questions(quiz_id: int):
+    if not is_db_connected(): return []
+    try:
+        response = supabase.table("quiz_questions").select("*").eq("quiz_id", quiz_id).execute()
+        return response.data
+    except Exception:
+        return []

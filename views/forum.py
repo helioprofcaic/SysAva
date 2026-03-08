@@ -3,7 +3,16 @@ import time
 from services import database as db
 
 def show_page():
-    st.header("💬 Fórum de Dúvidas")
+    # Verifica se a página foi chamada a partir de uma aula específica
+    lesson_id = st.session_state.get('context_lesson_id')
+
+    if lesson_id:
+        st.header("💬 Fórum da Aula")
+        if st.button("⬅️ Voltar para as Aulas"):
+            st.session_state.page = 'Aulas'
+            st.rerun()
+    else:
+        st.header("💬 Fórum Geral")
     
     with st.form("novo_post"):
         nova_msg = st.text_area("Escreva sua dúvida ou comentário:")
@@ -11,7 +20,8 @@ def show_page():
         
         if submit_btn and nova_msg:
             if db.is_db_connected():
-                _, error = db.add_forum_post(st.session_state['usuario'], nova_msg)
+                # Passa o lesson_id se existir
+                _, error = db.add_forum_post(st.session_state['usuario'], nova_msg, lesson_id=lesson_id)
                 if error:
                     st.error(f"Erro: {error}")
                 else:
@@ -24,7 +34,11 @@ def show_page():
     st.divider()
     st.subheader("Últimas Discussões")
     
-    posts = db.get_forum_posts()
+    # Passa o lesson_id para buscar os posts corretos
+    posts = db.get_forum_posts(lesson_id=lesson_id)
+    
+    if not posts:
+        st.info("Nenhuma discussão neste fórum ainda.")
     
     for post in posts:
         col_msg, col_action = st.columns([0.9, 0.1])

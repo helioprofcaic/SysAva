@@ -11,8 +11,8 @@ __pycache__/
 # Arquivos de Segredos e Configuração Local
 .env
 .streamlit/secrets.toml
-data/Turmas/*/*.txt
 data/Turmas/*.txt
+data/Turmas/*/*.txt
 docs/*.txt
 
 

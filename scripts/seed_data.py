@@ -33,6 +33,12 @@ def run_seeder():
         print("Verifique se você criou um arquivo .env na raiz do projeto com SUPABASE_URL e SUPABASE_KEY.")
         return
 
+    # Verificação básica da URL
+    url = os.environ.get("SUPABASE_URL", "")
+    if not url.startswith("http"):
+        print(f"ERRO: A URL do Supabase no .env parece inválida: '{url}'")
+        return
+
     print("Iniciando o processo de seeding do banco de dados...")
 
     # Caminho para o arquivo de dados
