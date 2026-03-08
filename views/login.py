@@ -3,7 +3,7 @@ from services import database as db
 from services import auth
 
 def show_page():
-    st.title("🔐 Login do Aluno")
+    st.title("🔐 Login do Aluno/Professor")
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
         user = st.text_input("Usuário")
