@@ -11,7 +11,13 @@ def configure_api(api_key):
     except Exception as e:
         return False
 
-def generate_content_with_fallback(prompt, model_names=["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash", "gemini-flash-latest"]):
+def generate_content_with_fallback(prompt, model_names=["gemini-3.1-flash-lite-preview",
+                                                        "gemini-2.5-flash", 
+                                                        "gemini-2.5-pro", 
+                                                        "gemini-2.0-flash",
+                                                        "gemini-2.5-flash-lite",
+                                                        "gemini-flash-latest", 
+                                                        "gemini-3-flash-preview"]):
     """Tenta gerar conteúdo usando uma lista de modelos em sequência."""
     for model_name in model_names:
         try:

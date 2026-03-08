@@ -5,6 +5,7 @@ from services import ai_generation as ai
 import re
 import json
 import pandas as pd
+import time
 
 def show_page():
     st.header("🛡️ Painel Administrativo")
