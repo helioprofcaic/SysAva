@@ -511,11 +511,16 @@ def show_page():
                     st.write("### 📋 Plano de Aulas Identificado")
                     
                     lessons_to_generate = []
+                    conflicting_ids = []
                     
                     for lesson in plan:
                         # Lógica simples de conflito: verifica se o tema está contido em algum título existente
                         # ou se existe uma aula com o mesmo número (se conseguíssemos extrair o numero do titulo)
-                        is_conflict = any(lesson['topic'] in t for t in existing_titles)
+                        found_lesson = next((l for l in existing_lessons if lesson['topic'] in l['title']), None)
+                        is_conflict = found_lesson is not None
+                        if is_conflict:
+                            conflicting_ids.append(found_lesson['id'])
+
                         status = "✅ Já existe (Pular)" if is_conflict else "🆕 Será gerada"
                         
                         col1, col2, col3 = st.columns([0.1, 0.7, 0.2])
@@ -525,6 +530,14 @@ def show_page():
                         
                         if not is_conflict:
                             lessons_to_generate.append(lesson)
+
+                    if conflicting_ids:
+                        if st.button(f"🗑️ Excluir {len(set(conflicting_ids))} aulas conflitantes deste cronograma"):
+                            for lid in set(conflicting_ids):
+                                db.delete_lesson(lid)
+                            st.success("Aulas excluídas com sucesso! Clique em 'Analizar Cronograma' novamente para atualizar.")
+                            del st.session_state['lesson_plan']
+                            st.rerun()
 
                     if lessons_to_generate:
                         st.info(f"Serão geradas {len(lessons_to_generate)} novas aulas.")
@@ -548,7 +561,7 @@ def show_page():
                                     final_title = f"Aula {lesson['lesson_number']}: {lesson['topic']}"
                                     
                                     # Insere aula
-                                    lesson_id = db.upsert_lesson(final_title, subject_id, "Gerada via IA", "")
+                                    lesson_id = db.upsert_lesson(final_title, subject_id, content, "")
                                     
                                     # Tenta extrair e inserir Quiz (reutilizando lógica simplificada)
                                     quiz_match = re.search(r'(?:^|\n)(##\s*📝\s*Quiz)', content, re.IGNORECASE)

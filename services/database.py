@@ -324,6 +324,15 @@ def upsert_lesson(title: str, subject_id: int, description: str, video_url: str)
         print(f"Erro ao fazer upsert da aula '{title}': {e}")
         return None
 
+def delete_lesson(lesson_id: int):
+    """Remove uma aula do banco de dados."""
+    if not is_db_connected(): return None, "Banco de dados não conectado"
+    try:
+        response = supabase.table("lessons").delete().eq("id", lesson_id).execute()
+        return response.data, None
+    except Exception as e:
+        return None, str(e)
+
 def create_quiz(lesson_id: int, title: str):
     """Cria um novo quiz associado a uma aula."""
     if not is_db_connected(): return None, "Banco de dados não conectado"
