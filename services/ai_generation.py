@@ -72,7 +72,7 @@ def generate_lesson_markdown(subject, class_name, topic, lesson_num):
     Gera o conteúdo da aula em Markdown usando o Gemini.
     """
     prompt = f"""
-    Atue como o Professor Helio Lima do CETI PROFESSOR RALDIR CAVALCANTE BASTOS.
+    Atue como o Professor Helio Lima de Desenvolvimento de Sistemas - Curso Técnico.
     Crie o conteúdo de uma aula em formato Markdown seguindo ESTRITAMENTE o modelo abaixo.
 
     Variáveis:
@@ -116,7 +116,8 @@ def generate_lesson_markdown(subject, class_name, topic, lesson_num):
     ## 🛠️ Atividade Prática
     (Exercícios ou exemplos práticos)
     
-    ## 📝 Quiz de Fixação
+    ## 📝 Quiz Aula: {lesson_num} - {topic}
+
     (Crie 4 perguntas de múltipla escolha. Para cada pergunta, marque a resposta correta com um [x] e as incorretas com [ ]. Exemplo: - [x] Opção correta)
     
     ## Gabarito Comentado
