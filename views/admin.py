@@ -10,7 +10,7 @@ def show_page():
         st.warning("Funcionalidade disponível apenas com banco de dados conectado.")
         return
 
-    tab1, tab2, tab3, tab4 = st.tabs(["Gerenciar Usuários", "Gerenciar Aulas", "Gerenciar Quizzes", "Gerenciar Avaliações"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Gerenciar Usuários", "Gerenciar Aulas", "Gerenciar Quizzes", "Gerenciar Avaliações", "🤖 Simulador"])
 
     with tab1:
         with st.expander("➕ Cadastrar Novo Usuário", expanded=False):
@@ -298,3 +298,53 @@ def show_page():
                                 else: 
                                     st.success("Questão adicionada!")
                                     st.rerun()
+
+    with tab5:
+        st.subheader("🤖 Simulador de Atividades de Aluno")
+        st.info("Esta ferramenta preenche o histórico de um aluno com todas as aulas e quizzes para fins de teste. A ação de 'Zerar' apaga permanentemente o histórico e as provas realizadas pelo aluno.")
+
+        users = db.get_all_users()
+        students = {u['username']: u['name'] for u in users if u['role'] == 'student'}
+        
+        if not students:
+            st.warning("Nenhum aluno cadastrado para simular.")
+        else:
+            selected_student_username = st.selectbox(
+                "Selecione o Aluno (por login/RA) para gerenciar:", 
+                options=list(students.keys()),
+                format_func=lambda username: f"{students[username]} ({username})"
+            )
+
+            if selected_student_username:
+                st.markdown("---")
+                st.markdown(f"#### Progresso Atual de **{students[selected_student_username]}**")
+                
+                progress = db.get_user_progress_stats(selected_student_username)
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Aulas Vistas", progress.get('lessons', 0))
+                col2.metric("Quizzes Feitos", progress.get('quizzes', 0))
+                col3.metric("Posts no Fórum", progress.get('forum', 0))
+
+                st.markdown("---")
+
+                col_sim, col_reset = st.columns(2)
+
+                with col_sim:
+                    st.markdown("#### ✅ Simular Conclusão Total")
+                    if st.button("🚀 Simular Todas as Atividades"):
+                        with st.spinner("Simulando..."):
+                            _, err = db.simulate_student_activities(selected_student_username)
+                            if err: st.error(f"Erro na simulação: {err}")
+                            else: st.rerun()
+                
+                with col_reset:
+                    st.markdown("#### ⚠️ Zerar Dados do Aluno")
+                    st.warning("Apaga histórico e provas. Use para liberar o RA para um aluno real.")
+                    
+                    confirm_reset = st.checkbox(f"Confirmo que desejo zerar todos os dados de {students[selected_student_username]}")
+
+                    if st.button("🗑️ Zerar Dados Agora", disabled=not confirm_reset):
+                        with st.spinner("Apagando dados..."):
+                            _, err = db.reset_student_data(selected_student_username)
+                            if err: st.error(f"Erro ao zerar dados: {err}")
+                            else: st.rerun()

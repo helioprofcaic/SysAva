@@ -404,3 +404,151 @@ def get_all_quiz_questions_for_subject(subject_id: int):
     except Exception as e:
         print(f"Erro ao buscar banco de questões: {e}")
         return []
+
+# --- Funções de Submissão e Controle de Avaliações ---
+
+def get_user_progress_stats(username: str):
+    """Calcula estatísticas de progresso baseadas no histórico para liberar provas."""
+    if not is_db_connected(): return {"lessons": 0, "quizzes": 0, "forum": 0}
+    
+    # Busca todo o histórico do usuário
+    # Nota: Em produção, seria ideal fazer count direto no banco, mas user_history é genérico.
+    history = get_user_history(username)
+    
+    unique_lessons = set()
+    unique_quizzes = set()
+    forum_posts = 0
+    
+    for item in history:
+        act = item.get('activity', '')
+        if act.startswith("Acessou a aula:"):
+            unique_lessons.add(act) # Conta títulos de aulas únicos
+        elif act.startswith("Concluiu Quiz:"):
+            unique_quizzes.add(act) # Conta quizzes únicos
+        elif "mensagem no fórum" in act:
+            forum_posts += 1 # Conta total de posts
+            
+    return {
+        "lessons": len(unique_lessons),
+        "quizzes": len(unique_quizzes),
+        "forum": forum_posts
+    }
+
+def get_student_submission(username: str, assessment_id: int):
+    """Verifica se o aluno já realizou a avaliação."""
+    if not is_db_connected(): return None
+    try:
+        res = supabase.table("student_assessments").select("*").eq("user_username", username).eq("assessment_id", assessment_id).execute()
+        return res.data[0] if res.data else None
+    except Exception:
+        return None
+
+def submit_assessment(username: str, assessment_id: int, answers: list):
+    """
+    Salva a submissão da prova.
+    answers: lista de dicts {'question_id': int, 'type': str, 'value': ...}
+    """
+    if not is_db_connected(): return None, "Offline"
+    try:
+        # 1. Criar a submissão pai
+        sub_res = supabase.table("student_assessments").insert({
+            "user_username": username,
+            "assessment_id": assessment_id,
+            "status": "submitted"
+        }).execute()
+        
+        if not sub_res.data:
+            return None, "Erro ao criar registro de submissão."
+            
+        submission_id = sub_res.data[0]['id']
+        
+        # 2. Inserir as respostas
+        answers_data = []
+        for ans in answers:
+            entry = {
+                "submission_id": submission_id,
+                "question_id": ans['question_id'],
+                "selected_option_index": ans.get('value'), # Para objetivas
+                "answer_text": ans.get('text'),            # Para subjetivas
+                "answer_link": ans.get('link')             # Para subjetivas
+            }
+            answers_data.append(entry)
+            
+        supabase.table("student_assessment_answers").insert(answers_data).execute()
+        return True, None
+    except Exception as e:
+        return None, str(e)
+
+def simulate_student_activities(username: str):
+    """Simula a conclusão de todas as aulas e quizzes para um usuário."""
+    if not is_db_connected(): return None, "Offline"
+    try:
+        lessons = get_lessons()
+        if not lessons:
+            return None, "Nenhuma aula encontrada para simular."
+
+        history_entries = []
+        # Simula acesso a todas as aulas e quizzes
+        for lesson in lessons:
+            history_entries.append({"username": username, "activity": f"Acessou a aula: {lesson['title']}"})
+            quiz = get_quiz_for_lesson(lesson['id'])
+            if quiz:
+                history_entries.append({"username": username, "activity": f"Concluiu Quiz: {quiz['title']} (2/2)"})
+        
+        # Simula 15 posts no fórum para garantir liberação
+        for _ in range(15):
+            history_entries.append({"username": username, "activity": "Enviou mensagem no fórum"})
+
+        supabase.table("user_history").insert(history_entries).execute()
+        return True, None
+    except Exception as e:
+        return None, str(e)
+
+def reset_student_data(username: str):
+    """Zera o histórico, submissões e respostas de avaliações de um aluno."""
+    if not is_db_connected(): return None, "Offline"
+    try:
+        supabase.table("user_history").delete().eq("username", username).execute()
+
+        submissions_res = supabase.table("student_assessments").select("id").eq("user_username", username).execute()
+        if submissions_res.data:
+            submission_ids = [s['id'] for s in submissions_res.data]
+            supabase.table("student_assessment_answers").delete().in_("submission_id", submission_ids).execute()
+            supabase.table("student_assessments").delete().in_("id", submission_ids).execute()
+        
+        return True, None
+    except Exception as e:
+        return None, str(e)
+
+def get_assessment_submissions_with_users(assessment_id: int):
+    """Busca todas as submissões de uma avaliação incluindo dados do usuário."""
+    if not is_db_connected(): return []
+    try:
+        # Supabase permite join na query se as chaves estrangeiras estiverem certas
+        # Sintaxe: tabela!fk(colunas)
+        response = supabase.table("student_assessments")\
+            .select("*, app_users!inner(name, ra)")\
+            .eq("assessment_id", assessment_id)\
+            .execute()
+        return response.data
+    except Exception as e:
+        print(f"Erro ao buscar submissões: {e}")
+        return []
+
+def get_submission_answers(submission_id: int):
+    """Busca as respostas de uma submissão específica."""
+    if not is_db_connected(): return []
+    try:
+        response = supabase.table("student_assessment_answers").select("*").eq("submission_id", submission_id).execute()
+        return response.data
+    except Exception:
+        return []
+
+def update_submission_score(submission_id: int, new_score: float):
+    """Atualiza a nota final de uma submissão."""
+    if not is_db_connected(): return None, "Offline"
+    try:
+        response = supabase.table("student_assessments").update({"score": new_score}).eq("id", submission_id).execute()
+        return response.data, None
+    except Exception as e:
+        return None, str(e)

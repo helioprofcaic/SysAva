@@ -1,24 +1,31 @@
 # 🎓 Plataforma de Ensino - SysAva
 
-Este é um protótipo de uma Plataforma de Ensino (LMS - Learning Management System) desenvolvida com Streamlit e Supabase. O objetivo é criar um sistema modular e escalável para gerenciar aulas, fóruns, avaliações e usuários (alunos e administradores).
+Este é um protótipo de uma Plataforma de Ensino (LMS - Learning Management System) desenvolvida com Streamlit e Supabase. O objetivo é criar um sistema modular e escalável para gerenciar o progresso de alunos através de aulas, quizzes e avaliações.
 
 ## ✨ Funcionalidades
 
--   **Autenticação de Usuários:** Sistema de login e registro com senhas criptografadas.
+-   **Autenticação de Usuários:** Sistema de login e registro com senhas criptografadas e persistência de sessão.
 -   **Perfis de Usuário:** Distinção entre `aluno` e `admin` com permissões diferentes.
--   **Módulos de Ensino:**
-    -   **Aulas:** Exibição de conteúdo em vídeo.
-    -   **Fórum:** Espaço para discussões com moderação por administradores.
-    -   **Quiz:** Testes rápidos de conhecimento.
-    -   **Avaliações:** Painel de notas e desempenho.
--   **Painel Administrativo:** Visualização de todos os usuários cadastrados.
+-   **Estrutura Acadêmica:**
+    -   **Aulas:** Organizadas por turmas e disciplinas, com conteúdo em vídeo e resumos.
+    -   **Fórum:** Espaço para discussões gerais ou por aula específica.
+    -   **Quizzes:** Testes rápidos de conhecimento ao final de cada aula.
+    -   **Avaliações:** Provas formais (MN1, MN2, MN3, RM) com questões objetivas e subjetivas (com envio de links).
+-   **Sistema de Progressão:** Liberação automática de avaliações (MN1, MN2, MN3) baseada no histórico de atividades do aluno (aulas assistidas, quizzes realizados, etc.).
+-   **Painel Administrativo Completo:**
+    -   **Gerenciamento de Usuários:** Cadastro e exclusão de alunos e administradores.
+    -   **Gerenciamento de Aulas:** Criação de aulas vinculadas a turmas e disciplinas.
+    -   **Gerenciamento de Quizzes:** Criação de quizzes e questões para cada aula.
+    -   **Gerenciamento de Avaliações:** Criação de provas (MN1, etc.), com banco de questões e importação de perguntas dos quizzes.
+    -   **Correção de Provas:** Interface para o professor corrigir questões subjetivas, atribuir notas e exportar resultados em CSV.
+    -   **Simulador de Aluno:** Ferramenta para popular o histórico de um aluno para testes e zerar seus dados antes do uso real.
 -   **Banco de Dados Persistente:** Utiliza o Supabase para armazenar todas as informações.
 
 ## 🧅 Arquitetura
 
 O projeto segue uma arquitetura em camadas (inspirada na "Onion Architecture") para separar responsabilidades e facilitar a manutenção.
 
-```
+```text
 SysAva/
 ├── .streamlit/
 │   └── secrets.toml      # Segredos para rodar localmente
@@ -33,6 +40,7 @@ SysAva/
 │   ├── admin.py
 │   ├── aulas.py
 │   ├── avaliacoes.py
+│   ├── home.py
 │   ├── forum.py
 │   ├── login.py
 │   ├── quiz.py
