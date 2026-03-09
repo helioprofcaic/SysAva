@@ -13,8 +13,10 @@ Este é um protótipo de uma Plataforma de Ensino (LMS - Learning Management Sys
     -   **Avaliações:** Provas formais (MN1, MN2, MN3, RM) com questões objetivas e subjetivas (com envio de links).
 -   **Sistema de Progressão:** Liberação automática de avaliações (MN1, MN2, MN3) baseada no histórico de atividades do aluno (aulas assistidas, quizzes realizados, etc.).
 -   **Painel Administrativo Completo:**
+    -   **Setup Guiado:** Interface para configuração inicial do banco de dados, criação de tabelas e importação de estrutura escolar sem necessidade de código.
     -   **Gerenciamento de Usuários:** Cadastro e exclusão de alunos e administradores.
     -   **Gerenciamento de Aulas:** Criação de aulas vinculadas a turmas e disciplinas.
+    -   **Gerador de Aulas com IA:** Integração com Google Gemini para ler cronogramas e gerar conteúdo de aulas, quizzes e planos de ensino automaticamente.
     -   **Gerenciamento de Quizzes:** Criação de quizzes e questões para cada aula.
     -   **Gerenciamento de Avaliações:** Criação de provas (MN1, etc.), com banco de questões e importação de perguntas dos quizzes.
     -   **Correção de Provas:** Interface para o professor corrigir questões subjetivas, atribuir notas e exportar resultados em CSV.
@@ -75,3 +77,14 @@ Para criar uma versão "standalone" do aplicativo (um arquivo `.exe` que pode se
 3.  Navegue até a pasta do projeto e execute: `.\setup.ps1`
 
 O script irá criar uma pasta `dist/SysAva` contendo o executável e todos os arquivos necessários. Siga as instruções no final do processo de build para copiar os arquivos de configuração (`.env` e `.streamlit/`) para a pasta de destino antes de executar.
+
+## ☁️ Deploy e Privacidade
+
+Este projeto foi desenhado para ser "forkado". Se você é um professor e deseja usar o SysAva:
+
+1.  Faça um **Fork** deste repositório no GitHub.
+2.  Crie seu próprio projeto no **Supabase** (para ter seu próprio banco de dados).
+3.  Faça o deploy do seu repositório no **Streamlit Cloud**.
+4.  Ao acessar seu novo link pela primeira vez, vá na aba **Admin > Configuração** e insira suas credenciais do Supabase.
+
+Isso garante que os dados dos seus alunos fiquem isolados e sob seu controle.

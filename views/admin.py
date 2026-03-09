@@ -107,6 +107,18 @@ def show_page():
                 
                 **[https://github.com/helioprofcaic/SysAva](https://github.com/helioprofcaic/SysAva)**
             """)
+            
+            st.warning("""
+            ⚠️ **Importante: Privacidade e Deploy Próprio**
+            
+            Se você está acessando este sistema através de um link compartilhado (ex: Streamlit Cloud de outro professor), saiba que **você está utilizando o banco de dados dele**.
+            
+            Para utilizar o SysAva na **sua escola** com total privacidade e controle sobre os dados dos seus alunos:
+            1. Acesse o GitHub acima e faça um **Fork** (cópia) do projeto.
+            2. Crie sua própria conta no **Streamlit Cloud**.
+            3. Faça o deploy do **seu** repositório.
+            4. Configure suas próprias credenciais do Supabase na aba de Configuração do seu novo link.
+            """)
 
     with tab1:
         with st.expander("➕ Cadastrar Novo Usuário", expanded=False):
