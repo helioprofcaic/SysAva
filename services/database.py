@@ -2,14 +2,19 @@
 from supabase import create_client, Client
 import streamlit as st
 import httpx
+import os
 
 @st.cache_resource
 def init_connection():
     """Inicializa e armazena em cache a conexão com o Supabase."""
     try:
-        supabase_url = st.secrets["SUPABASE_URL"]
-        supabase_key = st.secrets["SUPABASE_KEY"]
-        return create_client(supabase_url, supabase_key)
+        # Tenta pegar de secrets (Streamlit Cloud/Local) ou variáveis de ambiente (Session/Docker)
+        supabase_url = st.secrets.get("SUPABASE_URL") if "SUPABASE_URL" in st.secrets else os.environ.get("SUPABASE_URL")
+        supabase_key = st.secrets.get("SUPABASE_KEY") if "SUPABASE_KEY" in st.secrets else os.environ.get("SUPABASE_KEY")
+        
+        if supabase_url and supabase_key:
+            return create_client(supabase_url, supabase_key)
+        return None
     except Exception as e:
         print(f"Erro na conexão com Supabase: {e}")
         return None
@@ -19,6 +24,17 @@ supabase = init_connection()
 def is_db_connected():
     """Verifica se a conexão com o banco de dados foi estabelecida."""
     return supabase is not None
+
+def check_db_structure():
+    """Verifica se a estrutura básica do banco (tabela app_users) existe."""
+    if not is_db_connected():
+        return False
+    try:
+        # head=True faz uma requisição leve apenas para verificar a existência da tabela
+        supabase.table("app_users").select("username", head=True).execute()
+        return True
+    except Exception:
+        return False
 
 # --- Funções de Usuário ---
 def get_user(username: str):
@@ -124,6 +140,15 @@ def delete_forum_post(post_id: int):
     return response, error
 
 # --- Funções da Estrutura Acadêmica ---
+
+def get_school():
+    """Busca os dados da primeira escola cadastrada (assumindo single-tenant)."""
+    if not is_db_connected(): return None
+    try:
+        response = supabase.table("schools").select("*").limit(1).execute()
+        return response.data[0] if response.data else None
+    except Exception:
+        return None
 
 def upsert_school(name: str, gre: str):
     """Insere ou atualiza uma escola. Retorna o ID da escola."""
@@ -632,3 +657,53 @@ def get_latest_schedule(subject_id: int):
         return response.data[0]['content'] if response.data else None
     except Exception:
         return None
+
+def import_school_structure(text: str):
+    """Processa um texto no formato Escola.txt e popula o banco."""
+    if not is_db_connected(): return False, "Banco de dados não conectado"
+    
+    lines = [line.strip() for line in text.split('\n') if line.strip()]
+    if len(lines) < 2:
+        return False, "Formato inválido. Mínimo necessário: Nome da Escola e GRE."
+
+    logs = []
+    try:
+        # 1. Processar a Escola
+        school_name = lines[0]
+        school_gre = lines[1].split(':')[1].strip() if ':' in lines[1] else lines[1]
+        
+        school_id = upsert_school(name=school_name, gre=school_gre)
+        if not school_id:
+            return False, "Falha ao criar/atualizar escola."
+        logs.append(f"✅ Escola processada: {school_name}")
+
+        # 2. Processar Turmas e Disciplinas
+        i = 2
+        while i < len(lines):
+            if (i + 1 < len(lines)) and lines[i+1].startswith("Código da Turma:"):
+                class_name = lines[i]
+                class_code = lines[i+1].split(":")[1].strip()
+                
+                class_id = upsert_class(name=class_name, code=class_code, school_id=school_id)
+                if class_id:
+                    logs.append(f"  🏫 Turma: {class_name}")
+                    
+                    j = i + 2
+                    while j < len(lines):
+                        if (j + 1 >= len(lines)) or not lines[j+1].startswith("Código da Turma:"):
+                            subject_name = lines[j]
+                            subject_id = upsert_subject(name=subject_name)
+                            if subject_id:
+                                link_subject_to_class(class_id=class_id, subject_id=subject_id)
+                                logs.append(f"    📘 Disciplina: {subject_name}")
+                            j += 1
+                        else:
+                            break
+                    i = j
+                else:
+                    i += 1
+            else:
+                i += 1
+        return True, "\n".join(logs)
+    except Exception as e:
+        return False, str(e)

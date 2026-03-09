@@ -6,15 +6,107 @@ import re
 import json
 import pandas as pd
 import time
+import os
 
 def show_page():
     st.header("🛡️ Painel Administrativo")
 
     if not db.is_db_connected():
         st.warning("Funcionalidade disponível apenas com banco de dados conectado.")
-        return
+        # Não retornamos aqui para permitir que a aba de configuração apareça mesmo offline
 
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Gerenciar Usuários", "Gerenciar Aulas", "Gerenciar Quizzes", "Gerenciar Avaliações", "🤖 Simulador", "📊 Relatórios", "🤖 Gerador de Aulas"])
+    db_structure_exists = db.check_db_structure()
+
+    tab_config, tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["⚙️ Configuração", "Gerenciar Usuários", "Gerenciar Aulas", "Gerenciar Quizzes", "Gerenciar Avaliações", "🤖 Simulador", "📊 Relatórios", "🤖 Gerador de Aulas"])
+
+    with tab_config:
+        st.subheader("🛠️ Setup Inicial do Sistema")
+        
+        with st.expander("1️⃣ Conexão com Banco de Dados (Supabase)", expanded=not db.is_db_connected()):
+            st.markdown("""
+            1. Crie uma conta em [supabase.com](https://supabase.com).
+            2. Crie um novo projeto.
+            3. Vá em **Project Settings > API**.
+            4. Copie a **Project URL** e a **anon public key**.
+            """)
+            
+            c1, c2 = st.columns(2)
+            url_input = c1.text_input("Project URL", value=os.environ.get("SUPABASE_URL", ""))
+            key_input = c2.text_input("Anon Public Key", type="password", value=os.environ.get("SUPABASE_KEY", ""))
+            
+            if st.button("💾 Salvar Credenciais (Sessão Atual)"):
+                if url_input and key_input:
+                    os.environ["SUPABASE_URL"] = url_input
+                    os.environ["SUPABASE_KEY"] = key_input
+                    st.cache_resource.clear() # Limpa o cache para forçar reconexão
+                    st.success("Credenciais salvas na memória! A página será recarregada.")
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.error("Preencha ambos os campos.")
+            
+            if db.is_db_connected():
+                st.success("✅ Conectado ao Supabase com sucesso!")
+            else:
+                st.error("❌ Desconectado.")
+
+        with st.expander("2️⃣ Criar Estrutura do Banco (Primeira Vez)", expanded=db.is_db_connected() and not db_structure_exists):
+            st.warning("Atenção: As tabelas do banco de dados parecem não existir.")
+            st.info("Copie o código abaixo e execute-o no 'SQL Editor' do seu projeto Supabase para criar toda a estrutura necessária.")
+            
+            try:
+                # O caminho deve ser relativo à raiz do projeto, onde o app.py é executado
+                with open("docs/DATABASE_MODEL.md", "r", encoding="utf-8") as f:
+                    content = f.read()
+                
+                # Extrai o bloco de código SQL do arquivo markdown
+                sql_match = re.search(r"```sql\n(.*?)```", content, re.DOTALL)
+                if sql_match:
+                    sql_code = sql_match.group(1).strip()
+                    st.text_area("Código SQL para criar tabelas", sql_code, height=300, key="sql_code_area")
+                    if st.button("Já executei o SQL, verificar novamente"):
+                        st.rerun()
+                else:
+                    st.error("Não foi possível ler o bloco SQL do arquivo 'docs/DATABASE_MODEL.md'.")
+            except FileNotFoundError:
+                st.error("Arquivo 'docs/DATABASE_MODEL.md' não encontrado. Verifique se ele está na pasta 'docs/'.")
+
+        with st.expander("3️⃣ Dados da Escola", expanded=db.is_db_connected() and db_structure_exists):
+            current_school = db.get_school()
+            s_name = st.text_input("Nome da Escola", value=current_school['name'] if current_school else "Escola Modelo", disabled=not db_structure_exists)
+            s_gre = st.text_input("Regional (GRE)", value=current_school['gre'] if current_school else "GRE-01", disabled=not db_structure_exists)
+            
+            if st.button("Salvar Dados da Escola", disabled=not db_structure_exists):
+                if db.upsert_school(s_name, s_gre):
+                    st.success("Dados da escola atualizados!")
+                    st.rerun()
+                else:
+                    st.error("Erro ao salvar.")
+
+        with st.expander("4️⃣ Importar Estrutura (Turmas e Disciplinas)", expanded=db.is_db_connected() and db_structure_exists):
+            st.info("Cole aqui o conteúdo do seu arquivo `Escola.txt` para criar turmas e disciplinas em lote.")
+            import_text = st.text_area("Conteúdo do Arquivo", height=200, placeholder="Nome da Escola\nGRE: 21\nNome da Turma\nCódigo da Turma: 123\nDisciplina 1\nDisciplina 2...", disabled=not db_structure_exists)
+            
+            if st.button("🚀 Processar Importação", disabled=not db_structure_exists):
+                if import_text:
+                    with st.spinner("Processando..."):
+                        success, msg = db.import_school_structure(import_text)
+                        if success:
+                            st.success("Importação concluída!")
+                            st.text_area("Log de Importação", value=msg, height=150)
+                        else:
+                            st.error(f"Erro: {msg}")
+        
+        if db.is_db_connected() and db_structure_exists:
+            st.divider()
+            st.success("🎉 Configuração básica concluída!")
+            st.markdown("""
+                O sistema está pronto para ser utilizado. Você já pode começar a gerenciar usuários, aulas e avaliações nas outras abas.
+
+                Para mais informações, tutoriais e atualizações, visite o repositório oficial do projeto no GitHub:
+                
+                **[https://github.com/helioprofcaic/SysAva](https://github.com/helioprofcaic/SysAva)**
+            """)
 
     with tab1:
         with st.expander("➕ Cadastrar Novo Usuário", expanded=False):
@@ -551,7 +643,12 @@ def show_page():
                                 status_text.text(f"Gerando aula {lesson['lesson_number']}: {lesson['topic']}...")
                                 
                                 # Gera conteúdo
-                                content = ai.generate_lesson_markdown(sel_subject_name, sel_class_name, lesson['topic'], lesson['lesson_number'])
+                                # Busca dados da escola e professor para o template
+                                school_info = db.get_school()
+                                school_name_gen = school_info['name'] if school_info else "Escola Técnica"
+                                prof_name_gen = st.session_state.get('usuario', 'Professor')
+
+                                content = ai.generate_lesson_markdown(sel_subject_name, sel_class_name, lesson['topic'], lesson['lesson_number'], school_name_gen, prof_name_gen)
                                 
                                 if content:
                                     # Popula no banco (Aula + Quiz se houver)

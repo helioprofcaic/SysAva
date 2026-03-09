@@ -67,12 +67,12 @@ def parse_cronograma(cronograma_text):
     except Exception:
         return []
 
-def generate_lesson_markdown(subject, class_name, topic, lesson_num):
+def generate_lesson_markdown(subject, class_name, topic, lesson_num, school_name, professor_name):
     """
     Gera o conteúdo da aula em Markdown usando o Gemini.
     """
     prompt = f"""
-    Atue como o Professor Helio Lima de Desenvolvimento de Sistemas - Curso Técnico.
+    Atue como o Professor {professor_name} de Desenvolvimento de Sistemas - Curso Técnico.
     Crie o conteúdo de uma aula em formato Markdown seguindo ESTRITAMENTE o modelo abaixo.
 
     Variáveis:
@@ -84,8 +84,8 @@ def generate_lesson_markdown(subject, class_name, topic, lesson_num):
     Modelo de Saída (Markdown):
     # 🎨 Aula {lesson_num}: {topic}
 
-    **🏫 Escola:** CETI PROFESSOR RALDIR CAVALCANTE BASTOS  
-    **👨‍🏫 Professor:** Helio Lima  
+    **🏫 Escola:** {school_name}  
+    **👨‍🏫 Professor:** {professor_name}  
     **🎓 Turma:** {class_name}
     **📚 Componente:** {subject}  
 
