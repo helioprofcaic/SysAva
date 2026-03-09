@@ -388,6 +388,15 @@ def create_quiz_question(quiz_id: int, question_text: str, options: list, correc
     except Exception as e:
         return None, str(e)
 
+def delete_quiz_question(question_id: int):
+    """Remove uma questão de quiz do banco de dados."""
+    if not is_db_connected(): return None, "Banco de dados não conectado"
+    try:
+        response = supabase.table("quiz_questions").delete().eq("id", question_id).execute()
+        return response.data, None
+    except Exception as e:
+        return None, str(e)
+
 # --- Funções de Avaliações (MN1, MN2, MN3, RM) ---
 
 def get_assessments_by_subject(subject_id: int):
@@ -431,6 +440,15 @@ def create_assessment_question(assessment_id: int, question_text: str, question_
             "correct_option_index": correct_index
         }
         response = supabase.table("assessment_questions").insert(data).execute()
+        return response.data, None
+    except Exception as e:
+        return None, str(e)
+
+def delete_assessment_question(question_id: int):
+    """Remove uma questão de avaliação do banco de dados."""
+    if not is_db_connected(): return None, "Banco de dados não conectado"
+    try:
+        response = supabase.table("assessment_questions").delete().eq("id", question_id).execute()
         return response.data, None
     except Exception as e:
         return None, str(e)

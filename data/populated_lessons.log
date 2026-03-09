@@ -1,0 +1,160 @@
+2026-03-08 22:58:48.388 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+Iniciando importação de aulas em lote a partir de: B:\Dev\SysAva\data\Turmas
+  ⚠️  Ignorando pasta 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B\MENTORIAS TEC II': Estrutura muito rasa (esperado: Turma/Disciplina/Semana).
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'MENTORIAS TEC II' -> Semana 'S01'
+    ⏭️  Aula 'Aula 01' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 02' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 03' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 04' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 05' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 06' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 07' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 08' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'MENTORIAS TEC II' -> Semana 'S02'
+    ⏭️  Aula 'Aula 09' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 10' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 11' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 12' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 13' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 14' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 15' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 16' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'MENTORIAS TEC II' -> Semana 'S03'
+    ⏭️  Aula 'Aula 17' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 18' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 19' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 20' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 21' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 22' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 23' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 24' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'MENTORIAS TEC II' -> Semana 'S04'
+    ⏭️  Aula 'Aula 25' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 26' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 27' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 28' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 29' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 30' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 31' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 32' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'MENTORIAS TEC II' -> Semana 'S05'
+    ⏭️  Aula 'Aula 33' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 34' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 35' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 36' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 37' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 38' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 39' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 40' já consta no logs.txt. Pulando.
+  ⚠️  Ignorando pasta 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B\PENSAMENTO COMPUTACIONAL II': Estrutura muito rasa (esperado: Turma/Disciplina/Semana).
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S01'
+    ⏭️  Aula 'Aula 01' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 02' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 03' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 04' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 05' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 06' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 07' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 08' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S02'
+    ⏭️  Aula 'Aula 09' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 10' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 11' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 12' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 13' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 14' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 15' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 16' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S03'
+    ⏭️  Aula 'Aula 17' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 18' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 19' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 20' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 21' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 22' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 23' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 24' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S04'
+    ⏭️  Aula 'Aula 25' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 26' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 27' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 28' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 29' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 30' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 31' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 32' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S05'
+    ⏭️  Aula 'Aula 33' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 34' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 35' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 36' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 37' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 38' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 39' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 40' já consta no logs.txt. Pulando.
+  ⚠️  Ignorando pasta 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B\PROGRAMACAO ESTRUTURADA': Estrutura muito rasa (esperado: Turma/Disciplina/Semana).
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S01'
+    ⏭️  Aula 'Aula 01' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 02' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 03' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 04' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 05' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 06' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 07' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 08' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 01' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 02' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S02'
+    ⏭️  Aula 'Aula 09' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 10  operadores lógicos (&&,   , !) e tabelas verdade aplicadas ao código.' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 11  estrutura condicional simples  o comando if.' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 12  revisão (aula 04  tipos primitivos de dados  inteiros e reais. declaração de variáveis e constantes.)' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 13  revisão (aula 03  instalação e configuração do ambiente)' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 14  revisão (lógica de decisão)' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 15  estudo de caso  algoritmo de validação de acesso e cálculo de descontos.' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 15  revisão de conteúdo' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 16  contadores e acumuladores' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S03'
+    ⏭️  Aula 'Aula 17' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 18' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 19' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 20' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 21' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 22' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 23' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 24' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S04'
+    ⏭️  Aula 'Aula 25' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 26' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 27' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 28' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 29' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 30' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 31' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 32' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S05'
+    ⏭️  Aula 'Aula 33' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 34' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 35' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 36' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 37' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 38' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 39' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 40' já consta no logs.txt. Pulando.
+
+Processo concluído. Total de aulas importadas: 0

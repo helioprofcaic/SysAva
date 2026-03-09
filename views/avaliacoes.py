@@ -1,6 +1,184 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 from services import database as db
+from datetime import datetime
+import re
+
+def markdown_to_html(text):
+    if not text: return ""
+    text = str(text)
+    # Bold **text**
+    text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)
+    # Italic *text*
+    text = re.sub(r'\*(.*?)\*', r'<em>\1</em>', text)
+    # Code `text`
+    text = re.sub(r'`(.*?)`', r'<code>\1</code>', text)
+    return text
+
+def generate_printable_view(school_name, subject_name, class_name, student_name, ra, score, questions, answers_map):
+    date_str = datetime.now().strftime("%d/%m/%Y")
+    
+    html = f"""
+    <html>
+    <head>
+        <style>
+            @media print {{
+                @page {{ 
+                    size: A4;
+                    margin: 13mm 20mm 20mm 20mm;
+                }}
+                body {{ margin: 0; }}
+                .no-print {{ display: none; }}
+                .print-container {{ 
+                    border: none !important; 
+                    padding: 0 !important; 
+                    max-width: 100% !important; 
+                    margin: 0 !important;
+                }}
+            }}
+        </style>
+    </head>
+    <body>
+    <div class="no-print" style="text-align: right; margin-bottom: 10px;">
+        <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">🖨️ Imprimir Agora</button>
+    </div>
+    <div class="print-container" style="font-family: Arial, sans-serif; padding: 40px; border: 1px solid #ccc; background-color: white; color: black; max-width: 800px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="margin: 0;">{school_name}</h2>
+            <p style="margin: 5px 0;"><strong>Disciplina:</strong> {subject_name} | <strong>Turma:</strong> {class_name}</p>
+            <p style="margin: 5px 0;"><strong>Data:</strong> {date_str} | <strong>Cidade:</strong> Teresina - PI</p>
+        </div>
+        
+        <div style="border: 1px solid #000; padding: 10px; margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between;">
+                <span><strong>Aluno(a):</strong> {student_name}</span>
+                <span><strong>Nota Final:</strong> {score if score is not None else 'Pendente'}</span>
+            </div>
+            <p style="margin: 5px 0 0 0;"><strong>RA:</strong> {ra}</p>
+        </div>
+        
+        <h3 style="border-bottom: 2px solid #000; padding-bottom: 5px;">Relatório de Avaliação</h3>
+    """
+    
+    for i, q in enumerate(questions):
+        ans = answers_map.get(q['id'])
+        
+        q_text = markdown_to_html(q['question_text'])
+        user_resp = "Não respondeu"
+        correct_resp = ""
+        is_correct = False
+        
+        if q['question_type'] == 'objective':
+            options = q.get('options', [])
+            correct_idx = q.get('correct_option_index', 0)
+            correct_resp = markdown_to_html(options[correct_idx]) if 0 <= correct_idx < len(options) else "?"
+            
+            if ans:
+                user_idx = ans.get('selected_option_index', -1)
+                if 0 <= user_idx < len(options):
+                    user_resp = markdown_to_html(options[user_idx])
+                is_correct = (user_idx == correct_idx)
+        else:
+            user_resp = ans.get('answer_text', '') if ans else ""
+            link = ans.get('answer_link', '') if ans else ""
+            if link:
+                user_resp += f" <br>(Link: {link})"
+            correct_resp = "(Questão Subjetiva)"
+        
+        color = "green" if is_correct else "red" if q['question_type'] == 'objective' else "black"
+        icon = "✅" if is_correct else "❌" if q['question_type'] == 'objective' else "📝"
+        
+        html += f"""
+        <div style="margin-bottom: 10px; border-bottom: 1px dotted #ccc; padding-bottom: 5px;">
+            <p style="margin: 0 0 5px 0;"><strong>{i+1}. {q_text}</strong></p>
+            <p style="margin: 0; color: {color};">Sua Resposta: {icon} {user_resp}</p>
+            {f'<p style="margin: 0; font-size: 0.9em; color: #555;">Gabarito: {correct_resp}</p>' if not is_correct and q['question_type'] == 'objective' else ''}
+        </div>
+        """
+        
+    html += """
+        <br><br><br><br>
+        <div style="display: flex; justify-content: space-between; margin-top: 50px;">
+           
+        </div>
+    </div>
+    </body>
+    </html>
+    """
+    return html
+
+def generate_blank_printable_view(school_name, subject_name, class_name, assessment_title, questions):
+    """Gera uma visualização de impressão para uma prova em branco."""
+    
+    html = f"""
+    <html>
+    <head>
+        <style>
+            @media print {{
+                @page {{ 
+                    size: A4;
+                    margin: 13mm 20mm 20mm 20mm;
+                }}
+                body {{ margin: 0; }}
+                .no-print {{ display: none; }}
+                .print-container {{ 
+                    border: none !important; 
+                    padding: 0 !important; 
+                    max-width: 100% !important; 
+                    margin: 0 !important;
+                }}
+            }}
+        </style>
+    </head>
+    <body>
+    <div class="no-print" style="text-align: right; margin-bottom: 10px;">
+        <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">🖨️ Imprimir Agora</button>
+    </div>
+    <div class="print-container" style="font-family: Arial, sans-serif; padding: 40px; border: 1px solid #ccc; background-color: white; color: black; max-width: 800px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="margin: 0;">{school_name}</h2>
+            <p style="margin: 5px 0;"><strong>Disciplina:</strong> {subject_name} | <strong>Turma:</strong> {class_name}</p>
+            
+            <p style="margin: 5px 0;"><strong>Data:</strong> ___/___/______ | <strong>Cidade:</strong> Teresina - PI</p>
+        </div>
+        
+        <div style="border: 1px solid #000; padding: 10px; margin-bottom: 15px; display: flex; justify-content: space-between;">
+            <span><strong>Aluno(a):</strong> ___________________________________________________</span>
+            <span><strong>Nota Final:</strong> _________</span>
+        </div>
+        
+        <p style="margin: 5px 0;"><strong>Avaliação:</strong> {assessment_title}</p>
+    """
+    
+    for i, q in enumerate(questions):
+        q_text = markdown_to_html(q['question_text'])
+        html += f"""
+        <div style="margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px dotted #ccc;">
+            <p style="margin: 0 0 5px 0;"><strong>{i+1}. {q_text}</strong></p>
+        """
+        if q['question_type'] == 'objective':
+            options = q.get('options', [])
+            for opt in options:
+                opt_html = markdown_to_html(opt)
+                html += f'<p style="margin: 5px 0 5px 20px;">( &nbsp; ) {opt_html}</p>'
+        else: # subjective
+            if q.get('options') and "LINK_REQUIRED" in q['options']:
+                 html += '<p style="margin: 5px 0 5px 20px;">Link para envio: ________________________________________________</p>'
+            html += '<div style="border: 1px solid #ddd; height: 120px; margin-top: 10px; padding: 5px;"></div>'
+            
+        html += "</div>"
+        
+    html += """
+        <br><br>
+        <div style="text-align: center; margin-top: 35px; font-style: italic; font-size: 1.1em;">
+            Boa sorte! 🍀
+        </div>
+    </div>
+    </body>
+    </html>
+    """
+    return html
 
 def show_admin_view():
     st.subheader("👨‍🏫 Área do Professor - Correção e Notas")
@@ -27,6 +205,22 @@ def show_admin_view():
             if selected_assessment_key != "-- Selecione --":
                 assessment = assessment_map[selected_assessment_key]
                 st.divider()
+
+                if st.button("🖨️ Imprimir Prova em Branco"):
+                    school_info = db.get_school()
+                    school_name = school_info['name'] if school_info else "Escola Técnica"
+                    questions = db.get_assessment_questions(assessment['id'])
+                    
+                    blank_html = generate_blank_printable_view(
+                        school_name,
+                        selected_subject,
+                        selected_class,
+                        assessment['title'],
+                        questions
+                    )
+                    components.html(blank_html, height=600, scrolling=True)
+                    # Para a execução para não mostrar o resto da página, focando na impressão
+                    st.stop()
                 
                 # 2. Lista de Submissões
                 submissions = db.get_assessment_submissions_with_users(assessment['id'])
@@ -65,6 +259,26 @@ def show_admin_view():
                     
                     student_sub = student_options[selected_student_key]
                     
+                    if st.button("🖨️ Visualizar Impressão"):
+                        school_info = db.get_school()
+                        school_name = school_info['name'] if school_info else "Escola Técnica"
+                        
+                        questions = db.get_assessment_questions(assessment['id'])
+                        answers = db.get_submission_answers(student_sub['id'])
+                        answers_map = {a['question_id']: a for a in answers}
+                        
+                        html_content = generate_printable_view(
+                            school_name, 
+                            selected_subject, 
+                            selected_class, 
+                            student_sub['app_users']['name'], 
+                            student_sub['app_users']['ra'], 
+                            student_sub['score'], 
+                            questions, 
+                            answers_map
+                        )
+                        components.html(html_content, height=600, scrolling=True)
+
                     with st.form("grading_form"):
                         st.markdown(f"**Aluno:** {student_sub['app_users']['name']}")
                         st.markdown(f"**Nota Atual:** {student_sub['score'] if student_sub['score'] is not None else 'N/A'}")

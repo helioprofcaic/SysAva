@@ -8,6 +8,7 @@ import json
 import pandas as pd
 import time
 import os
+import random
 
 def show_page():
     st.header("🛡️ Painel Administrativo")
@@ -347,8 +348,14 @@ def show_page():
                 if questions:
                     with st.expander(f"Ver {len(questions)} questões cadastradas", expanded=False):
                         for i, q in enumerate(questions):
-                            st.markdown(f"**{i+1}. {q['question_text']}**")
-                            st.caption(f"Opções: {', '.join(q['options'])} | Correta: {q['options'][q['correct_option_index']]}")
+                            col_q, col_del = st.columns([0.9, 0.1])
+                            with col_q:
+                                st.markdown(f"**{i+1}. {q['question_text']}**")
+                                st.caption(f"Opções: {', '.join(q['options'])} | Correta: {q['options'][q['correct_option_index']]}")
+                            with col_del:
+                                if st.button("🗑️", key=f"del_qq_{q['id']}", help="Excluir questão"):
+                                    db.delete_quiz_question(q['id'])
+                                    st.rerun()
                             st.divider()
                 
                 st.markdown("#### Adicionar Nova Questão")
@@ -435,10 +442,16 @@ def show_page():
                         questions = db.get_assessment_questions(assessment['id'])
                         st.write(f"Questões cadastradas: {len(questions)}/10")
                         for i, q in enumerate(questions):
-                            tipo_icon = "📝" if q.get('question_type') == 'subjective' else "🔘"
-                            st.text(f"{i+1}. {tipo_icon} {q['question_text']}")
-                            if q.get('question_type') == 'subjective' and q.get('options') and "LINK_REQUIRED" in q['options']:
-                                st.caption("   ↳ 🔗 Solicita link externo (GitHub/Drive)")
+                            col_q, col_del = st.columns([0.9, 0.1])
+                            with col_q:
+                                tipo_icon = "📝" if q.get('question_type') == 'subjective' else "🔘"
+                                st.text(f"{i+1}. {tipo_icon} {q['question_text']}")
+                                if q.get('question_type') == 'subjective' and q.get('options') and "LINK_REQUIRED" in q['options']:
+                                    st.caption("   ↳ 🔗 Solicita link externo (GitHub/Drive)")
+                            with col_del:
+                                if st.button("🗑️", key=f"del_aq_{q['id']}", help="Excluir questão"):
+                                    db.delete_assessment_question(q['id'])
+                                    st.rerun()
 
                         st.divider()
                         
@@ -455,27 +468,36 @@ def show_page():
                             if not quiz_questions:
                                 st.info(f"Nenhuma questão encontrada nos quizzes correspondentes à {assessment['type']}.")
                             else:
-                                for q in quiz_questions:
-                                    col_q, col_btn = st.columns([0.8, 0.2])
-                                    with col_q:
-                                        st.markdown(f"**{q['question_text']}**")
-                                        # Mostra opções de forma compacta se existirem
-                                        opts = q.get('options', [])
-                                        if isinstance(opts, list):
-                                            st.caption(f"Opções: {', '.join(map(str, opts))}")
-                                    with col_btn:
-                                        if st.button("Importar", key=f"imp_q_{q['id']}"):
-                                            # Importa como questão objetiva
-                                            _, err = db.create_assessment_question(
-                                                assessment['id'],
-                                                q['question_text'],
-                                                'objective',
-                                                q.get('options', []),
-                                                q.get('correct_option_index', 0)
-                                            )
-                                            if err: st.error("Erro ao importar.")
-                                            else: st.rerun()
-                                    st.divider()
+                                # Mapeia questões para seleção
+                                q_options = {f"{q['id']} - {q['question_text']}": q for q in quiz_questions}
+                                
+                                # Sorteio prévio de 10 questões
+                                session_key_rand = f"rand_q_{assessment['id']}_{workload_val}"
+                                if session_key_rand not in st.session_state:
+                                    all_keys = list(q_options.keys())
+                                    st.session_state[session_key_rand] = random.sample(all_keys, min(10, len(all_keys)))
+                                
+                                if st.button("🎲 Sortear Novamente (10 questões)", key=f"reroll_{assessment['id']}"):
+                                    all_keys = list(q_options.keys())
+                                    st.session_state[session_key_rand] = random.sample(all_keys, min(10, len(all_keys)))
+                                    st.rerun()
+
+                                selected_keys = st.multiselect(
+                                    "Selecione as questões para importar:",
+                                    options=list(q_options.keys()),
+                                    default=st.session_state[session_key_rand]
+                                )
+                                
+                                if st.button(f"📥 Importar {len(selected_keys)} Questões Selecionadas", key=f"imp_sel_{assessment['id']}"):
+                                    count = 0
+                                    for key in selected_keys:
+                                        q = q_options[key]
+                                        _, err = db.create_assessment_question(assessment['id'], q['question_text'], 'objective', q.get('options', []), q.get('correct_option_index', 0))
+                                        if not err: count += 1
+                                    
+                                    st.success(f"{count} questões importadas com sucesso!")
+                                    time.sleep(1)
+                                    st.rerun()
 
                         st.markdown("#### Adicionar Questão")
                         with st.form("add_assessment_question"):
