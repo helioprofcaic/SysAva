@@ -2,6 +2,7 @@ import streamlit as st
 from services import database as db
 from services import auth
 from services import ai_generation as ai
+from services import quiz_parser
 import re
 import json
 import pandas as pd
@@ -669,19 +670,16 @@ def show_page():
                                     title_match = re.search(r'^#\s+.*Aula\s*\d+:\s*(.*)', content, re.IGNORECASE)
                                     final_title = f"Aula {lesson['lesson_number']}: {lesson['topic']}"
                                     
-                                    # Insere aula
-                                    lesson_id = db.upsert_lesson(final_title, subject_id, content, "")
+                                    # Separa conteúdo da aula e do quiz
+                                    lesson_content, quiz_content = quiz_parser.split_lesson_and_quiz(content)
                                     
-                                    # Tenta extrair e inserir Quiz (reutilizando lógica simplificada)
-                                    quiz_match = re.search(r'(?:^|\n)(##\s*📝\s*Quiz)', content, re.IGNORECASE)
-                                    if quiz_match and lesson_id:
-                                        split_index = quiz_match.start(1)
-                                        quiz_content = content[split_index:].strip()
-                                        # Para simplificar, criamos o quiz básico. 
-                                        # A lógica completa de parsing de quiz do seed_lessons é complexa para replicar aqui inline,
-                                        # mas podemos criar o quiz vazio ou tentar um parse simples.
-                                        db.create_quiz(lesson_id, f"Quiz: {final_title}")
+                                    # Insere aula (apenas o conteúdo didático)
+                                    lesson_id = db.upsert_lesson(final_title, subject_id, lesson_content, "")
                                 
+                                    # Processa e salva o quiz (se existir)
+                                    if quiz_content and lesson_id:
+                                        quiz_parser.process_quiz_content(lesson_id, quiz_content, final_title)
+
                                 progress_bar.progress((i + 1) / len(lessons_to_generate))
                                 time.sleep(1) # Rate limit preventivo
                             

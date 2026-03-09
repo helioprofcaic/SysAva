@@ -115,11 +115,13 @@ def generate_lesson_markdown(subject, class_name, topic, lesson_num, school_name
 
     ## 🛠️ Atividade Prática
     (Exercícios ou exemplos práticos)
-    
+
+    ---
     ## 📝 Quiz Aula: {lesson_num} - {topic}
 
     (Crie 4 perguntas de múltipla escolha. Para cada pergunta, marque a resposta correta com um [x] e as incorretas com [ ]. Exemplo: - [x] Opção correta)
     
+    ---
     ## Gabarito Comentado
     (Breve explicação da resposta correta)
     """
