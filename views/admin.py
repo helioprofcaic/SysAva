@@ -282,6 +282,32 @@ def show_page():
                 st.write(f"Aulas de **{selected_subject_name}** ({selected_class_name}):")
                 lessons = db.get_lessons_for_subject(subject_id)
                 st.dataframe(lessons, use_container_width=True, column_config={"id": "ID", "title": "Título", "video_url": "Link", "created_at": "Criado em"})
+                
+                if lessons:
+                    with st.expander("🗑️ Excluir Aulas (Individual ou Lote)"):
+                        st.warning("Atenção: A exclusão é permanente e removerá também os quizzes e posts do fórum associados.")
+                        
+                        lesson_options = {f"{l['id']} - {l['title']}": l['id'] for l in lessons}
+                        selected_to_delete = st.multiselect("Selecione as aulas para excluir:", options=list(lesson_options.keys()))
+                        
+                        if selected_to_delete:
+                            if st.button(f"Confirmar Exclusão de {len(selected_to_delete)} aula(s)"):
+                                errors = []
+                                for lesson_key in selected_to_delete:
+                                    lid = lesson_options[lesson_key]
+                                    data, err = db.delete_lesson(lid)
+                                    if err:
+                                        errors.append(f"Erro em {lesson_key}: {err}")
+                                    elif not data:
+                                        errors.append(f"Não excluído (RLS/Permissão): {lesson_key}")
+                                    time.sleep(0.1)
+                                
+                                if errors:
+                                    for e in errors: st.error(e)
+                                else:
+                                    st.success("Aulas excluídas com sucesso!")
+                                    time.sleep(0.5)
+                                    st.rerun()
 
     with tab3:
         st.subheader("Gerenciar Quizzes")
