@@ -26,7 +26,7 @@ scripts/*
 !scripts/seed_students.py
 !scripts/fix_gabaritos.py
 !scripts/fix_quizzes.py
-
+!scripts\quiz_parser.py
 # Arquivos de IDEs e Editores
 .vscode/
 .idea/
