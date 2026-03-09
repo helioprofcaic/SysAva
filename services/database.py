@@ -353,6 +353,16 @@ def delete_lesson(lesson_id: int):
     """Remove uma aula do banco de dados."""
     if not is_db_connected(): return None, "Banco de dados não conectado"
     try:
+        # Remove dependências manualmente para evitar erro de Foreign Key (caso falte CASCADE)
+        supabase.table("forum_posts").delete().eq("lesson_id", lesson_id).execute()
+        
+        quizzes_res = supabase.table("quizzes").select("id").eq("lesson_id", lesson_id).execute()
+        if quizzes_res.data:
+            quiz_ids = [q['id'] for q in quizzes_res.data]
+            if quiz_ids:
+                supabase.table("quiz_questions").delete().in_("quiz_id", quiz_ids).execute()
+                supabase.table("quizzes").delete().in_("id", quiz_ids).execute()
+
         response = supabase.table("lessons").delete().eq("id", lesson_id).execute()
         return response.data, None
     except Exception as e:
