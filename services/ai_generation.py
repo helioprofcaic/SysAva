@@ -162,7 +162,8 @@ def generate_lesson_markdown(subject, class_name, topic, lesson_num, school_name
     3. 💡 Conteúdo
     4. 📖 Glossário
     5. 🛠️ Atividade Prática
-    6. 📝 Quiz
+    6. 🎬 Para Pesquisar (Vídeos)
+    7. 📝 Quiz
 
     ---
 
@@ -181,10 +182,13 @@ def generate_lesson_markdown(subject, class_name, topic, lesson_num, school_name
     ## 🛠️ Atividade Prática
     (Exercícios ou exemplos práticos)
 
+    ## 🎬 Para Pesquisar (Vídeos)
+    (Sugira 3 vídeos do YouTube sobre o tema, com título e link. Ex: - [Título do Vídeo](https://youtube.com/watch?v=...))
+
     ---
     ## 📝 Quiz Aula: {lesson_num} - {topic}
 
-    (Crie 4 perguntas de múltipla escolha. Para cada pergunta, marque a resposta correta com um [x] e as incorretas com [ ]. Exemplo: - [x] Opção correta)
+    (Crie 4 perguntas de múltipla escolha, cada uma com 4 alternativas. Para cada pergunta, marque a resposta correta com um [x] e as incorretas com [ ]. Exemplo: - [x] Opção correta)
     
     ---
     ## Gabarito Comentado
