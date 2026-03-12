@@ -16,8 +16,17 @@ data/Turmas/*.txt
 data/Turmas/*/*.txt
 data/Turmas/*/*.md
 data/Turmas/*/*/*.md
-data/Turmas/*/*/*/*.md
+data/Turmas/*/*/*.txt
+data/Turmas/*/*/*/*.md 
+# Scripts .py
+
+data/Turmas/*/*/*/*.py
+data/Turmas/*/*.py
+data/Turmas/*/*/*.py
+data/Turmas/*/*/*/*/*.py
+data/repo/*
 docs/*.txt
+
 dist/*
 build/*
 scripts/*

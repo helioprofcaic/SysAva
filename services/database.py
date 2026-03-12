@@ -3,6 +3,7 @@ from supabase import create_client, Client
 import streamlit as st
 import httpx
 import os
+import re
 
 @st.cache_resource
 def init_connection():
@@ -106,6 +107,167 @@ def get_all_users():
     if not is_db_connected(): return []
     response = supabase.table("app_users").select("username, name, role").execute()
     return response.data
+
+# --- Funções de Score e Pontuação ---
+def get_user_forum_lessons_by_subject(user_name: str):
+    """
+    Conta a participação do usuário no fórum por disciplina.
+    Retorna um dicionário {subject_id: count_de_aulas_unicas_com_post}.
+    """
+    if not is_db_connected(): return 0
+    try:
+        # 1. Pega todos os posts do usuário que estão em um fórum de aula
+        res = supabase.table("forum_posts").select("lesson_id").eq("user_name", user_name).not_.is_("lesson_id", "null").execute()
+        if not res.data: return {}
+        
+        # 2. Pega os IDs únicos das aulas onde o usuário postou
+        lesson_ids = list({r['lesson_id'] for r in res.data})
+        
+        # 3. Busca a qual disciplina cada uma dessas aulas pertence
+        lessons_res = supabase.table("lessons").select("id, subject_id").in_("id", lesson_ids).execute()
+        if not lessons_res.data: return {}
+        
+        # 4. Conta quantas aulas únicas por disciplina
+        subject_counts = {}
+        for lesson in lessons_res.data:
+            sid = lesson['subject_id']
+            subject_counts[sid] = subject_counts.get(sid, 0) + 1
+        return subject_counts
+    except Exception:
+        return {}
+
+def get_student_score(username: str, filter_subject_id: int = None):
+    """Calcula o score detalhado do aluno, com regras de proporção e fallback para logs antigos."""
+    if not is_db_connected(): return {"quiz": 0, "lesson": 0, "forum": 0, "total": 0}
+
+    # Dicionários para armazenar pontos por disciplina
+    quiz_points_by_subject = {}
+    viewed_lessons_by_subject = {} # {subject_id: set_of_lesson_activities}
+    
+    history = get_user_history(username)
+
+    # --- Mapas auxiliares para fallback em logs antigos ---
+    all_lessons = get_lessons()
+    # 1. Mapa de Aulas: {título_aula: subject_id}
+    lesson_title_map = {l['title']: l['subject_id'] for l in all_lessons}
+
+    # 2. Mapa de Quizzes: {título_quiz: subject_id}
+    try:
+        all_quizzes = supabase.table("quizzes").select("title, lesson_id").execute().data or []
+        lesson_id_map = {l['id']: l['subject_id'] for l in all_lessons}
+        quiz_title_map = {q['title']: lesson_id_map.get(q['lesson_id']) for q in all_quizzes if q.get('lesson_id') in lesson_id_map}
+    except Exception: # Se a tabela quizzes não existir ou der erro, o mapa fica vazio
+        quiz_title_map = {}
+    # --- Fim dos mapas ---
+    
+    # Processa o histórico para pontos de Aulas e Quizzes por disciplina
+    for h in history:
+        act = h.get('activity', '')
+        subject_id = None
+        
+        # 1. Tenta extrair subject_id dos logs novos (que possuem metadados)
+        match = re.search(r'\| subject_id:(\d+)', act)
+        if match:
+            subject_id = int(match.group(1))
+        
+        clean_act = act.split('|')[0].strip()
+
+        # 2. Fallback para logs antigos se o ID não foi encontrado
+        if not subject_id:
+            if clean_act.startswith("Acessou a aula:"):
+                title = clean_act.replace("Acessou a aula:", "").strip()
+                subject_id = lesson_title_map.get(title)
+            elif clean_act.startswith("Concluiu Quiz:"):
+                try:
+                    title_part = clean_act.replace("Concluiu Quiz:", "").strip()
+                    # Extrai o título antes do último '(' que contém o score
+                    title = title_part.rsplit('(', 1)[0].strip()
+                    subject_id = quiz_title_map.get(title)
+                except:
+                    pass # Ignora se o parse do título falhar
+
+        if not subject_id: 
+            continue # Pula se não conseguir identificar a disciplina de nenhuma forma
+
+        # Contabiliza os pontos
+        if clean_act.startswith("Acessou a aula:"):
+            if subject_id not in viewed_lessons_by_subject:
+                viewed_lessons_by_subject[subject_id] = set()
+            viewed_lessons_by_subject[subject_id].add(clean_act)
+            
+        elif clean_act.startswith("Concluiu Quiz:"):
+            try:
+                score_part = act.rsplit('(', 1)[-1].split(')')[0]
+                if '/' in score_part:
+                    points = int(score_part.split('/')[0])
+                    quiz_points_by_subject[subject_id] = quiz_points_by_subject.get(subject_id, 0) + points
+            except:
+                pass
+
+    # 2. Busca pontos do Fórum por disciplina
+    user_data = get_user(username)
+    forum_points_by_subject = {}
+    if user_data and user_data.get('name'):
+        forum_points_by_subject = get_user_forum_lessons_by_subject(user_data['name'])
+
+    # 3. Consolida e calcula o score final
+    enrollment = get_user_enrollment(username)
+    class_name = ""
+    if enrollment:
+        classes = get_classes()
+        class_info = next((c for c in classes if c['id'] == enrollment['class_id']), None)
+        if class_info:
+            class_name = class_info.get('name', '').lower()
+            # Normaliza removendo acentos e caracteres comuns
+            replacements = {'á': 'a', 'à': 'a', 'ã': 'a', 'â': 'a', 'é': 'e', 'ê': 'e', 'í': 'i', 'ó': 'o', 'ô': 'o', 'õ': 'o', 'ú': 'u', 'ç': 'c', 'º': '', 'ª': ''}
+            for k, v in replacements.items():
+                class_name = class_name.replace(k, v)
+            class_name = re.sub(r'[-\s]+', '', class_name)
+
+    all_subjects = {s['id']: s['name'] for s in get_subjects()}
+    workload_3ds = { "ATIVIDADES INTEGRADORAS - INTELIGÊNCIA ARTIFICIAL": 40, "TESTE DE SISTEMAS E SEGURANÇA DE DADOS": 80, "INTELIGÊNCIA ARTIFICIAL APLICADA A AUTOMAÇÃO": 80, "INTERNET DAS COISAS - IOT": 80, "ORIENTAÇÃO PROFISSIONAL E EMPREENDEDORISMO": 40, "PROJETO INTEGRADOR": 120 }
+
+    total_score, total_quiz_points, total_lesson_points, total_forum_points = 0, 0, 0, 0
+    all_subject_ids = set(quiz_points_by_subject.keys()) | set(viewed_lessons_by_subject.keys()) | set(forum_points_by_subject.keys())
+
+    # Se uma disciplina específica for solicitada, filtra a lista de IDs
+    if filter_subject_id:
+        all_subject_ids = {sid for sid in all_subject_ids if sid == filter_subject_id}
+
+    for sid in all_subject_ids:
+        l_points = len(viewed_lessons_by_subject.get(sid, set()))
+        q_points = quiz_points_by_subject.get(sid, 0)
+        f_points = forum_points_by_subject.get(sid, 0)
+        raw_subject_score = l_points + q_points + f_points
+        total_lesson_points += l_points
+        total_quiz_points += q_points
+        total_forum_points += f_points
+
+        final_subject_score = raw_subject_score
+        
+        # Identificação das turmas com base no nome normalizado
+        # Ex: "emtpdessis3serieintegralia" contém "3serie" e "sis"
+        is_3ano_ds = ("3ano" in class_name or "3serie" in class_name) and ("ds" in class_name or "sis" in class_name or "des" in class_name)
+        is_2ano_ds = ("2ano" in class_name or "2serie" in class_name) and ("ds" in class_name or "sis" in class_name)
+        
+        if is_3ano_ds:
+            subject_name = all_subjects.get(sid, "").upper().strip()
+            workload = workload_3ds.get(subject_name, 40)
+            divisor = (workload / 40.0) * 32.0
+            if divisor > 0:
+                final_subject_score = raw_subject_score / divisor
+        else:
+            # Padrão para 9ano, 2ano DS, 3ano Regular e outros (regra de 32 aulas)
+            final_subject_score = raw_subject_score / 32.0
+            
+        total_score += final_subject_score
+
+    return {
+        "quiz": total_quiz_points,
+        "lesson": total_lesson_points,
+        "forum": total_forum_points,
+        "total": round(total_score, 2)
+    }
 
 # --- Funções do Fórum ---
 def get_forum_posts(lesson_id: int = None):

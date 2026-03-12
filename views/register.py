@@ -33,6 +33,8 @@ def show_page():
                     # Verifica se o usuário já existe
                     if db.get_user(username.strip()):
                         st.error("Este nome de usuário já existe.")
+                    elif any(u.get('ra') == ra for u in db.get_all_users()):
+                        st.error("Este RA já está cadastrado no sistema. Não é permitido duplicar registros.")
                     else:
                         hashed = auth.hash_password(password)
                         user_role = 'student'

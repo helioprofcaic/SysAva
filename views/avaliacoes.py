@@ -228,33 +228,46 @@ def show_admin_view():
                 if not submissions:
                     st.info("Nenhum aluno realizou esta prova ainda.")
                 else:
-                    # --- Exportação CSV ---
-                    df_export = []
-                    for sub in submissions:
-                        user_info = sub.get('app_users', {})
-                        df_export.append({
-                            "Nome": user_info.get('name'),
-                            "RA": user_info.get('ra'),
-                            "Data Envio": sub['submitted_at'],
-                            "Nota Atual": sub['score'] if sub['score'] is not None else "Não avaliado"
-                        })
+                    # --- Montagem dos dados para exibição e exportação ---
+                    with st.spinner("Buscando scores dos alunos..."):
+                        table_data = []
+                        for sub in submissions:
+                            user_info = sub.get('app_users', {})
+                            username = sub.get('user_username')
+                            score_geral = db.get_student_score(username).get('total', 0) if username else 0
+                            
+                            table_data.append({
+                                "Nome": user_info.get('name'),
+                                "RA": user_info.get('ra'),
+                                "Score Plataforma": score_geral,
+                                "Data Envio": sub['submitted_at'],
+                                "Nota Prova": sub['score'] if sub['score'] is not None else "Não avaliado",
+                                "_submission": sub # hidden column to retrieve object
+                            })
                     
-                    df = pd.DataFrame(df_export)
-                    csv = df.to_csv(index=False).encode('utf-8')
-                    
+                    df = pd.DataFrame(table_data)
+
+                    # --- Métricas e Exportação ---
+                    df_display = df.drop(columns=['_submission'])
+                    csv = df_display.to_csv(index=False).encode('utf-8')
+
                     col_metrics, col_export = st.columns([0.7, 0.3])
                     col_metrics.metric("Total de Envios", len(submissions))
                     col_export.download_button(
-                        label="📥 Exportar CSV",
+                        label="📥 Exportar Notas (CSV)",
                         data=csv,
                         file_name=f"notas_{assessment['type']}_{selected_class}.csv",
                         mime="text/csv"
                     )
                     
-                    st.markdown("### 📝 Corrigir Provas")
+                    st.markdown("### 📝 Submissões dos Alunos")
+                    st.dataframe(df_display, use_container_width=True, hide_index=True)
+                    
+                    st.divider()
+                    st.markdown("### 🔎 Correção Individual")
                     
                     # Seletor de Aluno para Correção
-                    student_options = {f"{s['app_users']['name']} ({s['app_users']['ra']})": s for s in submissions}
+                    student_options = {f"{s['Nome']} ({s['RA']})": s['_submission'] for s in table_data}
                     selected_student_key = st.selectbox("Selecione o Aluno para corrigir:", list(student_options.keys()))
                     
                     student_sub = student_options[selected_student_key]

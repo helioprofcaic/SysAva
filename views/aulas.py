@@ -22,7 +22,7 @@ def show_lesson_detail():
     if lesson.get('video_url'):
         st.video(lesson['video_url'])
     if lesson.get('description'):
-        st.markdown(f"**Resumo da Aula:**\n{lesson['description']}")
+        st.markdown(lesson['description'], unsafe_allow_html=True)
 
     st.divider()
     col1, col2 = st.columns(2)
@@ -92,7 +92,7 @@ def show_student_view(class_id):
             st.subheader(f"Aulas de {selected_subject_name}")
             for lesson in lessons:
                 if st.button(lesson['title'], key=f"lesson_{lesson['id']}", use_container_width=True):
-                    db.add_user_history(st.session_state.get('username'), f"Acessou a aula: {lesson['title']}")
+                    db.add_user_history(st.session_state.get('username'), f"Acessou a aula: {lesson['title']} | subject_id:{subject_id}")
                     st.session_state.selected_lesson = lesson
                     st.session_state.view_mode = 'detail'
                     st.rerun()

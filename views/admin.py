@@ -488,6 +488,27 @@ def show_page():
                                     default=st.session_state[session_key_rand]
                                 )
                                 
+                                if selected_keys:
+                                    st.markdown("---")
+                                    st.markdown("##### Gabarito das Questões Selecionadas")
+                                    
+                                    gabarito_data = []
+                                    gabarito_text = ""
+                                    for i, key in enumerate(selected_keys):
+                                        q = q_options[key]
+                                        correct_index = q.get('correct_option_index', -1)
+                                        correct_letter = chr(ord('A') + correct_index) if correct_index != -1 else 'N/A'
+                                        
+                                        gabarito_data.append({
+                                            "Nº": i + 1,
+                                            "Questão (início)": q['question_text'][:60] + "...",
+                                            "Gabarito": correct_letter
+                                        })
+                                        gabarito_text += f"{i + 1}-{correct_letter}; "
+                                    
+                                    st.dataframe(gabarito_data, use_container_width=True, hide_index=True)
+                                    st.text_area("Gabarito para copiar:", value=gabarito_text.strip(), height=50)
+
                                 if st.button(f"📥 Importar {len(selected_keys)} Questões Selecionadas", key=f"imp_sel_{assessment['id']}"):
                                     count = 0
                                     for key in selected_keys:

@@ -2,6 +2,7 @@ import google.generativeai as genai
 import json
 import re
 import time
+import os
 
 def configure_api(api_key):
     """Configura a API do Gemini."""
@@ -31,16 +32,61 @@ def generate_content_with_fallback(prompt, model_names=["gemini-3.1-flash-lite-p
             continue
     return None
 
+def _extract_text_from_file(filepath):
+    """Extrai texto de arquivos .txt, .md e tenta extrair de .pdf."""
+    _, ext = os.path.splitext(filepath)
+    ext = ext.lower()
+    
+    try:
+        if ext == '.pdf':
+            try:
+                import pypdf
+                reader = pypdf.PdfReader(filepath)
+                return "\n".join([page.extract_text() for page in reader.pages])
+            except ImportError:
+                return f"[PDF detectado ({os.path.basename(filepath)}), mas a biblioteca 'pypdf' não está instalada.]"
+            except Exception as e:
+                return f"[Erro ao ler PDF: {e}]"
+        else:
+            # Tenta ler como texto (md, txt, etc)
+            with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                return f.read()
+    except Exception as e:
+        return f"[Erro ao ler arquivo {os.path.basename(filepath)}: {e}]"
+
+def get_repo_context(subject_name):
+    """Busca arquivos relevantes na pasta data/repo baseados no nome da disciplina."""
+    repo_path = os.path.join("data", "repo")
+    if not os.path.exists(repo_path):
+        return ""
+
+    context_parts = []
+    # Palavras-chave simples para filtrar arquivos (ignora palavras curtas)
+    keywords = [w.lower() for w in subject_name.split() if len(w) > 3]
+    
+    for root, _, files in os.walk(repo_path):
+        for file in files:
+            if any(k in file.lower() for k in keywords):
+                filepath = os.path.join(root, file)
+                content = _extract_text_from_file(filepath)
+                if content.strip():
+                    context_parts.append(f"--- CONTEXTO DO ARQUIVO: {file} ---\n{content}\n")
+    
+    return "\n".join(context_parts)
+
 def parse_cronograma(cronograma_text):
     """
     Usa o Gemini para ler o texto do cronograma e estruturar os dados.
     """
     prompt = f"""
-    Analise o seguinte texto de um cronograma de aulas.
-    Extraia a estrutura de aulas.
-    Regra de inferência de Semanas: Geralmente as disciplinas possuem blocos de 8 ou 10 aulas por semana.
-    Se as semanas não estiverem explicitamente numeradas no texto, deduza a semana (week) baseando-se nessa contagem sequencial.
-    Retorne APENAS um JSON (sem markdown, sem aspas triplas) com o seguinte formato para cada aula identificada:
+    Analise o seguinte texto de um cronograma de aulas e extraia a estrutura de aulas.
+    - Sua tarefa é identificar cada aula individualmente.
+    - Se encontrar um intervalo de aulas (ex: "Aulas 3-6: Tema X"), você deve expandi-lo para aulas individuais (Aula 3: Tema X, Aula 4: Tema X, etc.).
+    - Ignore completamente linhas que são apenas comentários, anúncios de recesso, feriados, ou títulos de seção que não definem uma aula.
+    - Para cada aula, extraia o NÚMERO da aula e o TEMA.
+    - Identifique a SEMANA (week) de cada aula. Se o texto fornecer datas, use-as para agrupar as aulas por semana. Se não houver datas, infira a semana: considere que disciplinas de 40h tem 8 aulas/semana e as de 80h tem 10 aulas/semana. Use o número da aula para agrupar sequencialmente (ex: Aulas 1-8 são semana 1, 9-16 semana 2, etc., para um ritmo de 8 aulas/semana).
+
+    Retorne APENAS um JSON (sem markdown, sem aspas triplas) com uma lista de objetos. Cada objeto representa UMA aula e deve ter o seguinte formato:
     [
         {{
             "week": int,
@@ -49,7 +95,7 @@ def parse_cronograma(cronograma_text):
         }}
     ]
 
-    Texto do Cronograma:
+    Texto do Cronograma a ser analisado:
     {cronograma_text}
     """
     
@@ -71,8 +117,17 @@ def generate_lesson_markdown(subject, class_name, topic, lesson_num, school_name
     """
     Gera o conteúdo da aula em Markdown usando o Gemini.
     """
+    
+    # Carrega contexto do repositório se disponível
+    repo_context = get_repo_context(subject)
+    context_instruction = ""
+    if repo_context:
+        context_instruction = f"\n\nCONTEXTO ADICIONAL (Ementas/Materiais encontrados no repositório):\n{repo_context}\nUse estas informações para garantir que o conteúdo esteja alinhado com a ementa oficial."
+
     prompt = f"""
     Atue como o Professor {professor_name} de Desenvolvimento de Sistemas - Curso Técnico.
+    Público-Alvo: Estudantes adolescentes de escola pública (Ensino Médio Integrado). Use uma linguagem acessível, motivadora, com analogias do cotidiano e cultura pop, evitando termos excessivamente acadêmicos sem explicação.
+    
     Crie o conteúdo de uma aula em formato Markdown seguindo ESTRITAMENTE o modelo abaixo.
 
     Variáveis:
@@ -80,6 +135,16 @@ def generate_lesson_markdown(subject, class_name, topic, lesson_num, school_name
     - Tema: {topic}
     - Turma: {class_name}
     - Disciplina: {subject}
+    {context_instruction}
+
+    Instruções Visuais (Importante para engajamento):
+    1. Use Emojis (🚀, 💡, 💻, ⚠️) generosamente para estruturar tópicos e quebrar blocos de texto.
+    2. **ILUSTRAÇÕES VETORIAIS (SVG)**: 
+       - Para explicar conceitos visuais (fluxogramas, arquiteturas, esquemas elétricos), **GERE O CÓDIGO SVG** (<svg>...</svg>) diretamente no corpo do texto.
+       - O SVG deve ser responsivo (use `viewBox`), com cores vibrantes e estilo didático/lúdico.
+       - **IMPORTANTE:** O código SVG deve ser inserido como HTML puro, SEM blocos de código markdown (sem ``` ou `).
+       - Certifique-se de que há uma linha em branco ANTES e DEPOIS da tag <svg> para garantir a renderização correta e evitar conflitos de formatação.
+    3. Use formatação Markdown (negrito, listas, code blocks) para tornar a leitura dinâmica.
 
     Modelo de Saída (Markdown):
     # 🎨 Aula {lesson_num}: {topic}
