@@ -411,12 +411,12 @@ def show_page():
                     with col_create:
                         st.markdown("#### Nova Avaliação")
                         with st.form("create_assessment_form"):
-                            av_type = st.selectbox("Tipo", ["MN1", "MN2", "MN3", "RM"])
+                            av_type = st.selectbox("Tipo", ["MN1", "MN2", "MN3", "RM", "Outros"])
                             av_title = st.text_input("Título (ex: Prova de Python Básico)")
                             if st.form_submit_button("Criar Avaliação"):
                                 # Verifica se já existe esse tipo para a disciplina (opcional, mas recomendado)
                                 existing = [a for a in assessments if a['type'] == av_type]
-                                if existing:
+                                if existing and av_type != "Outros":
                                     st.warning(f"Já existe uma avaliação {av_type} para esta disciplina.")
                                 else:
                                     _, err = db.create_assessment(subject_id_av, av_type, av_title)
