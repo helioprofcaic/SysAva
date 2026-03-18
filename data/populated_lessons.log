@@ -1,160 +1,71 @@
-2026-03-13 11:11:11.676 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-03-17 13:26:08.372 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
 Iniciando importação de aulas em lote a partir de: B:\Dev\SysAva\data\Turmas
   ⚠️  Ignorando pasta 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B\MENTORIAS TEC II': Estrutura muito rasa (esperado: Turma/Disciplina/Semana).
 
  Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'MENTORIAS TEC II' -> Semana 'S01'
-    ⏭️  Aula 'Aula 01' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 02' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 03' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 04' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 05' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 06' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 07' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 08' já consta no logs.txt. Pulando.
+Traceback (most recent call last):
+  File "B:\Dev\SysAva\.sysenv\Lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "B:\Dev\SysAva\.sysenv\Lib\site-packages\httpx\_transports\default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "B:\Dev\SysAva\.sysenv\Lib\site-packages\httpcore\_sync\connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "B:\Dev\SysAva\.sysenv\Lib\site-packages\httpcore\_sync\connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "B:\Dev\SysAva\.sysenv\Lib\site-packages\httpcore\_sync\connection.py", line 101, in handle_request
+    raise exc
+  File "B:\Dev\SysAva\.sysenv\Lib\site-packages\httpcore\_sync\connection.py", line 78, in handle_request
+    stream = self._connect(request)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "B:\Dev\SysAva\.sysenv\Lib\site-packages\httpcore\_sync\connection.py", line 124, in _connect
+    stream = self._network_backend.connect_tcp(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "B:\Dev\SysAva\.sysenv\Lib\site-packages\httpcore\_backends\sync.py", line 207, in connect_tcp
+    with map_exceptions(exc_map):
+  File "C:\Local\Apps\Python\Python312\Lib\contextlib.py", line 155, in __exit__
+    self.gen.throw(value)
+  File "B:\Dev\SysAva\.sysenv\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ConnectError: [WinError 10013] Foi feita uma tentativa de acesso a um soquete de uma maneira que é proibida pelas permissões de acesso
 
- Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'MENTORIAS TEC II' -> Semana 'S02'
-    ⏭️  Aula 'Aula 09' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 10' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 11' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 12' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 13' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 14' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 15' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 16' já consta no logs.txt. Pulando.
+The above exception was the direct cause of the following exception:
 
- Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'MENTORIAS TEC II' -> Semana 'S03'
-    ⏭️  Aula 'Aula 17' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 18' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 19' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 20' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 21' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 22' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 23' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 24' já consta no logs.txt. Pulando.
-
- Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'MENTORIAS TEC II' -> Semana 'S04'
-    ⏭️  Aula 'Aula 25' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 26' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 27' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 28' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 29' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 30' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 31' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 32' já consta no logs.txt. Pulando.
-
- Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'MENTORIAS TEC II' -> Semana 'S05'
-    ⏭️  Aula 'Aula 33' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 34' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 35' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 36' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 37' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 38' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 39' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 40' já consta no logs.txt. Pulando.
-  ⚠️  Ignorando pasta 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B\PENSAMENTO COMPUTACIONAL II': Estrutura muito rasa (esperado: Turma/Disciplina/Semana).
-
- Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S01'
-    ⏭️  Aula 'Aula 01' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 02' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 03' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 04' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 05' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 06' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 07' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 08' já consta no logs.txt. Pulando.
-
- Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S02'
-    ⏭️  Aula 'Aula 09' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 10' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 11' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 12' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 13' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 14' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 15' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 16' já consta no logs.txt. Pulando.
-
- Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S03'
-    ⏭️  Aula 'Aula 17' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 18' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 19' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 20' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 21' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 22' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 23' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 24' já consta no logs.txt. Pulando.
-
- Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S04'
-    ⏭️  Aula 'Aula 25' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 26' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 27' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 28' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 29' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 30' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 31' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 32' já consta no logs.txt. Pulando.
-
- Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S05'
-    ⏭️  Aula 'Aula 33' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 34' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 35' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 36' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 37' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 38' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 39' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 40' já consta no logs.txt. Pulando.
-  ⚠️  Ignorando pasta 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B\PROGRAMACAO ESTRUTURADA': Estrutura muito rasa (esperado: Turma/Disciplina/Semana).
-
- Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S01'
-    ⏭️  Aula 'Aula 01' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 02' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 03' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 04' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 05' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 06' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 07' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 08' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 01' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 02' já consta no logs.txt. Pulando.
-
- Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S02'
-    ⏭️  Aula 'Aula 09' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 10  operadores lógicos (&&,   , !) e tabelas verdade aplicadas ao código.' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 11  estrutura condicional simples  o comando if.' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 12  revisão (aula 04  tipos primitivos de dados  inteiros e reais. declaração de variáveis e constantes.)' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 13  revisão (aula 03  instalação e configuração do ambiente)' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 14  revisão (lógica de decisão)' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 15  estudo de caso  algoritmo de validação de acesso e cálculo de descontos.' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 15  revisão de conteúdo' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 16  contadores e acumuladores' já consta no logs.txt. Pulando.
-
- Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S03'
-    ⏭️  Aula 'Aula 17' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 18' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 19' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 20' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 21' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 22' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 23' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 24' já consta no logs.txt. Pulando.
-
- Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S04'
-    ⏭️  Aula 'Aula 25' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 26' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 27' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 28' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 29' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 30' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 31' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 32' já consta no logs.txt. Pulando.
-
- Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S05'
-    ⏭️  Aula 'Aula 33' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 34' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 35' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 36' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 37' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 38' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 39' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 40' já consta no logs.txt. Pulando.
-
-Processo concluído. Total de aulas importadas: 0
+Traceback (most recent call last):
+  File "B:\Dev\SysAva\scripts\seed_lessons.py", line 334, in <module>
+    run_lesson_seeder()
+  File "B:\Dev\SysAva\scripts\seed_lessons.py", line 229, in run_lesson_seeder
+    subject_data = db.get_subject_by_name(subject_name)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "B:\Dev\SysAva\services\database.py", line 394, in get_subject_by_name
+    res = supabase.table("subjects").select("id").eq("name", name).execute()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "B:\Dev\SysAva\.sysenv\Lib\site-packages\postgrest\_sync\request_builder.py", line 47, in execute
+    r = self.request.send()
+        ^^^^^^^^^^^^^^^^^^^
+  File "B:\Dev\SysAva\.sysenv\Lib\site-packages\postgrest\base_request_builder.py", line 82, in send
+    return self.session.request(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "B:\Dev\SysAva\.sysenv\Lib\site-packages\httpx\_client.py", line 825, in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "B:\Dev\SysAva\.sysenv\Lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "B:\Dev\SysAva\.sysenv\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "B:\Dev\SysAva\.sysenv\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "B:\Dev\SysAva\.sysenv\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "B:\Dev\SysAva\.sysenv\Lib\site-packages\httpx\_transports\default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+  File "C:\Local\Apps\Python\Python312\Lib\contextlib.py", line 155, in __exit__
+    self.gen.throw(value)
+  File "B:\Dev\SysAva\.sysenv\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectError: [WinError 10013] Foi feita uma tentativa de acesso a um soquete de uma maneira que é proibida pelas permissões de acesso

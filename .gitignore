@@ -17,7 +17,19 @@ data/Turmas/*/*.txt
 data/Turmas/*/*.md
 data/Turmas/*/*/*.md
 data/Turmas/*/*/*.txt
-data/Turmas/*/*/*/*.md 
+data/Turmas/*/*/*/*.md
+data/Turmas/*/*/*/*/*.md
+data/Turmas/*/*/*/*.sb3
+data/Turmas/*/*/*/*/*.sb3
+data/Turmas/*/*/*/*.png
+data/Turmas/*/*/*/*.svg
+data/Turmas/*/*/*/*.py
+data/Turmas/*/*/*/*.java
+data/Turmas/*/*/*/*/*.java
+data/Turmas/*/*/*/*.feature
+data/Turmas/*/*/*/*.pdf
+data/Turmas/*/*/*/*/*.pdf
+data/Turmas/*/*/*/assets/*
 # Scripts .py
 
 data/Turmas/*/*/*/*.py

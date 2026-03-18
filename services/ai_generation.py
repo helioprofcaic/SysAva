@@ -64,13 +64,24 @@ def get_repo_context(subject_name):
     # Palavras-chave simples para filtrar arquivos (ignora palavras curtas)
     keywords = [w.lower() for w in subject_name.split() if len(w) > 3]
     
-    for root, _, files in os.walk(repo_path):
-        for file in files:
-            if any(k in file.lower() for k in keywords):
-                filepath = os.path.join(root, file)
-                content = _extract_text_from_file(filepath)
-                if content.strip():
-                    context_parts.append(f"--- CONTEXTO DO ARQUIVO: {file} ---\n{content}\n")
+    # Lista de pastas para buscar contexto (Repo oficial e Exemplos práticos)
+    search_paths = [repo_path, os.path.join("data", "examples")]
+    
+    for base_path in search_paths:
+        if not os.path.exists(base_path):
+            continue
+            
+        for root, _, files in os.walk(base_path):
+            for file in files:
+                # Filtra arquivos relevantes: código python, markdown, feature files
+                if any(k in file.lower() for k in keywords) or file.endswith(('.py', '.feature', '.md', '.java')):
+                    # Se a palavra chave estiver no nome ou se for um arquivo de exemplo da semana
+                    # (Refinamento: se for .py/.feature, incluímos para dar contexto prático)
+                    if any(k in file.lower() for k in keywords) or "src_" in file or "test_" in file or "spec_" in file or file.endswith('.java'):
+                        filepath = os.path.join(root, file)
+                        content = _extract_text_from_file(filepath)
+                        if content.strip():
+                            context_parts.append(f"--- CONTEXTO ({os.path.basename(base_path)}): {file} ---\n{content}\n")
     
     return "\n".join(context_parts)
 
