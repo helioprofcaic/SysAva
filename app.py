@@ -1,8 +1,15 @@
 import streamlit as st
 import argparse
+import sys
+import os
+
+# Adiciona o diretório raiz do projeto ao sys.path para garantir que os módulos sejam encontrados.
+project_root = os.path.abspath(os.path.dirname(__file__))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 # Importa as funções que renderizam cada página
-from views import home, aulas, forum, quiz, avaliacoes, admin, login, register
+from views import home, aulas, forum, quiz, avaliacoes, admin, login, register, gerador_aulas
 from services import database, auth
 
 # Configuração da Página (deve ser o primeiro comando Streamlit)
@@ -77,6 +84,7 @@ def main():
             opcoes_menu = ["Home", "Aulas", "Fórum", "Avaliações"]
             if st.session_state.get('role') in ['admin', 'teacher']:
                 opcoes_menu.append("Admin")
+                opcoes_menu.append("Gerador de Aulas")
             
             # Identifica qual opção deve estar marcada no menu
             current_page = st.session_state.get('page', 'Home')
@@ -144,6 +152,8 @@ def main():
             avaliacoes.show_page()
         elif page_to_show == "Admin":
             admin.show_page()
+        elif page_to_show == "Gerador de Aulas":
+            gerador_aulas.show_page()
 
 
 if __name__ == "__main__":

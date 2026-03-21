@@ -3,6 +3,16 @@ import json
 import re
 import time
 import os
+import openai
+
+# NOTA: Para usar o modelo local, a biblioteca 'openai' é necessária.
+# Adicione 'openai' ao seu arquivo requirements.txt.
+# Ex: pip install openai
+
+# Classe mock para compatibilidade de resposta entre diferentes modelos
+class MockResponse:
+    def __init__(self, text):
+        self.text = text
 
 def configure_api(api_key):
     """Configura a API do Gemini."""
@@ -11,6 +21,36 @@ def configure_api(api_key):
         return True
     except Exception as e:
         return False
+
+def generate_content_local_lm_studio(prompt: str):
+    """Gera conteúdo usando um modelo local via LM Studio (OpenAI compatible)."""
+    # LM Studio por padrão usa uma API Key "lm-studio", mas pode ser qualquer coisa.
+    try:
+        client = openai.OpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")
+        
+        completion = client.chat.completions.create(
+            model="local-model", # O nome do modelo não importa para o LM Studio
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+        )
+        
+        return MockResponse(completion.choices[0].message.content)
+
+    except openai.APIConnectionError as e:
+        error_message = (
+            "**ERRO: Não foi possível conectar ao modelo local em http://localhost:1234.**\n\n"
+            "Verifique se o LM Studio está rodando e o servidor está ativo na porta 1234.\n\n"
+            f"*Detalhes técnicos: {e}*"
+        )
+        return MockResponse(error_message)
+    except Exception as e:
+        error_message = (
+            "**ERRO inesperado ao chamar o modelo local.**\n\n"
+            f"*Detalhes técnicos: {e}*"
+        )
+        return MockResponse(error_message)
 
 def generate_content_with_fallback(prompt, model_names=["gemini-3.1-flash-lite-preview",
                                                         "gemini-2.5-flash", 

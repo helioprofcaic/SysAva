@@ -12,6 +12,7 @@ __pycache__/
 # Arquivos de Segredos e Configuração Local
 .env
 .streamlit/secrets.toml
+/*.md
 data/Turmas/*.txt
 data/Turmas/*/*.txt
 data/Turmas/*/*.md
@@ -19,6 +20,7 @@ data/Turmas/*/*/*.md
 data/Turmas/*/*/*.txt
 data/Turmas/*/*/*/*.md
 data/Turmas/*/*/*/*/*.md
+data/Turmas/*/*/*.sb3
 data/Turmas/*/*/*/*.sb3
 data/Turmas/*/*/*/*/*.sb3
 data/Turmas/*/*/*/*.png
@@ -29,6 +31,8 @@ data/Turmas/*/*/*/*/*.java
 data/Turmas/*/*/*/*.feature
 data/Turmas/*/*/*/*.pdf
 data/Turmas/*/*/*/*/*.pdf
+data/Turmas/*/*/*/*.png
+data/Turmas/*/*/*/*/*.png
 data/Turmas/*/*/*/assets/*
 # Scripts .py
 

@@ -6,3 +6,5 @@ pyinstaller
 customtkinter
 google-generativeai
 google-auth-oauthlib
+openai
+pypdf
