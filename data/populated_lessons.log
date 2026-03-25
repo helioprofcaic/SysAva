@@ -1,16 +1,8 @@
-2026-03-20 13:15:49.550 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-03-25 13:11:19.205 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
 Iniciando importação de aulas em lote a partir de: B:\Dev\SysAva\data\Turmas
 
  Encontrado: Turma 'EFR-FUND II ANOS FINAIS INT-9º ANO-I-A' -> Disciplina 'COMPUTAÇAO' -> Semana 'S01'
-    ✅ Aula '🎨 Aula 1: Modelação de Queda Livre com Aceleração Constante 🚀' importada/atualizada.
-      -> 💬 Post de fórum criado.
-      -> 📝 Quiz 'Quiz: 🎨 Aula 1: Modelação de Queda Livre com Aceleração Constante 🚀' criado.
-      -> Processando conteúdo do quiz...
-      -> 🔑 Seção de Gabarito encontrada.
-          ⚠️  Gabarito para questão 1 não encontrado no buffer.
-          ⚠️  Gabarito para questão 2 não encontrado no buffer.
-          ⚠️  Gabarito para questão 3 não encontrado no buffer.
-      -> Salvando 0 questões no banco...
+    ⏭️  Aula '🎨 aula 03 -  modelação de queda livre com aceleração constante 🚀' já consta no logs.txt. Pulando.
   ⚠️  Ignorando pasta 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B\MENTORIAS TEC II': Estrutura muito rasa (esperado: Turma/Disciplina/Semana).
 
  Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'MENTORIAS TEC II' -> Semana 'S01'
@@ -146,27 +138,25 @@ Iniciando importação de aulas em lote a partir de: B:\Dev\SysAva\data\Turmas
     ⏭️  Aula 'Aula 21' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 22' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 23' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 24' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 24 modularização e sub-rotinas construindo programas como legos!' já consta no logs.txt. Pulando.
 
  Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S04'
     ⏭️  Aula 'Aula 25' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 26' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 27' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 28' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 29' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 30' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 31' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 32' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 29 recursão na programação' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 30 o algoritmo quicksort' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 31 pilhas e filas – estruturas de dados para organizar a informação!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 32 ponteiros na programação' já consta no logs.txt. Pulando.
 
  Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S05'
     ⏭️  Aula 'Aula 33' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 34' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 35' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 36' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 37' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 38' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 39' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 40' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 36 árvores binárias - hierarquia e importância' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 37 árvores binárias - tipos e operações' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Guia semana 05' já consta no logs.txt. Pulando.
 
  Encontrado: Turma 'EMTPDES-SIS-3ª SERIE - INTEGRAL-I-A' -> Disciplina 'TESTE DE SISTEMAS E SEGURANÇA DE DADOS' -> Semana 'S01'
     ⏭️  Aula 'Aula 10 prática de avaliação heurística de interfaces' já consta no logs.txt. Pulando.
@@ -208,80 +198,21 @@ Iniciando importação de aulas em lote a partir de: B:\Dev\SysAva\data\Turmas
     ⏭️  Aula 'Aula 30 condução de experimentos em ambiente de teste' já consta no logs.txt. Pulando.
 
  Encontrado: Turma 'EMTPDES-SIS-3ª SERIE - INTEGRAL-I-A' -> Disciplina 'TESTE DE SISTEMAS E SEGURANÇA DE DADOS' -> Semana 'S04'
-    ✅ Aula '🚀 Aula 31: Testando a Nuvem: Segurança e Qualidade na Computação em Nuvem' importada/atualizada.
-      -> 💬 Post de fórum criado.
-      -> 📝 Quiz '📝 Quiz Aula: 31 - Testando a Nuvem: Segurança e Qualidade' criado.
-      -> Processando conteúdo do quiz...
-        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
-        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
-      -> 🔑 Seção de Gabarito encontrada.
-        ✅ Questão 3 identificada (aguardando gabarito/salvamento)...
-      -> Salvando 3 questões no banco...
-        ✅ Questão 1 salva com sucesso.
-        ✅ Questão 2 salva com sucesso.
-        ✅ Questão 3 salva com sucesso.
-    ✅ Aula '🚀 Aula 32: CI/CD e Automação: O Futuro do Desenvolvimento de Software!' importada/atualizada.
-      -> 💬 Post de fórum criado.
-      -> 📝 Quiz '📝 Quiz Aula: 32 - CI/CD e Automação' criado.
-      -> Processando conteúdo do quiz...
-        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
-        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
-      -> 🔑 Seção de Gabarito encontrada.
-        ⏳ Questão 3 identificada (aguardando gabarito/salvamento)...
-          -> Gabarito aplicado: Questão 1 = C (Opção 3)
-          -> Gabarito aplicado: Questão 2 = C (Opção 3)
-          -> Gabarito aplicado: Questão 3 = C (Opção 3)
-      -> Salvando 3 questões no banco...
-        ✅ Questão 1 salva com sucesso.
-        ✅ Questão 2 salva com sucesso.
-        ✅ Questão 3 salva com sucesso.
-    ✅ Aula '🎨 Aula 33: IA e Machine Learning no Teste de Software: O Futuro Chegou!' importada/atualizada.
-      -> 💬 Post de fórum criado.
-      -> 📝 Quiz '📝 Quiz Aula: 33 - IA e Machine Learning no Teste de Software' criado.
-      -> Processando conteúdo do quiz...
-        ⏳ Questão 1 identificada (aguardando gabarito/salvamento)...
-        ⏳ Questão 2 identificada (aguardando gabarito/salvamento)...
-      -> 🔑 Seção de Gabarito encontrada.
-        ⏳ Questão 3 identificada (aguardando gabarito/salvamento)...
-          -> Gabarito aplicado: Questão 1 = B (Opção 2)
-          -> Gabarito aplicado: Questão 2 = C (Opção 3)
-          -> Gabarito aplicado: Questão 3 = C (Opção 3)
-      -> Salvando 3 questões no banco...
-        ✅ Questão 1 salva com sucesso.
-        ✅ Questão 2 salva com sucesso.
-        ✅ Questão 3 salva com sucesso.
-    ✅ Aula '🚀 Aula 34: Desenvolvimento Guiado por Testes (TDD): Construindo Sistemas Robustos!' importada/atualizada.
-      -> 💬 Post de fórum criado.
-      -> 📝 Quiz '📝 Quiz Aula: 34 - Desenvolvimento Guiado por Testes (TDD): Construindo Sistemas Robustos!' criado.
-      -> Processando conteúdo do quiz...
-        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
-        ⏳ Questão 2 identificada (aguardando gabarito/salvamento)...
-      -> 🔑 Seção de Gabarito encontrada.
-        ⏳ Questão 3 identificada (aguardando gabarito/salvamento)...
-          -> Gabarito aplicado: Questão 1 = C (Opção 3)
-          -> Gabarito aplicado: Questão 2 = C (Opção 3)
-          -> Gabarito aplicado: Questão 3 = C (Opção 3)
-      -> Salvando 3 questões no banco...
-        ✅ Questão 1 salva com sucesso.
-        ✅ Questão 2 salva com sucesso.
-        ✅ Questão 3 salva com sucesso.
-    ✅ Aula '🎨 Aula 35: Behavior Driven Development (BDD) e a Colaboração com Stakeholders' importada/atualizada.
-      -> 💬 Post de fórum criado.
-      -> 📝 Quiz '📝 Quiz Aula: 35 - BDD e Stakeholders' criado.
-      -> Processando conteúdo do quiz...
-        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
-        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
-      -> 🔑 Seção de Gabarito encontrada.
-        ✅ Questão 3 identificada (aguardando gabarito/salvamento)...
-          -> Gabarito aplicado: Questão 1 = B (Opção 2)
-          -> Gabarito aplicado: Questão 2 = B (Opção 2)
-          -> Gabarito aplicado: Questão 3 = C (Opção 3)
-      -> Salvando 3 questões no banco...
-        ✅ Questão 1 salva com sucesso.
-        ✅ Questão 2 salva com sucesso.
-        ✅ Questão 3 salva com sucesso.
+    ⏭️  Aula 'Aula 31 testando a nuvem segurança e qualidade na computação em nuvem' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 32 cicd e automação o futuro do desenvolvimento de software!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 33 ia e machine learning no teste de software o futuro chegou!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 34 desenvolvimento guiado por testes (tdd) construindo sistemas robustos!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 35 behavior driven development (bdd) e a colaboração com stakeholders' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 36 cenários de teste preparando o campo de batalha digital!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 37 casos de teste a receita para um sistema impecável!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 38 desvendando o javascript a linguagem que faz a web viver!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 39 introdução à segurança da informação e testes' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 40 introdução à teste de sistemas e a importância da segurança de dados' já consta no logs.txt. Pulando.
 
  Encontrado: Turma 'EMTPDES-SIS-3ª SERIE - INTEGRAL-I-A' -> Disciplina 'TESTE DE SISTEMAS E SEGURANÇA DE DADOS' -> Semana 'S05'
-    ⏭️  Aula 'Linls videos s05' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 42 domando funções em javascript seu guia para código poderoso!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 43 arrays em javascript dominando a coleção de dados!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 44 domando os loops repetição e controle no desenvolvimento de software!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 45 desvendando objetos em javascript a chave para a web moderna!' já consta no logs.txt. Pulando.
 
-Processo concluído. Total de aulas importadas: 6
+Processo concluído. Total de aulas importadas: 0

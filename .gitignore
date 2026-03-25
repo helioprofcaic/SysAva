@@ -18,6 +18,8 @@ data/Turmas/*/*.txt
 data/Turmas/*/*.md
 data/Turmas/*/*/*.md
 data/Turmas/*/*/*.txt
+data/Turmas/*/*/*/*.txt
+data/Turmas/*/*/*/*/*.txt
 data/Turmas/*/*/*/*.md
 data/Turmas/*/*/*/*/*.md
 data/Turmas/*/*/*.sb3
@@ -29,11 +31,17 @@ data/Turmas/*/*/*/*.py
 data/Turmas/*/*/*/*.java
 data/Turmas/*/*/*/*/*.java
 data/Turmas/*/*/*/*.feature
+data/Turmas/*/*/*.pdf
 data/Turmas/*/*/*/*.pdf
 data/Turmas/*/*/*/*/*.pdf
+data/Turmas/*/*/*.png
 data/Turmas/*/*/*/*.png
 data/Turmas/*/*/*/*/*.png
+data/Turmas/*/*/*.jpg
+data/Turmas/*/*/*/*.jpg
+data/Turmas/*/*/*/*/*.jpg
 data/Turmas/*/*/*/assets/*
+data/rascunhos/*
 # Scripts .py
 
 data/Turmas/*/*/*/*.py

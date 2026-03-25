@@ -87,13 +87,17 @@ class GeradorAulaGemini:
             # Tenta inferir o caminho do txt: data/repo/<Disciplina>/lista de aulas.txt
             print(f">>> [DEBUG] Gerando via ROTA 1 (Cronograma) para {disciplina} - Aula {numero_aula}")
             
-            # Ajuste de caminho: Assume que o nome da pasta da disciplina pode ter acentos (ex: Computação)
-            # Se o input for "Computacao", isso pode requerer um mapeamento ou input exato.
-            caminho_lista = os.path.join(REPO_DIR, disciplina, "lista de aulas.txt")
+            # Ajuste de caminho: repo/<Turma>/<Disciplina>/lista de aulas.txt
+            caminho_lista = os.path.join(REPO_DIR, turma, disciplina, "lista de aulas.txt")
             
             if not os.path.exists(caminho_lista):
-                # Tentativa de fallback para nome capitalizado se não achar
-                caminho_lista = os.path.join(REPO_DIR, disciplina.capitalize(), "lista de aulas.txt")
+                # Tenta fallback para estrutura antiga (sem turma)
+                caminho_lista_antigo = os.path.join(REPO_DIR, disciplina, "lista de aulas.txt")
+                if os.path.exists(caminho_lista_antigo):
+                    caminho_lista = caminho_lista_antigo
+                else:
+                    # Tentativa de fallback para nome capitalizado se não achar
+                    caminho_lista = os.path.join(REPO_DIR, disciplina.capitalize(), "lista de aulas.txt")
 
             contexto_str = self.contexto_mgr.obter_contexto_geracao(
                 usar_arquivos=False,
@@ -102,7 +106,7 @@ class GeradorAulaGemini:
             )
         return contexto_str
 
-    def gerar_prompt_aula(self, turma, disciplina, semana, contexto_str: str, school_name: str = "Escola Técnica Estadual", professor_name: str = "Professor(a) Assistente", numero_aula: int = None):
+    def gerar_prompt_aula(self, turma, disciplina, semana, contexto_str: str, school_name: str = "Escola Técnica Estadual", professor_name: str = "Professor(a) Assistente", numero_aula: int = None, titulo_personalizado: str = None):
         """
         Gera o prompt final para o LLM a partir de um contexto já fornecido,
         usando o template estruturado que gera um plano de aula completo com quiz.
@@ -110,8 +114,11 @@ class GeradorAulaGemini:
         if numero_aula is None:
             numero_aula = semana
 
-        # Instrução para a IA inferir o tópico
-        topic_instruction = "Inferir o TEMA principal a partir do CONTEÚDO BASE fornecido."
+        # Instrução para a IA inferir o tópico ou usar o personalizado
+        if titulo_personalizado:
+            topic_instruction = f"TEMA DEFINIDO: {titulo_personalizado}"
+        else:
+            topic_instruction = "Inferir o TEMA principal a partir do CONTEÚDO BASE fornecido."
 
         # 2. Dados do Currículo
         info_curriculo = self._carregar_competencias_curriculo(disciplina)
@@ -151,7 +158,7 @@ Instruções de Formatação:
 2. Use formatação Markdown (negrito, listas, blocos de código) para tornar a leitura dinâmica.
 
 Modelo de Saída (Siga este formato):
-# 🎨 Aula [NÚMERO IDENTIFICADO]: [TEMA INFERIDO AQUI]
+# 🎨 Aula [NÚMERO IDENTIFICADO]: {titulo_personalizado if titulo_personalizado else "[TEMA INFERIDO AQUI]"}
 
 **🏫 Escola:** {school_name}
 **👨‍🏫 Professor:** {professor_name}
@@ -190,7 +197,7 @@ Modelo de Saída (Siga este formato):
 
 ---
 
-## 📝 Quiz Aula: [NÚMERO IDENTIFICADO] - [TEMA INFERIDO AQUI]
+## 📝 Quiz Aula: [NÚMERO IDENTIFICADO] - {titulo_personalizado if titulo_personalizado else "[TEMA INFERIDO AQUI]"}
 
 (Crie 3 perguntas de múltipla escolha com 4 alternativas cada. Marque a resposta correta com um [x] e as incorretas com [ ].)
 
