@@ -157,19 +157,11 @@ def show_page():
                 spinner_text = "Conectando ao modelo local e gerando aula..." if ia_source == "local" else "Analisando contexto e gerando aula com Gemini..."
                 with st.spinner(spinner_text):
                     try:
-                        # Lê o nome da escola do arquivo Escola.txt
-                        path_turmas_ui = os.path.join(DATA_DIR, "Turmas")
-                        school_name_ui = "Escola Técnica Estadual" # Valor Padrão
-                        school_file_path_ui = os.path.join(path_turmas_ui, "Escola.txt")
-                        if os.path.exists(school_file_path_ui):
-                            with open(school_file_path_ui, 'r', encoding='utf-8') as f:
-                                first_line = f.readline().strip()
-                                if first_line: school_name_ui = first_line
+                        gerador = GeradorAulaGemini()
+                        school_name_ui = gerador.obter_nome_escola()
 
                         # Pega o nome do professor logado na sessão (ou usa padrão se offline/não logado)
                         professor_name_ui = st.session_state.get('usuario', "Professor(a) Assistente")
-
-                        gerador = GeradorAulaGemini()
                         
                         contexto_para_ia = st.session_state.gerador_contexto
 

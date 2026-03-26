@@ -50,6 +50,7 @@ data/Turmas/*/*/*.py
 data/Turmas/*/*/*/*/*.py
 data/repo/*
 docs/*.txt
+data/credentials.json
 
 dist/*
 build/*

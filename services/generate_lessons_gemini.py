@@ -29,6 +29,21 @@ class GeradorAulaGemini:
         self.contexto_mgr = GerenciadorContextoAula(DATA_DIR)
         self.api_key = api_key
 
+    def obter_nome_escola(self):
+        """
+        Busca o nome da escola no arquivo Escola.txt dentro da pasta data/Turmas.
+        """
+        path_escola = os.path.join(DATA_DIR, "Turmas", "Escola.txt")
+        if os.path.exists(path_escola):
+            try:
+                with open(path_escola, 'r', encoding='utf-8') as f:
+                    nome = f.readline().strip()
+                    if nome:
+                        return nome
+            except Exception as e:
+                print(f"[Aviso] Erro ao ler Escola.txt: {e}")
+        return "Escola Técnica Estadual"
+
     def _carregar_competencias_curriculo(self, disciplina):
         """
         Tenta carregar as competências e habilidades do arquivo curriculo_db.json.

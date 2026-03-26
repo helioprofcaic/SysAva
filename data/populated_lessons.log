@@ -1,8 +1,71 @@
-2026-03-25 13:11:19.205 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-03-26 07:25:55.681 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
 Iniciando importação de aulas em lote a partir de: B:\Dev\SysAva\data\Turmas
 
  Encontrado: Turma 'EFR-FUND II ANOS FINAIS INT-9º ANO-I-A' -> Disciplina 'COMPUTAÇAO' -> Semana 'S01'
     ⏭️  Aula '🎨 aula 03 -  modelação de queda livre com aceleração constante 🚀' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMRINTEGRAL-3ª SERIE-I-A' -> Disciplina 'INTELIGÊNCIA ARTIFICIAL' -> Semana 'S01'
+    ✅ Aula '🎨 Aula 5: Introdução ao Machine Learning: O Poder dos Robôs que Aprendem!' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '📝 Quiz Aula: 5 - Introdução ao Machine Learning!' criado.
+      -> Processando conteúdo do quiz...
+        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
+        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
+      -> 🔑 Seção de Gabarito encontrada.
+        ⏳ Questão 3 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito aplicado: Questão 1 = B (Opção 2)
+          -> Gabarito aplicado: Questão 2 = A (Opção 1)
+          -> Gabarito aplicado: Questão 3 = C (Opção 3)
+      -> Salvando 3 questões no banco...
+        ✅ Questão 1 salva com sucesso.
+        ✅ Questão 2 salva com sucesso.
+        ✅ Questão 3 salva com sucesso.
+    ✅ Aula '🎨 Aula 6: Entendendo os Dados que Alimentam a IA' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '📝 Quiz Aula: 6 - Entendendo os Dados que Alimentam a IA' criado.
+      -> Processando conteúdo do quiz...
+        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
+        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
+      -> 🔑 Seção de Gabarito encontrada.
+        ✅ Questão 3 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito aplicado: Questão 1 = C (Opção 3)
+          -> Gabarito aplicado: Questão 2 = A (Opção 1)
+          -> Gabarito aplicado: Questão 3 = B (Opção 2)
+      -> Salvando 3 questões no banco...
+        ✅ Questão 1 salva com sucesso.
+        ✅ Questão 2 salva com sucesso.
+        ✅ Questão 3 salva com sucesso.
+    ✅ Aula '🎨 Aula 7: Introdução ao Machine Learning e a Magia dos Dados!' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '📝 Quiz Aula: 7 - Introdução ao Machine Learning!' criado.
+      -> Processando conteúdo do quiz...
+        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
+        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
+      -> 🔑 Seção de Gabarito encontrada.
+        ✅ Questão 3 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito aplicado: Questão 1 = C (Opção 3)
+          -> Gabarito aplicado: Questão 2 = A (Opção 1)
+          -> Gabarito aplicado: Questão 3 = C (Opção 3)
+      -> Salvando 3 questões no banco...
+        ✅ Questão 1 salva com sucesso.
+        ✅ Questão 2 salva com sucesso.
+        ✅ Questão 3 salva com sucesso.
+    ✅ Aula '🎨 Aula 8: Árvores de Decisão e Regressão Linear: Desvendando os Segredos dos Dados!' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '📝 Quiz Aula: 8 - Árvores de Decisão e Regressão Linear' criado.
+      -> Processando conteúdo do quiz...
+        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito identificado na linha: B (Opção 2)
+        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
+      -> 🔑 Seção de Gabarito encontrada.
+        ✅ Questão 3 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito aplicado: Questão 1 = C (Opção 3)
+          -> Gabarito aplicado: Questão 2 = A (Opção 1)
+          -> Gabarito aplicado: Questão 3 = C (Opção 3)
+      -> Salvando 3 questões no banco...
+        ✅ Questão 1 salva com sucesso.
+        ✅ Questão 2 salva com sucesso.
+        ✅ Questão 3 salva com sucesso.
   ⚠️  Ignorando pasta 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B\MENTORIAS TEC II': Estrutura muito rasa (esperado: Turma/Disciplina/Semana).
 
  Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'MENTORIAS TEC II' -> Semana 'S01'
@@ -215,4 +278,4 @@ Iniciando importação de aulas em lote a partir de: B:\Dev\SysAva\data\Turmas
     ⏭️  Aula 'Aula 44 domando os loops repetição e controle no desenvolvimento de software!' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 45 desvendando objetos em javascript a chave para a web moderna!' já consta no logs.txt. Pulando.
 
-Processo concluído. Total de aulas importadas: 0
+Processo concluído. Total de aulas importadas: 4

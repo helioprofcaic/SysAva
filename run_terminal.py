@@ -57,6 +57,7 @@ def select_multiple_from_list(options, prompt_text, suggested_options=[]):
             print("Formato inválido. Use apenas números separados por vírgula.")
 
 def main():
+    gerador = GeradorAulaGemini()
     print_header()
 
     # 1. Configuração do Modelo
@@ -78,13 +79,7 @@ def main():
         print(f"Erro: Pasta {path_turmas} não encontrada.")
         return
 
-    # Lê o nome da escola do arquivo Escola.txt
-    school_name = "Escola Técnica Estadual" # Valor Padrão
-    school_file_path = os.path.join(path_turmas, "Escola.txt")
-    if os.path.exists(school_file_path):
-        with open(school_file_path, 'r', encoding='utf-8') as f:
-            first_line = f.readline().strip()
-            if first_line: school_name = first_line
+    school_name = gerador.obter_nome_escola()
 
     turmas = [d for d in os.listdir(path_turmas) if os.path.isdir(os.path.join(path_turmas, d))]
     if not turmas:
@@ -111,7 +106,6 @@ def main():
     modo = select_from_list(["Ler Arquivos da Pasta (Rota 2)", "Ler Cronograma (Rota 1)"], "Fonte de Contexto:")
     usar_arquivos = "Rota 2" in modo
 
-    gerador = GeradorAulaGemini()
     contexto = ""
 
     print("\n🔄 Buscando contexto...")
