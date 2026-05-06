@@ -7,3 +7,286 @@ Iniciando importação de aulas em lote a partir de: D:\Florestan\Apps\SysAva\da
   ⚠️  Ignorando pasta '2ª SÉRIE - Turma I-B (Técnico DS)\PENSAMENTO COMPUTACIONAL II': Estrutura não corresponde a 'Turma/Disciplina/Semana' ou 'Treinamento/Semana'.
 
 Processo concluído. Total de aulas importadas: 0
+=======
+2026-03-26 07:25:55.681 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+Iniciando importação de aulas em lote a partir de: B:\Dev\SysAva\data\Turmas
+
+ Encontrado: Turma 'EFR-FUND II ANOS FINAIS INT-9º ANO-I-A' -> Disciplina 'COMPUTAÇAO' -> Semana 'S01'
+    ⏭️  Aula '🎨 aula 03 -  modelação de queda livre com aceleração constante 🚀' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMRINTEGRAL-3ª SERIE-I-A' -> Disciplina 'INTELIGÊNCIA ARTIFICIAL' -> Semana 'S01'
+    ✅ Aula '🎨 Aula 5: Introdução ao Machine Learning: O Poder dos Robôs que Aprendem!' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '📝 Quiz Aula: 5 - Introdução ao Machine Learning!' criado.
+      -> Processando conteúdo do quiz...
+        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
+        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
+      -> 🔑 Seção de Gabarito encontrada.
+        ⏳ Questão 3 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito aplicado: Questão 1 = B (Opção 2)
+          -> Gabarito aplicado: Questão 2 = A (Opção 1)
+          -> Gabarito aplicado: Questão 3 = C (Opção 3)
+      -> Salvando 3 questões no banco...
+        ✅ Questão 1 salva com sucesso.
+        ✅ Questão 2 salva com sucesso.
+        ✅ Questão 3 salva com sucesso.
+    ✅ Aula '🎨 Aula 6: Entendendo os Dados que Alimentam a IA' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '📝 Quiz Aula: 6 - Entendendo os Dados que Alimentam a IA' criado.
+      -> Processando conteúdo do quiz...
+        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
+        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
+      -> 🔑 Seção de Gabarito encontrada.
+        ✅ Questão 3 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito aplicado: Questão 1 = C (Opção 3)
+          -> Gabarito aplicado: Questão 2 = A (Opção 1)
+          -> Gabarito aplicado: Questão 3 = B (Opção 2)
+      -> Salvando 3 questões no banco...
+        ✅ Questão 1 salva com sucesso.
+        ✅ Questão 2 salva com sucesso.
+        ✅ Questão 3 salva com sucesso.
+    ✅ Aula '🎨 Aula 7: Introdução ao Machine Learning e a Magia dos Dados!' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '📝 Quiz Aula: 7 - Introdução ao Machine Learning!' criado.
+      -> Processando conteúdo do quiz...
+        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
+        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
+      -> 🔑 Seção de Gabarito encontrada.
+        ✅ Questão 3 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito aplicado: Questão 1 = C (Opção 3)
+          -> Gabarito aplicado: Questão 2 = A (Opção 1)
+          -> Gabarito aplicado: Questão 3 = C (Opção 3)
+      -> Salvando 3 questões no banco...
+        ✅ Questão 1 salva com sucesso.
+        ✅ Questão 2 salva com sucesso.
+        ✅ Questão 3 salva com sucesso.
+    ✅ Aula '🎨 Aula 8: Árvores de Decisão e Regressão Linear: Desvendando os Segredos dos Dados!' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '📝 Quiz Aula: 8 - Árvores de Decisão e Regressão Linear' criado.
+      -> Processando conteúdo do quiz...
+        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito identificado na linha: B (Opção 2)
+        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
+      -> 🔑 Seção de Gabarito encontrada.
+        ✅ Questão 3 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito aplicado: Questão 1 = C (Opção 3)
+          -> Gabarito aplicado: Questão 2 = A (Opção 1)
+          -> Gabarito aplicado: Questão 3 = C (Opção 3)
+      -> Salvando 3 questões no banco...
+        ✅ Questão 1 salva com sucesso.
+        ✅ Questão 2 salva com sucesso.
+        ✅ Questão 3 salva com sucesso.
+  ⚠️  Ignorando pasta 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B\MENTORIAS TEC II': Estrutura muito rasa (esperado: Turma/Disciplina/Semana).
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'MENTORIAS TEC II' -> Semana 'S01'
+    ⏭️  Aula 'Aula 01' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 02' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 03' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 04' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 05' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 06' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 07' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 08' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'MENTORIAS TEC II' -> Semana 'S02'
+    ⏭️  Aula 'Aula 09' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 10' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 11' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 12' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 13' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 14' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 15' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 16' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'MENTORIAS TEC II' -> Semana 'S03'
+    ⏭️  Aula 'Aula 17' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 18' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 19' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 20' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 21' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 22' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 23' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 24' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'MENTORIAS TEC II' -> Semana 'S04'
+    ⏭️  Aula 'Aula 25' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 26' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 27' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 28' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 29' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 30' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 31' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 32' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'MENTORIAS TEC II' -> Semana 'S05'
+    ⏭️  Aula 'Aula 33' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 34' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 35' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 36' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 37' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 38' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 39' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 40' já consta no logs.txt. Pulando.
+  ⚠️  Ignorando pasta 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B\PENSAMENTO COMPUTACIONAL II': Estrutura muito rasa (esperado: Turma/Disciplina/Semana).
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S01'
+    ⏭️  Aula 'Aula 01' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 02' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 03' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 04' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 05' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 06' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 07' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 08' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S02'
+    ⏭️  Aula 'Aula 09' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 10' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 11' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 12' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 13' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 14' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 15' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 16' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S03'
+    ⏭️  Aula 'Aula 17' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 18' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 19' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 20' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 21' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 22' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 23' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 24' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S04'
+    ⏭️  Aula 'Aula 25' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 26' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 27' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 28' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 29' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 30' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 31' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 32' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S05'
+    ⏭️  Aula 'Aula 33' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 34' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 35' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 36' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 37' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 38' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 39' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 40' já consta no logs.txt. Pulando.
+  ⚠️  Ignorando pasta 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B\PROGRAMACAO ESTRUTURADA': Estrutura muito rasa (esperado: Turma/Disciplina/Semana).
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S01'
+    ⏭️  Aula 'Aula 01' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 02' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 03' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 04' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 05' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 06' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 07' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 08' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 01' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 02' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S02'
+    ⏭️  Aula 'Aula 09' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 10  operadores lógicos (&&,   , !) e tabelas verdade aplicadas ao código.' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 11  estrutura condicional simples  o comando if.' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 12  revisão (aula 04  tipos primitivos de dados  inteiros e reais. declaração de variáveis e constantes.)' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 13  revisão (aula 03  instalação e configuração do ambiente)' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 14  revisão (lógica de decisão)' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 15  estudo de caso  algoritmo de validação de acesso e cálculo de descontos.' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 15  revisão de conteúdo' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 16  contadores e acumuladores' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S03'
+    ⏭️  Aula 'Aula 17' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 18' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 19' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 20' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 21' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 22' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 23' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 24 modularização e sub-rotinas construindo programas como legos!' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S04'
+    ⏭️  Aula 'Aula 25' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 26' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 27' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 28' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 29 recursão na programação' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 30 o algoritmo quicksort' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 31 pilhas e filas – estruturas de dados para organizar a informação!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 32 ponteiros na programação' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-2ª SERIE - INTEGRAL-I-B' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S05'
+    ⏭️  Aula 'Aula 33' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 34' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 35' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 36 árvores binárias - hierarquia e importância' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 37 árvores binárias - tipos e operações' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Guia semana 05' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-3ª SERIE - INTEGRAL-I-A' -> Disciplina 'TESTE DE SISTEMAS E SEGURANÇA DE DADOS' -> Semana 'S01'
+    ⏭️  Aula 'Aula 10 prática de avaliação heurística de interfaces' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 1 introdução a testes, avaliação e análise' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 2 fundamentos e objetivos da avaliação de sistemas' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 3 tipos de testes conceituação de caixa branca' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 4 aplicação prática de testes de caixa branca' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 5 tipos de testes conceituação de caixa preta' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 6 aplicação prática de testes de caixa preta' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 7 tipos de testes caixa cinza e suas aplicações' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 8 planejamento de testes integrados' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 9 testes heurísticos princípios e conceitos' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Template bug report' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-3ª SERIE - INTEGRAL-I-A' -> Disciplina 'TESTE DE SISTEMAS E SEGURANÇA DE DADOS' -> Semana 'S02'
+    ⏭️  Aula 'Aula 11 testes de desempenho e performance' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 12 monitoramento de carga e performance de sistemas' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 13 testes de usabilidade conceitos de experiência do usuário' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 14 aplicação de testes de usabilidade' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 15 testes no estágio de software fase de projeto' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 16 verificação e validação na arquitetura do sistema' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 17 testes no estágio de software fase de desenvolvimento' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 18 práticas de testes unitários e de integração' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 19 testes no estágio de software fase de implantação' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 20 homologação e aceitação do usuário final' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Roteiro aula 13 15' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Roteiro aula unitarios' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-3ª SERIE - INTEGRAL-I-A' -> Disciplina 'TESTE DE SISTEMAS E SEGURANÇA DE DADOS' -> Semana 'S03'
+    ⏭️  Aula 'Aula 21 classificação de métodos de avaliação' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 22 critérios para seleção de métodos de teste' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 23 técnicas de coleta de dados para análise de sistemas' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 24 instrumentos de coleta entrevistas e questionários' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 25 tipos de dados coletados dados quantitativos' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 26 análise estatística básica aplicada a testes' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 27 tipos de dados coletados dados qualitativos' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 28 categorização de feedback e observações qualitativas' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 29 tipo de análise introdução à análise experimental' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 30 condução de experimentos em ambiente de teste' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-3ª SERIE - INTEGRAL-I-A' -> Disciplina 'TESTE DE SISTEMAS E SEGURANÇA DE DADOS' -> Semana 'S04'
+    ⏭️  Aula 'Aula 31 testando a nuvem segurança e qualidade na computação em nuvem' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 32 cicd e automação o futuro do desenvolvimento de software!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 33 ia e machine learning no teste de software o futuro chegou!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 34 desenvolvimento guiado por testes (tdd) construindo sistemas robustos!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 35 behavior driven development (bdd) e a colaboração com stakeholders' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 36 cenários de teste preparando o campo de batalha digital!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 37 casos de teste a receita para um sistema impecável!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 38 desvendando o javascript a linguagem que faz a web viver!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 39 introdução à segurança da informação e testes' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 40 introdução à teste de sistemas e a importância da segurança de dados' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma 'EMTPDES-SIS-3ª SERIE - INTEGRAL-I-A' -> Disciplina 'TESTE DE SISTEMAS E SEGURANÇA DE DADOS' -> Semana 'S05'
+    ⏭️  Aula 'Aula 42 domando funções em javascript seu guia para código poderoso!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 43 arrays em javascript dominando a coleção de dados!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 44 domando os loops repetição e controle no desenvolvimento de software!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 45 desvendando objetos em javascript a chave para a web moderna!' já consta no logs.txt. Pulando.
+
+Processo concluído. Total de aulas importadas: 4
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9

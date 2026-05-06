@@ -3,11 +3,14 @@ import os
 import sys
 from dotenv import load_dotenv
 
+<<<<<<< HEAD
 # Garante que a saída do console suporte UTF-8 no Windows
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding='utf-8')
     sys.stderr.reconfigure(encoding='utf-8')
 
+=======
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 # Adiciona o diretório raiz ao path para importar os serviços
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -72,6 +75,7 @@ def run_student_seeder():
                         hashed_pw = auth.hash_password(ra)
                         
                         # Cria o usuário e matricula
+<<<<<<< HEAD
                         user_res, user_err = db.upsert_user(username=ra, hashed_password=hashed_pw, name=name, ra=ra)
                         if user_err:
                             print(f"  ❌ Erro ao criar usuário {name}: {user_err}")
@@ -83,6 +87,12 @@ def run_student_seeder():
                         else:
                             count += 1
                             print(f"  ✅ {name} ({ra})")
+=======
+                        db.upsert_user(username=ra, hashed_password=hashed_pw, name=name, ra=ra)
+                        db.enroll_student(username=ra, class_id=class_id)
+                        count += 1
+                        print(f"  ✅ {name} ({ra})")
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
                 
                 print(f"  -> Total importado na turma: {count}")
 

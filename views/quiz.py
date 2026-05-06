@@ -1,7 +1,11 @@
 import streamlit as st
 from services import database as db
+<<<<<<< HEAD
 import pandas as pd
 import re
+=======
+import json
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 
 def show_page():
     quiz_id = st.session_state.get('context_quiz_id')
@@ -14,7 +18,11 @@ def show_page():
             st.rerun()
         return
 
+<<<<<<< HEAD
     # Busca os dados do quiz e da aula
+=======
+    # Busca os dados do quiz e da aula para dar mais contexto ao aluno
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     quiz_data = db.get_quiz_by_id(quiz_id)
     lesson_data = db.get_lesson_by_id(quiz_data['lesson_id']) if quiz_data else None
 
@@ -30,6 +38,7 @@ def show_page():
     st.subheader(f"Referente à aula: {lesson_data['title']}")
     st.divider()
 
+<<<<<<< HEAD
     # --- LÓGICA DE TENTATIVAS E HISTÓRICO ---
     username = st.session_state.get('username')
     history = db.get_user_history(username)
@@ -60,6 +69,10 @@ def show_page():
         st.info("Você ainda não realizou este quiz.")
 
     questions = db.get_quiz_questions(quiz_id)
+=======
+    questions = db.get_quiz_questions(quiz_id)
+
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     if not questions:
         st.warning("Este quiz ainda não tem perguntas.")
         if st.button("⬅️ Voltar para a Aula"):
@@ -68,6 +81,7 @@ def show_page():
             st.rerun()
         return
 
+<<<<<<< HEAD
     num_attempts = len(quiz_attempts)
     max_attempts = 3
     session_key_submitted = f"quiz_{quiz_id}_submitted"
@@ -125,40 +139,77 @@ def show_page():
     # Se já atingiu o limite de tentativas e não está visualizando um resultado recém-enviado
     if num_attempts >= max_attempts:
         st.error(f"Você já utilizou suas {max_attempts} tentativas permitidas.")
+=======
+    # Verifica se o usuário já respondeu a este quiz nesta sessão
+    session_key_submitted = f"quiz_{quiz_id}_submitted"
+    if session_key_submitted in st.session_state:
+        score = st.session_state.get(f"quiz_{quiz_id}_score", 0)
+        total = st.session_state.get(f"quiz_{quiz_id}_total", len(questions))
+        st.success(f"Você já concluiu este quiz. Sua pontuação foi: {score}/{total}")
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
         if st.button("⬅️ Voltar para a Aula"):
             st.session_state.page = 'Aulas'
             if 'context_quiz_id' in st.session_state: del st.session_state['context_quiz_id']
             st.rerun()
         return
 
+<<<<<<< HEAD
     # --- FORMULÁRIO PARA REALIZAR O QUIZ ---
     st.subheader("📝 Responder Quiz")
     st.info(f"Tentativa {num_attempts + 1} de {max_attempts}")
 
+=======
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     with st.form("quiz_form"):
         responses = {}
         for i, q in enumerate(questions):
             st.write(f"**{i+1}. {q['question_text']}**")
+<<<<<<< HEAD
             options = q['options']
             responses[q['id']] = st.radio(f"Opções para a questão {i+1}:", options, key=f"q_{q['id']}", label_visibility="collapsed")
+=======
+            # O cliente Supabase já converte JSONB para lista/dicionário Python
+            options = q['options']
+            responses[q['id']] = st.radio(f"Resposta {i+1}:", options, key=f"q_{q['id']}", label_visibility="collapsed")
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
         
         submitted = st.form_submit_button("Enviar Respostas")
         
         if submitted:
             score = 0
+<<<<<<< HEAD
             for q in questions:
                 user_answer = responses[q['id']]
                 correct_answer = q['options'][q['correct_option_index']]
+=======
+            total = len(questions)
+            for q in questions:
+                user_answer = responses[q['id']]
+                options = q['options']
+                correct_answer = options[q['correct_option_index']]
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
                 if user_answer == correct_answer:
                     score += 1
             
             subject_id = lesson_data['subject_id'] if lesson_data else 0
+<<<<<<< HEAD
             db.add_user_history(username, f"Concluiu Quiz: {quiz_data['title']} ({score}/{len(questions)}) | subject_id:{subject_id}")
 
             st.session_state[session_key_submitted] = True
             st.session_state[f"quiz_{quiz_id}_score"] = score
             st.session_state[f"quiz_{quiz_id}_total"] = len(questions)
             st.session_state[f"quiz_{quiz_id}_responses"] = responses
+=======
+            # Registra no histórico
+            db.add_user_history(st.session_state.get('username'), f"Concluiu Quiz: {quiz_data['title']} ({score}/{total}) | subject_id:{subject_id}")
+
+            # Salva o resultado na sessão para evitar que o aluno refaça o teste
+            st.session_state[session_key_submitted] = True
+            st.session_state[f"quiz_{quiz_id}_score"] = score
+            st.session_state[f"quiz_{quiz_id}_total"] = total
+            
+            # Reroda a página para mostrar o resultado final de forma limpa
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
             st.rerun()
 
     if st.button("⬅️ Voltar para a Aula"):

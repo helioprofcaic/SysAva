@@ -2,6 +2,7 @@ streamlit
 supabase
 bcrypt
 python-dotenv
+<<<<<<< HEAD
 google-generativeai
 google-auth-oauthlib
 openai
@@ -11,3 +12,11 @@ requests
 pyinstaller
 streamlit-pdf-viewer
 streamlit-javascript
+=======
+pyinstaller
+customtkinter
+google-generativeai
+google-auth-oauthlib
+openai
+pypdf
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9

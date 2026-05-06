@@ -18,20 +18,15 @@ data/Turmas/**
 !data/Turmas/Escola.txt
 
 data/rascunhos/*
-data/datasets/*
-data/datasets/*.png
-# Scripts .py
-
-data/Turmas/*/*/*/*.py
-data/Turmas/*/*.py
-data/Turmas/*/*/*.py
-data/Turmas/*/*/*/*/*.py
 data/repo/*
 docs/*.txt
 data/credentials.json
 
 dist/*
+<<<<<<< HEAD
 img/*
+=======
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 build/*
 scripts/*
 !scripts/seed_data.py

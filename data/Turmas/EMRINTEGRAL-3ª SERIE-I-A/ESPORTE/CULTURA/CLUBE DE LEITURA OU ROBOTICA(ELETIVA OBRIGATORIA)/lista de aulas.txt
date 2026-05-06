@@ -1,0 +1,24 @@
+LISTA DE AULAS - EMRINTEGRAL-3ª SERIE-I-A - ESPORTE/CULTURA/CLUBE DE LEITURA OU ROBOTICA(ELETIVA OBRIGATORIA)
+========================================
+
+- Frequência: 2 aulas por semana (Ex: Terças e Quintas)
+- Distribuição das Aulas
+- Aula 1: Apresentação da disciplina e nivelamento de Lógica.
+- Aula 2: Revisão de Arduino e Sensores básicos.
+- Aulas 3-6: Eletrônica de Potência – Uso de Relés e Transistores para controle de cargas.
+- Aulas 7-10: Sensores Complexos (Ultrassônico, DHT22 e Infravermelho avançado).
+- Aulas 11-14: Introdução ao ESP32 – Pinout, Wi-Fi e Diferenças para o Arduino.
+- Aulas 15-18: Protocolos de Comunicação (Introdução ao HTTP e MQTT).
+- Aulas 19-22: Dashboards IoT – Integração com Blynk ou Adafruit IO.
+- Aulas 23-26: Design de Projetos e Modelagem de Chassis.
+- Aulas 27-30: Atuadores Específicos – Motores de Passo e Servomotores de alto torque.
+- Aulas 31-34: Definição de temas e início do desenvolvimento (Metodologia Ágil).
+- Aulas 35-38: Laboratório de montagem, testes e correção de bugs (Hands-on).
+- Aula 39: Documentação técnica e preparação da apresentação.
+- Aula 40 (Final): Mostra de Robótica e entrega dos projetos.
+- Datas Importantes (Feriados sem aula):
+- Aula 01 (19/02 - Quinta): Introdução e Nivelamento Criativo
+- Aula 02 (24/02 - Terça): Aprofundando na Lógica e Variáveis
+- Aula 03 (26/02 - Quinta): Eletrônica de Potência - O Salto para o Mundo Real
+- Interação: O acionamento do relé deve ser condicionado a uma leitura de sensor da aula anterior (ex: se estiver escuro/LDR, o relé liga a "lâmpada").
+- Check-out (10 min): Organização do laboratório e briefing sobre a próxima aula (Sensores Complexos).

@@ -4,11 +4,14 @@ import sys
 import re
 from dotenv import load_dotenv
 
+<<<<<<< HEAD
 # Garante que a saída do console suporte UTF-8 no Windows
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding='utf-8')
     sys.stderr.reconfigure(encoding='utf-8')
 
+=======
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 # Adiciona o diretório raiz ao path para importar os serviços
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -69,7 +72,11 @@ def process_quiz_content(lesson_id: int, quiz_content: str, lesson_title: str):
             print(f"      -> 🔑 Seção de Gabarito encontrada.")
             flush_current_question() # Salva a última questão pendente
             parsing_gabarito = True
+<<<<<<< HEAD
             # Não faz continue! Permite que a linha do marcador também receba parse se houver as letras.
+=======
+            continue
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 
         if parsing_gabarito:
             # Encontra todas as ocorrências de "1-c", "2.b", "3 c", etc. na linha
@@ -201,10 +208,13 @@ def run_lesson_seeder():
 
     total_lessons = 0
 
+<<<<<<< HEAD
     # Carrega todos os treinamentos existentes para verificação
     all_subjects_db = db.get_subjects()
     training_subjects_map = {s['name']: s['id'] for s in all_subjects_db if s.get('type') == 'training'}
 
+=======
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     # Usa os.walk para percorrer toda a árvore de diretórios
     for root, dirs, files in os.walk(base_path):
         # Só nos interessam as pastas que contêm arquivos .md
@@ -219,6 +229,7 @@ def run_lesson_seeder():
         except ValueError:
             continue
         
+<<<<<<< HEAD
         # --- NOVA LÓGICA PARA TREINAMENTOS ---
         # Estrutura esperada: {nome_do_treinamento}\{semana} (2 partes)
         if len(path_parts) == 2 and path_parts[0] in training_subjects_map:
@@ -281,6 +292,11 @@ def run_lesson_seeder():
             else:
                 # Comportamento padrão para turmas regulares
                 class_name, subject_name, week_folder = path_parts
+=======
+        # A estrutura esperada é: {turma}\{disciplina}\{semana} (3 partes)
+        if len(path_parts) == 3:
+            class_name, subject_name, week_folder = path_parts
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 
             # Define o caminho do log na pasta da turma e carrega aulas já processadas
             class_dir = os.path.join(base_path, class_name)
@@ -293,6 +309,7 @@ def run_lesson_seeder():
             if week_folder.upper().startswith('S'):
                 print(f"\n Encontrado: Turma '{class_name}' -> Disciplina '{subject_name}' -> Semana '{week_folder}'")
 
+<<<<<<< HEAD
                 # Se não for um treinamento, busca a disciplina regular pelo nome
                 if dir1 not in training_subjects_map:
                     subject_data = db.get_subject_by_name(subject_name)
@@ -301,6 +318,15 @@ def run_lesson_seeder():
                         continue
                     
                     subject_id = subject_data['id']
+=======
+                # Busca a disciplina no banco pelo nome da pasta
+                subject_data = db.get_subject_by_name(subject_name)
+                if not subject_data:
+                    print(f"  ⚠️  Disciplina '{subject_name}' não encontrada no banco. Verifique se o nome da pasta corresponde ao nome no Escola.txt.")
+                    continue
+                
+                subject_id = subject_data['id']
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 
                 # Processa os arquivos .md dentro da pasta da semana
                 for lesson_file in sorted(md_files):
@@ -317,8 +343,13 @@ def run_lesson_seeder():
                         full_content = f.read()
                     
                     # Separar conteúdo da aula e do quiz
+<<<<<<< HEAD
                     # 1. Tenta encontrar o início do Quiz por qualquer cabeçalho (#) contendo a palavra "Quiz"
                     quiz_match = re.search(r'(?:^|\n)(#+.*Quiz.*)', full_content, re.IGNORECASE)
+=======
+                    # 1. Tenta encontrar o início do Quiz pelo cabeçalho específico "## 📝 Quiz"
+                    quiz_match = re.search(r'(?:^|\n)(##\s*📝\s*Quiz)', full_content, re.IGNORECASE)
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
                     
                     if quiz_match:
                         split_index = quiz_match.start(1)
@@ -395,7 +426,11 @@ def run_lesson_seeder():
         else:
             # Diagnóstico para pastas ignoradas
             if len(path_parts) < 3:
+<<<<<<< HEAD
                 print(f"  ⚠️  Ignorando pasta '{relative_path}': Estrutura não corresponde a 'Turma/Disciplina/Semana' ou 'Treinamento/Semana'.")
+=======
+                print(f"  ⚠️  Ignorando pasta '{relative_path}': Estrutura muito rasa (esperado: Turma/Disciplina/Semana).")
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 
     print(f"\nProcesso concluído. Total de aulas importadas: {total_lessons}")
 

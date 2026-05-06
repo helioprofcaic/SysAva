@@ -9,6 +9,7 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 # Importa as funções que renderizam cada página
+<<<<<<< HEAD
 from views import home, aulas, forum, quiz, avaliacoes, admin, login, register, gerador_aulas, plugins
 from services import database, auth
 import config
@@ -18,6 +19,13 @@ school_name = config.get_school_name()
 
 # Configuração da Página (deve ser o primeiro comando Streamlit)
 st.set_page_config(page_title=school_name, layout="wide", page_icon="🎓")
+=======
+from views import home, aulas, forum, quiz, avaliacoes, admin, login, register, gerador_aulas
+from services import database, auth
+
+# Configuração da Página (deve ser o primeiro comando Streamlit)
+st.set_page_config(page_title="Plataforma de Ensino", layout="wide", page_icon="🎓")
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 
 # Define o tema da aplicação
 st.markdown(
@@ -33,6 +41,23 @@ st.markdown(
 
 
 # --- Lógica Principal (Roteamento) ---
+<<<<<<< HEAD
+=======
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Streamlit App with Command-Line Arguments")
+    parser.add_argument("--port", type=int, default=8501, help="Port to run the Streamlit app on")
+    parser.add_argument("--theme", type=str, default="default", help="Theme for the Streamlit app")
+    return parser.parse_args()
+
+args = parse_arguments()
+
+# Now you can use args.port, args.theme, etc. in your Streamlit app
+
+# # Mock function to simulate fetching user history
+def get_mock_user_history(username):
+    # Replace this with actual database or data source retrieval
+    return [f"Aula 1 concluída em 2024-01-01", f"Participou do fórum em 2024-01-05"]
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 
 def main():
     # Tenta recuperar a sessão via URL se o usuário não estiver logado
@@ -70,6 +95,7 @@ def main():
             st.image("https://cdn-icons-png.flaticon.com/512/2991/2991148.png", width=100)
             st.title(f"Olá, {st.session_state['usuario']}")
 
+<<<<<<< HEAD
             # Menu base (O Fórum agora é condicional à visualização de uma aula)
             opcoes_menu = ["Home", "Aulas"]
             
@@ -82,6 +108,12 @@ def main():
             if st.session_state.get('role') in ['admin', 'teacher']:
                 opcoes_menu.append("Admin")
                 opcoes_menu.append("Plugins")
+=======
+            # O Quiz agora é acessado via Aulas, então removemos do menu principal
+            opcoes_menu = ["Home", "Aulas", "Fórum", "Avaliações"]
+            if st.session_state.get('role') in ['admin', 'teacher']:
+                opcoes_menu.append("Admin")
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
                 opcoes_menu.append("Gerador de Aulas")
             
             # Identifica qual opção deve estar marcada no menu
@@ -150,8 +182,11 @@ def main():
             avaliacoes.show_page()
         elif page_to_show == "Admin":
             admin.show_page()
+<<<<<<< HEAD
         elif page_to_show == "Plugins":
             plugins.show_page()
+=======
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
         elif page_to_show == "Gerador de Aulas":
             gerador_aulas.show_page()
 

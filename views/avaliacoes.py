@@ -5,12 +5,15 @@ from services import database as db
 from datetime import datetime
 import re
 
+<<<<<<< HEAD
 # Tenta importar o componente de JS, se não existir, a funcionalidade ficará desabilitada.
 try:
     from streamlit_javascript import st_javascript
 except ImportError:
     st_javascript = None
 
+=======
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 def markdown_to_html(text):
     if not text: return ""
     text = str(text)
@@ -230,16 +233,20 @@ def show_admin_view():
                 
                 # 2. Lista de Submissões
                 submissions = db.get_assessment_submissions_with_users(assessment['id'])
+<<<<<<< HEAD
 
                 # Chave para o estado da sessão
                 session_key = f"data_editor_{assessment['id']}"
                 original_data_key = f"original_data_{assessment['id']}"
+=======
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
                 
                 if not submissions:
                     st.info("Nenhum aluno realizou esta prova ainda.")
                 else:
                     # --- Montagem dos dados para exibição e exportação ---
                     with st.spinner("Buscando scores dos alunos..."):
+<<<<<<< HEAD
                         # 1. Pega todas as questões da avaliação para montar as colunas
                         questions = db.get_assessment_questions(assessment['id'])
                         
@@ -299,6 +306,25 @@ def show_admin_view():
                         
                         original_df = pd.DataFrame(st.session_state[original_data_key]).reset_index()
                     
+=======
+                        table_data = []
+                        for sub in submissions:
+                            user_info = sub.get('app_users', {})
+                            username = sub.get('user_username')
+                            score_geral = db.get_student_score(username).get('total', 0) if username else 0
+                            
+                            table_data.append({
+                                "Nome": user_info.get('name'),
+                                "RA": user_info.get('ra'),
+                                "Score Plataforma": score_geral,
+                                "Data Envio": sub['submitted_at'],
+                                "Nota Prova": sub['score'] if sub['score'] is not None else "Não avaliado",
+                                "_submission": sub # hidden column to retrieve object
+                            })
+                    
+                    df = pd.DataFrame(table_data)
+
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
                     # --- Métricas e Exportação ---
                     df_display = df.drop(columns=['_submission'])
                     csv = df_display.to_csv(index=False).encode('utf-8')
@@ -313,6 +339,7 @@ def show_admin_view():
                     )
                     
                     st.markdown("### 📝 Submissões dos Alunos")
+<<<<<<< HEAD
 
                     # --- Configuração dinâmica das colunas do data_editor ---
                     column_config = {
@@ -399,6 +426,86 @@ def show_admin_view():
                                 questions, answers_map
                             )
                             components.html(html_content, height=600, scrolling=True)
+=======
+                    st.dataframe(df_display, use_container_width=True, hide_index=True)
+                    
+                    st.divider()
+                    st.markdown("### 🔎 Correção Individual")
+                    
+                    # Seletor de Aluno para Correção
+                    student_options = {f"{s['Nome']} ({s['RA']})": s['_submission'] for s in table_data}
+                    selected_student_key = st.selectbox("Selecione o Aluno para corrigir:", list(student_options.keys()))
+                    
+                    student_sub = student_options[selected_student_key]
+                    
+                    if st.button("🖨️ Visualizar Impressão"):
+                        school_info = db.get_school()
+                        school_name = school_info['name'] if school_info else "Escola Técnica"
+                        
+                        questions = db.get_assessment_questions(assessment['id'])
+                        answers = db.get_submission_answers(student_sub['id'])
+                        answers_map = {a['question_id']: a for a in answers}
+                        
+                        html_content = generate_printable_view(
+                            school_name, 
+                            selected_subject, 
+                            selected_class, 
+                            student_sub['app_users']['name'], 
+                            student_sub['app_users']['ra'], 
+                            student_sub['score'], 
+                            questions, 
+                            answers_map
+                        )
+                        components.html(html_content, height=600, scrolling=True)
+
+                    with st.form("grading_form"):
+                        st.markdown(f"**Aluno:** {student_sub['app_users']['name']}")
+                        st.markdown(f"**Nota Atual:** {student_sub['score'] if student_sub['score'] is not None else 'N/A'}")
+                        st.divider()
+                        
+                        # Busca perguntas e respostas
+                        questions = db.get_assessment_questions(assessment['id'])
+                        answers = db.get_submission_answers(student_sub['id'])
+                        answers_map = {a['question_id']: a for a in answers}
+                        
+                        # Exibe a prova respondida
+                        for i, q in enumerate(questions):
+                            ans = answers_map.get(q['id'])
+                            st.markdown(f"**Questão {i+1}:** {q['question_text']}")
+                            
+                            if q['question_type'] == 'objective':
+                                user_idx = ans['selected_option_index'] if ans else -1
+                                correct_idx = q['correct_option_index']
+                                options = q.get('options', [])
+                                
+                                user_text = options[user_idx] if 0 <= user_idx < len(options) else "Não respondeu"
+                                correct_text = options[correct_idx] if 0 <= correct_idx < len(options) else "Erro"
+                                
+                                if user_idx == correct_idx:
+                                    st.success(f"Resposta do Aluno: {user_text} (Correta)")
+                                else:
+                                    st.error(f"Resposta do Aluno: {user_text}")
+                                    st.caption(f"Resposta Correta: {correct_text}")
+                                    
+                            elif q['question_type'] == 'subjective':
+                                st.info(f"✍️ Resposta Subjetiva:")
+                                st.text_area("Texto:", value=ans['answer_text'] if ans else "", disabled=True)
+                                if ans and ans.get('answer_link'):
+                                    st.markdown(f"🔗 **Link enviado:** [{ans['answer_link']}]({ans['answer_link']})")
+                                else:
+                                    st.caption("Nenhum link enviado.")
+                            
+                            st.divider()
+                        
+                        new_grade = st.number_input("Nota Final", min_value=0.0, max_value=10.0, value=float(student_sub['score'] or 0.0), step=0.5)
+                        
+                        if st.form_submit_button("💾 Salvar Nota"):
+                            _, err = db.update_submission_score(student_sub['id'], new_grade)
+                            if err: st.error(f"Erro: {err}")
+                            else: 
+                                st.success("Nota atualizada com sucesso!")
+                                st.rerun()
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 
 def show_student_view():
     username = st.session_state.get('username')
@@ -445,6 +552,7 @@ def show_student_view():
                     st.subheader(f"{assessment['type']} - {assessment['title']}")
                 
                 # Verifica se já foi feita
+<<<<<<< HEAD
                 submissions = db.get_student_submissions(username, assessment['id'])
                 attempts = len(submissions)
 
@@ -466,6 +574,19 @@ def show_student_view():
                         st.caption(f"Você já realizou esta avaliação {attempts} vez(es). Aguarde a correção.")
 
                 if attempts < 2:
+=======
+                submission = db.get_student_submission(username, assessment['id'])
+                
+                if submission:
+                    score = submission.get('score')
+                    with col2:
+                        if score is not None:
+                            st.success(f"Nota: {score}")
+                        else:
+                            st.success("✅ Concluída")
+                    st.caption("Avaliação corrigida." if score is not None else "Você já realizou esta avaliação. Aguarde a correção.")
+                else:
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
                     # Lógica de Bloqueio MN1
                     is_locked = False
                     lock_reason = []
@@ -511,6 +632,7 @@ def show_student_view():
                         st.progress(min(stats['lessons']/15, 1.0), text="Progresso de Aulas")
                     else:
                         with col2:
+<<<<<<< HEAD
                             label = f"Iniciar {'Nova ' if attempts > 0 else ''}Tentativa ({attempts + 1}/2)"
                             if st.button(label, key=f"start_{assessment['id']}_{attempts}"):
                                 st.session_state.active_assessment = assessment
@@ -521,6 +643,13 @@ def show_student_view():
                     st.caption("Você já utilizou todas as suas tentativas para esta avaliação.")
                 st.divider()
     
+=======
+                            if st.button("Iniciar Prova", key=f"start_{assessment['id']}"):
+                                st.session_state.active_assessment = assessment
+                                st.rerun()
+                st.divider()
+
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     # --- ÁREA DE REALIZAÇÃO DA PROVA ---
     else:
         assessment = st.session_state.active_assessment
@@ -528,6 +657,7 @@ def show_student_view():
         if st.button("Cancelar / Voltar"):
             del st.session_state.active_assessment
             st.rerun()
+<<<<<<< HEAD
 
         # --- NOVO: Detector de Perda de Foco ---
         if st_javascript is None:
@@ -549,6 +679,8 @@ def show_student_view():
                 st.error("⚠️ **Atenção:** Detectamos que você saiu da tela da prova. Esta ação foi registrada.")
                 db.add_user_history(username, f"Perdeu o foco durante a avaliação: {assessment['title']}")
             st.rerun()
+=======
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
         
         questions = db.get_assessment_questions(assessment['id'])
         
@@ -576,6 +708,7 @@ def show_student_view():
                 if any((a['type'] == 'objective' and a['value'] == -1) for a in answers):
                     st.error("Responda todas as questões objetivas.")
                 else:
+<<<<<<< HEAD
                     with st.spinner("Corrigindo e enviando sua avaliação..."):
                         # --- LÓGICA DE AUTOCORREÇÃO ---
                         objective_score = 0
@@ -603,6 +736,15 @@ def show_student_view():
                             st.rerun()
                         else:
                             st.error(f"Erro ao enviar: {err}")
+=======
+                    success, err = db.submit_assessment(username, assessment['id'], answers)
+                    if success:
+                        st.success("Avaliação enviada com sucesso!")
+                        del st.session_state.active_assessment
+                        st.rerun()
+                    else:
+                        st.error(f"Erro ao enviar: {err}")
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 
 def show_page():
     st.header("📊 Avaliações e Provas")

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Documentação de Funcionalidades Avançadas
 
 Este documento detalha o funcionamento de recursos avançados do SysAva, como a página de Plugins e a gestão de Treinamentos (disciplinas flutuantes).
@@ -70,3 +71,28 @@ O recurso de "Treinamentos" permite criar disciplinas especiais que não pertenc
 
       **Por que a pasta é repetida?**
       Essa estrutura `Treinamento/Treinamento/Semana` foi projetada para ser compatível com a ferramenta **"🤖 Gerador de Aulas"**, que espera o formato `Turma/Disciplina/Semana`. Dessa forma, você pode usar o gerador de aulas com IA para criar o conteúdo do seu treinamento de forma automatizada. O script `seed_lessons.py` foi ajustado para entender essa estrutura e importar as aulas para a disciplina flutuante correta.
+=======
+# ✨ Funcionalidades da Plataforma de Ensino
+
+Este documento descreve as principais funcionalidades do sistema.
+
+## Módulos Principais (Para Alunos)
+
+-   **Login & Registro:** Sistema de autenticação seguro com senhas criptografadas. Novos alunos podem se cadastrar sozinhos.
+-   **Aulas:** Área para visualização de conteúdo em vídeo, com um menu para navegar entre as aulas.
+-   **Fórum:** Um espaço de discussão onde os alunos podem postar dúvidas e interagir. As mensagens são salvas permanentemente.
+-   **Quiz:** Um questionário interativo para testar o conhecimento adquirido nas aulas.
+-   **Avaliações:** Uma página para visualizar o desempenho, como notas e média geral.
+
+## 🛡️ Funcionalidades Administrativas
+
+O sistema possui um papel especial de **"Admin"** com privilégios elevados.
+
+### Como se Tornar um Admin?
+1.  Cadastre uma conta normalmente pelo aplicativo na página "Registre-se".
+2.  Peça para alguém com acesso ao banco de dados (Supabase) para "promover" sua conta para o papel de `admin`. O comando SQL para isso está no arquivo `DATABASE_SETUP.md`.
+
+### O que um Admin Pode Fazer?
+-   **Painel Administrativo:** Acessar um menu exclusivo "Admin" na barra lateral para visualizar todos os usuários cadastrados no sistema.
+-   **Moderar o Fórum:** Excluir qualquer mensagem postada no fórum clicando no ícone de lixeira (🗑️) que aparece ao lado do post.
+>>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
