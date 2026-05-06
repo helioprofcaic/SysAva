@@ -5,15 +5,11 @@ from services import database as db
 from datetime import datetime
 import re
 
-<<<<<<< HEAD
 # Tenta importar o componente de JS, se não existir, a funcionalidade ficará desabilitada.
 try:
     from streamlit_javascript import st_javascript
 except ImportError:
     st_javascript = None
-
-=======
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 def markdown_to_html(text):
     if not text: return ""
     text = str(text)

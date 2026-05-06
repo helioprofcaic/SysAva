@@ -1,16 +1,10 @@
 @echo off
 chcp 65001 > nul
 setlocal
-<<<<<<< HEAD
 set PYTHONUTF8=1
 
 REM Converte para caminho absoluto do Windows
 set "PYTHON_EXECUTABLE=C:\Local\apps\miniconda3\python.exe"
-=======
-
-REM Converte para caminho absoluto do Windows
-set "PYTHON_EXECUTABLE=C:\Local\Apps\Python\Python312\python.exe"
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 set "VENV_DIR=.sysenv"
 
 

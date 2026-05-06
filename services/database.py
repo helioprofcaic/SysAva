@@ -238,7 +238,6 @@ def get_student_score(username: str, filter_subject_id: int = None):
 
     for sid in all_subject_ids:
         l_points = len(viewed_lessons_by_subject.get(sid, set()))
-<<<<<<< HEAD
         
         # Soma as melhores notas de cada quiz desta disciplina
         q_points = sum(best_quiz_scores_by_subject.get(sid, {}).values())
@@ -305,10 +304,6 @@ def delete_forum_post(post_id: int):
 # --- Funções da Estrutura Acadêmica ---
 
 def get_school():
-<<<<<<< HEAD
-=======
-    """Busca os dados da primeira escola cadastrada (assumindo single-tenant)."""
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     if not is_db_connected(): return None
     try:
         response = supabase.table("schools").select("*").limit(1).execute()
@@ -317,15 +312,9 @@ def get_school():
         return None
 
 def upsert_school(name: str, gre: str):
-<<<<<<< HEAD
-    if not is_db_connected(): return None
-    try:
-=======
     """Insere ou atualiza uma escola. Retorna o ID da escola."""
     if not is_db_connected(): return None
     try:
-        # A cláusula 'on_conflict' e 'update' é específica do PostgreSQL. Usamos um select/insert para simplicidade.
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
         res = supabase.table("schools").select("id").eq("name", name).execute()
         if res.data:
             return res.data[0]['id']
@@ -336,10 +325,7 @@ def upsert_school(name: str, gre: str):
         return None
 
 def upsert_class(name: str, code: str, school_id: int):
-<<<<<<< HEAD
-=======
     """Insere ou atualiza uma turma. Retorna o ID da turma."""
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     if not is_db_connected(): return None
     res = supabase.table("classes").select("id").eq("code", code).execute()
     if res.data:
@@ -348,10 +334,7 @@ def upsert_class(name: str, code: str, school_id: int):
     return res.data[0]['id']
 
 def get_classes():
-<<<<<<< HEAD
-=======
     """Busca todas as turmas cadastradas."""
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     if not is_db_connected(): return []
     try:
         response = supabase.table("classes").select("*").order("name").execute()
@@ -440,15 +423,9 @@ def get_subject_by_name(name: str):
     return res.data[0] if res.data else None
 
 def get_user_enrollment(username: str):
-
-    if not is_db_connected(): return None
-    try:
-
     """Busca a matrícula (turma) de um usuário."""
     if not is_db_connected(): return None
     try:
-        # O username do app é o user_username na tabela de matrícul
-        
         response = supabase.table("student_enrollments").select("class_id").eq("user_username", username).limit(1).execute()
         return response.data[0] if response.data else None
     except Exception as e:
@@ -456,14 +433,6 @@ def get_user_enrollment(username: str):
         return None
 
 def get_subjects_for_class(class_id: int):
-<<<<<<< HEAD
-    if not is_db_connected(): return []
-    try:
-        response = supabase.table("class_subjects").select("subject_id").eq("class_id", class_id).execute()
-        if not response.data:
-            return []
-        subject_ids = [item['subject_id'] for item in response.data]
-=======
     """Busca todas as disciplinas associadas a uma turma."""
     if not is_db_connected(): return []
     try:
@@ -473,9 +442,6 @@ def get_subjects_for_class(class_id: int):
             return []
         
         subject_ids = [item['subject_id'] for item in response.data]
-        
-        # 2. Buscar os detalhes das disciplinas com base nos IDs
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
         subjects_response = supabase.table("subjects").select("*").in_("id", subject_ids).order("name").execute()
         return subjects_response.data
     except Exception as e:
@@ -535,8 +501,6 @@ def update_training_links(subject_id: int, new_class_ids: list):
     except Exception as e:
         print(f"Erro ao atualizar vínculos do treinamento: {e}")
 
-=======
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 # --- Funções de Aulas e Conteúdo ---
 def get_lessons():
     if not is_db_connected(): return []
@@ -544,18 +508,11 @@ def get_lessons():
         response = supabase.table("lessons").select("*").order("id").execute()
         return response.data
     except Exception as e:
-<<<<<<< HEAD
         print(f"Erro ao buscar aulas: {e}")
         return []
 
 def get_lessons_for_subject(subject_id: int):
-=======
-        print(f"Erro ao buscar aulas (verifique se a tabela 'lessons' existe): {e}")
-        return []
-
-def get_lessons_for_subject(subject_id: int):
     """Busca todas as aulas de uma disciplina específica."""
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     if not is_db_connected(): return []
     try:
         response = supabase.table("lessons").select("*").eq("subject_id", subject_id).order("id").execute()
@@ -581,7 +538,6 @@ def get_quiz_for_lesson(lesson_id: int):
         print(f"Erro ao buscar quiz da aula {lesson_id}: {e}")
         return None
 
-<<<<<<< HEAD
 def get_quizzes_for_subject(subject_id: int):
     if not is_db_connected(): return []
     try:
@@ -593,9 +549,6 @@ def get_quizzes_for_subject(subject_id: int):
     except Exception as e:
         print(f"Erro ao buscar quizzes da disciplina {subject_id}: {e}")
         return []
-
-=======
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 def get_quiz_by_id(quiz_id: int):
     if not is_db_connected(): return None
     try:
@@ -615,10 +568,7 @@ def get_quiz_questions(quiz_id: int):
         return []
 
 def create_lesson(title: str, subject_id: int, description: str, video_url: str):
-<<<<<<< HEAD
-=======
     """Cria uma nova aula no banco."""
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     if not is_db_connected(): return None, "Banco de dados não conectado"
     try:
         response = supabase.table("lessons").insert({
@@ -629,22 +579,13 @@ def create_lesson(title: str, subject_id: int, description: str, video_url: str)
         return None, str(e)
 
 def upsert_lesson(title: str, subject_id: int, description: str, video_url: str):
-<<<<<<< HEAD
-    if not is_db_connected(): return None
-    try:
-        lesson_data = {"title": title, "subject_id": subject_id, "description": description, "video_url": video_url}
-=======
     """Cria ou atualiza uma aula. Retorna o ID da aula."""
     if not is_db_connected(): return None
     try:
         lesson_data = {
-            "title": title,
-            "subject_id": subject_id,
-            "description": description,
-            "video_url": video_url
+             "title": title, "subject_id": subject_id, "description": description, "video_url": video_url
         }
         # on_conflict usa as colunas com a constraint UNIQUE para fazer o upsert
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
         response = supabase.table("lessons").upsert(lesson_data, on_conflict="subject_id,title").execute()
         return response.data[0]['id']
     except Exception as e:
@@ -692,10 +633,7 @@ def create_quiz(lesson_id: int, title: str):
         return None, str(e)
 
 def create_quiz_question(quiz_id: int, question_text: str, options: list, correct_index: int):
-<<<<<<< HEAD
-=======
     """Cria uma nova questão para um quiz."""
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     if not is_db_connected(): return None, "Banco de dados não conectado"
     try:
         response = supabase.table("quiz_questions").insert({
@@ -706,10 +644,7 @@ def create_quiz_question(quiz_id: int, question_text: str, options: list, correc
         return None, str(e)
 
 def delete_quiz_question(question_id: int):
-<<<<<<< HEAD
-=======
     """Remove uma questão de quiz do banco de dados."""
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     if not is_db_connected(): return None, "Banco de dados não conectado"
     try:
         response = supabase.table("quiz_questions").delete().eq("id", question_id).execute()
@@ -717,7 +652,6 @@ def delete_quiz_question(question_id: int):
     except Exception as e:
         return None, str(e)
 
-<<<<<<< HEAD
 def get_all_quiz_questions():
     if not is_db_connected(): return []
     try:
@@ -746,12 +680,7 @@ def update_quiz_question_correct_index(question_id: int, correct_index: int):
 # --- Funções de Avaliações (MN1, MN2, MN3, RM) ---
 
 def get_assessments_by_subject(subject_id: int):
-=======
-# --- Funções de Avaliações (MN1, MN2, MN3, RM) ---
-
-def get_assessments_by_subject(subject_id: int):
     """Busca todas as avaliações de uma disciplina."""
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     if not is_db_connected(): return []
     try:
         response = supabase.table("assessments").select("*").eq("subject_id", subject_id).order("type").execute()
@@ -761,18 +690,12 @@ def get_assessments_by_subject(subject_id: int):
         return []
 
 def create_assessment(subject_id: int, type: str, title: str):
-<<<<<<< HEAD
-    if not is_db_connected(): return None, "Banco de dados não conectado"
-    try:
-        response = supabase.table("assessments").insert({"subject_id": subject_id, "type": type, "title": title}).execute()
-=======
     """Cria uma nova avaliação (MN1, MN2, MN3, RM)."""
     if not is_db_connected(): return None, "Banco de dados não conectado"
     try:
         response = supabase.table("assessments").insert({
             "subject_id": subject_id, "type": type, "title": title
         }).execute()
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
         return response.data, None
     except Exception as e:
         return None, str(e)

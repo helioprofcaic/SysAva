@@ -17,14 +17,7 @@ import config
 # Busca o nome da escola dinamicamente
 school_name = config.get_school_name()
 
-# Configuração da Página (deve ser o primeiro comando Streamlit)
 st.set_page_config(page_title=school_name, layout="wide", page_icon="🎓")
-
-from views import home, aulas, forum, quiz, avaliacoes, admin, login, register, gerador_aulas
-from services import database, auth
-
-# Configuração da Página (deve ser o primeiro comando Streamlit)
-st.set_page_config(page_title="Plataforma de Ensino", layout="wide", page_icon="🎓")
 
 
 # Define o tema da aplicação
