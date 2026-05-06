@@ -45,19 +45,10 @@ class GeradorAulaGemini:
         if os.path.exists(path_escola):
             try:
                 with open(path_escola, 'r', encoding='utf-8') as f:
-
                     return f.readline().strip()
             except Exception as e:
                 print(f"[Aviso] Erro ao ler Escola.txt: {e}")
         return "Escola Técnica Estadual" # Valor padrão final
-
-                    nome = f.readline().strip()
-                    if nome:
-                        return nome
-            except Exception as e:
-                print(f"[Aviso] Erro ao ler Escola.txt: {e}")
-        return "Escola Técnica Estadual"
-
 
     def _carregar_competencias_curriculo(self, disciplina):
         """
@@ -256,49 +247,6 @@ Modelo de Saída (Siga este formato):
 ## 📝 Quiz: {titulo_personalizado if titulo_personalizado else "[TEMA]"}
 
 (Crie 3 perguntas de múltipla escolha com 4 alternativas cada. Marque a resposta correta com um [x] e as incorretas com [ ].)
-
-=======
-(Liste 3 objetivos claros, alinhados com a Referência Curricular e o Conteúdo Base)
-
-## 💡 Conteúdo
-(Explicação detalhada e didática do tema, baseada no CONTEÚDO BASE. Se houver código, use blocos de código.)
-
-## 📖 Glossário
-(Definição de 3 a 5 termos chave mencionados no conteúdo.)
-
-## 🛠️ Atividade Prática
-(Crie um exercício ou uma dinâmica relacionada ao conteúdo. Se o CONTEÚDO BASE for um exercício, adapte-o e formate-o aqui.)
-
----
-
-## 🧰 Recursos e Ferramentas
-(Liste as ferramentas de software ou hardware mencionadas no CONTEÚDO BASE. Se encontrar links de vídeos do YouTube no CONTEÚDO BASE, liste-os aqui também com título e link. Ex: - [Título do Vídeo](https://youtube.com/watch?v=...))
-
----
-
-## 📝 Quiz Aula: [NÚMERO IDENTIFICADO] - {titulo_personalizado if titulo_personalizado else "[TEMA INFERIDO AQUI]"}
-
-(Crie 3 perguntas de múltipla escolha com 4 alternativas cada. Marque a resposta correta com um [x] e as incorretas com [ ].)
-
-**1. Pergunta 1?**
-- [ ] Opção A
-- [ ] Opção B
-- [x] Opção C
-- [ ] Opção D
-
-**2. Pergunta 2?**
-- [x] Opção A
-- [ ] Opção B
-- [ ] Opção C
-- [ ] Opção D
-
-**3. Pergunta 3?**
-- [ ] Opção A
-- [x] Opção B
-- [ ] Opção C
-- [ ] Opção D
-
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 ---
 ### ✅ Gabarito
 (Liste o gabarito de forma simples. Ex: 1. C, 2. A, 3. B)

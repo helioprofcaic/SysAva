@@ -196,10 +196,7 @@ def generate_lesson_markdown(subject, class_name, topic, lesson_num, school_name
        - **IMPORTANTE:** O código SVG deve ser inserido como HTML puro, SEM blocos de código markdown (sem ``` ou `).
        - Certifique-se de que há uma linha em branco ANTES e DEPOIS da tag <svg> para garantir a renderização correta e evitar conflitos de formatação.
     3. Use formatação Markdown (negrito, listas, code blocks) para tornar a leitura dinâmica.
-<<<<<<< HEAD
     4. **TABELAS**: Use tabelas em Markdown para comparar conceitos ou listar dados de forma estruturada.
-=======
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 
     Modelo de Saída (Markdown):
     # 🎨 Aula {lesson_num}: {topic}

@@ -43,7 +43,6 @@ def get_user(username: str):
     response = supabase.table("app_users").select("username, password, name, role").eq("username", username).execute()
     return response.data[0] if response.data else None
 
-<<<<<<< HEAD
 def get_all_users():
     if not is_db_connected(): return []
     try:
@@ -51,9 +50,6 @@ def get_all_users():
         return response.data
     except Exception:
         return []
-
-=======
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 def create_user(username: str, hashed_password: str, name: str, ra: str, role: str = 'student'):
     if not is_db_connected(): return None, "Banco de dados não conectado"
     try:
@@ -114,25 +110,13 @@ def upsert_user(username: str, hashed_password: str, name: str, ra: str):
     except Exception as e:
         return None, str(e)
 
-<<<<<<< HEAD
-=======
-def get_all_users():
-    if not is_db_connected(): return []
-    response = supabase.table("app_users").select("username, name, role").execute()
-    return response.data
-
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 # --- Funções de Score e Pontuação ---
 def get_user_forum_lessons_by_subject(user_name: str):
     """
     Conta a participação do usuário no fórum por disciplina.
     Retorna um dicionário {subject_id: count_de_aulas_unicas_com_post}.
     """
-<<<<<<< HEAD
     if not is_db_connected(): return {}
-=======
-    if not is_db_connected(): return 0
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     try:
         # 1. Pega todos os posts do usuário que estão em um fórum de aula
         res = supabase.table("forum_posts").select("lesson_id").eq("user_name", user_name).not_.is_("lesson_id", "null").execute()
@@ -155,55 +139,29 @@ def get_user_forum_lessons_by_subject(user_name: str):
         return {}
 
 def get_student_score(username: str, filter_subject_id: int = None):
-<<<<<<< HEAD
     """Calcula o score detalhado do aluno, considerando apenas a melhor tentativa de cada quiz."""
     if not is_db_connected(): return {"quiz": 0, "lesson": 0, "forum": 0, "total": 0}
 
     # Estrutura: {subject_id: {quiz_title: max_points}}
     best_quiz_scores_by_subject = {}
-=======
-    """Calcula o score detalhado do aluno, com regras de proporção e fallback para logs antigos."""
-    if not is_db_connected(): return {"quiz": 0, "lesson": 0, "forum": 0, "total": 0}
-
-    # Dicionários para armazenar pontos por disciplina
-    quiz_points_by_subject = {}
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     viewed_lessons_by_subject = {} # {subject_id: set_of_lesson_activities}
     
     history = get_user_history(username)
 
     # --- Mapas auxiliares para fallback em logs antigos ---
     all_lessons = get_lessons()
-<<<<<<< HEAD
     lesson_title_map = {l['title']: l['subject_id'] for l in all_lessons}
-
-=======
-    # 1. Mapa de Aulas: {título_aula: subject_id}
-    lesson_title_map = {l['title']: l['subject_id'] for l in all_lessons}
-
-    # 2. Mapa de Quizzes: {título_quiz: subject_id}
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     try:
         all_quizzes = supabase.table("quizzes").select("title, lesson_id").execute().data or []
         lesson_id_map = {l['id']: l['subject_id'] for l in all_lessons}
         quiz_title_map = {q['title']: lesson_id_map.get(q['lesson_id']) for q in all_quizzes if q.get('lesson_id') in lesson_id_map}
-<<<<<<< HEAD
     except Exception:
         quiz_title_map = {}
-    
-    # Processa o histórico
-=======
-    except Exception: # Se a tabela quizzes não existir ou der erro, o mapa fica vazio
-        quiz_title_map = {}
-    # --- Fim dos mapas ---
-    
-    # Processa o histórico para pontos de Aulas e Quizzes por disciplina
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
+
     for h in history:
         act = h.get('activity', '')
         subject_id = None
         
-<<<<<<< HEAD
         # 1. Tenta extrair subject_id dos logs novos
         match_sid = re.search(r'\| subject_id:(\d+)', act)
         if match_sid:
@@ -212,16 +170,6 @@ def get_student_score(username: str, filter_subject_id: int = None):
         clean_act = act.split('|')[0].strip()
 
         # 2. Fallback para logs antigos
-=======
-        # 1. Tenta extrair subject_id dos logs novos (que possuem metadados)
-        match = re.search(r'\| subject_id:(\d+)', act)
-        if match:
-            subject_id = int(match.group(1))
-        
-        clean_act = act.split('|')[0].strip()
-
-        # 2. Fallback para logs antigos se o ID não foi encontrado
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
         if not subject_id:
             if clean_act.startswith("Acessou a aula:"):
                 title = clean_act.replace("Acessou a aula:", "").strip()
@@ -229,7 +177,6 @@ def get_student_score(username: str, filter_subject_id: int = None):
             elif clean_act.startswith("Concluiu Quiz:"):
                 try:
                     title_part = clean_act.replace("Concluiu Quiz:", "").strip()
-<<<<<<< HEAD
                     title = title_part.rsplit('(', 1)[0].strip()
                     subject_id = quiz_title_map.get(title)
                 except:
@@ -238,24 +185,11 @@ def get_student_score(username: str, filter_subject_id: int = None):
         if not subject_id: continue
 
         # Contabiliza Aulas (únicas por título)
-=======
-                    # Extrai o título antes do último '(' que contém o score
-                    title = title_part.rsplit('(', 1)[0].strip()
-                    subject_id = quiz_title_map.get(title)
-                except:
-                    pass # Ignora se o parse do título falhar
-
-        if not subject_id: 
-            continue # Pula se não conseguir identificar a disciplina de nenhuma forma
-
-        # Contabiliza os pontos
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
         if clean_act.startswith("Acessou a aula:"):
             if subject_id not in viewed_lessons_by_subject:
                 viewed_lessons_by_subject[subject_id] = set()
             viewed_lessons_by_subject[subject_id].add(clean_act)
             
-<<<<<<< HEAD
         # Contabiliza Quizzes (apenas a melhor nota de cada quiz)
         elif clean_act.startswith("Concluiu Quiz:"):
             try:
@@ -275,20 +209,6 @@ def get_student_score(username: str, filter_subject_id: int = None):
                         best_quiz_scores_by_subject[subject_id][quiz_name] = points
             except:
                 pass
-
-    # 2. Busca pontos do Fórum
-=======
-        elif clean_act.startswith("Concluiu Quiz:"):
-            try:
-                score_part = act.rsplit('(', 1)[-1].split(')')[0]
-                if '/' in score_part:
-                    points = int(score_part.split('/')[0])
-                    quiz_points_by_subject[subject_id] = quiz_points_by_subject.get(subject_id, 0) + points
-            except:
-                pass
-
-    # 2. Busca pontos do Fórum por disciplina
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     user_data = get_user(username)
     forum_points_by_subject = {}
     if user_data and user_data.get('name'):
@@ -302,10 +222,6 @@ def get_student_score(username: str, filter_subject_id: int = None):
         class_info = next((c for c in classes if c['id'] == enrollment['class_id']), None)
         if class_info:
             class_name = class_info.get('name', '').lower()
-<<<<<<< HEAD
-=======
-            # Normaliza removendo acentos e caracteres comuns
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
             replacements = {'á': 'a', 'à': 'a', 'ã': 'a', 'â': 'a', 'é': 'e', 'ê': 'e', 'í': 'i', 'ó': 'o', 'ô': 'o', 'õ': 'o', 'ú': 'u', 'ç': 'c', 'º': '', 'ª': ''}
             for k, v in replacements.items():
                 class_name = class_name.replace(k, v)
@@ -315,14 +231,8 @@ def get_student_score(username: str, filter_subject_id: int = None):
     workload_3ds = { "ATIVIDADES INTEGRADORAS - INTELIGÊNCIA ARTIFICIAL": 40, "TESTE DE SISTEMAS E SEGURANÇA DE DADOS": 80, "INTELIGÊNCIA ARTIFICIAL APLICADA A AUTOMAÇÃO": 80, "INTERNET DAS COISAS - IOT": 80, "ORIENTAÇÃO PROFISSIONAL E EMPREENDEDORISMO": 40, "PROJETO INTEGRADOR": 120 }
 
     total_score, total_quiz_points, total_lesson_points, total_forum_points = 0, 0, 0, 0
-<<<<<<< HEAD
     all_subject_ids = set(best_quiz_scores_by_subject.keys()) | set(viewed_lessons_by_subject.keys()) | set(forum_points_by_subject.keys())
 
-=======
-    all_subject_ids = set(quiz_points_by_subject.keys()) | set(viewed_lessons_by_subject.keys()) | set(forum_points_by_subject.keys())
-
-    # Se uma disciplina específica for solicitada, filtra a lista de IDs
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     if filter_subject_id:
         all_subject_ids = {sid for sid in all_subject_ids if sid == filter_subject_id}
 
@@ -336,25 +246,12 @@ def get_student_score(username: str, filter_subject_id: int = None):
         f_points = forum_points_by_subject.get(sid, 0)
         raw_subject_score = l_points + q_points + f_points
         
-=======
-        q_points = quiz_points_by_subject.get(sid, 0)
-        f_points = forum_points_by_subject.get(sid, 0)
-        raw_subject_score = l_points + q_points + f_points
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
         total_lesson_points += l_points
         total_quiz_points += q_points
         total_forum_points += f_points
 
         final_subject_score = raw_subject_score
-<<<<<<< HEAD
         is_3ano_ds = ("3ano" in class_name or "3serie" in class_name) and ("ds" in class_name or "sis" in class_name or "des" in class_name)
-=======
-        
-        # Identificação das turmas com base no nome normalizado
-        # Ex: "emtpdessis3serieintegralia" contém "3serie" e "sis"
-        is_3ano_ds = ("3ano" in class_name or "3serie" in class_name) and ("ds" in class_name or "sis" in class_name or "des" in class_name)
-        is_2ano_ds = ("2ano" in class_name or "2serie" in class_name) and ("ds" in class_name or "sis" in class_name)
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
         
         if is_3ano_ds:
             subject_name = all_subjects.get(sid, "").upper().strip()
@@ -363,10 +260,6 @@ def get_student_score(username: str, filter_subject_id: int = None):
             if divisor > 0:
                 final_subject_score = raw_subject_score / divisor
         else:
-<<<<<<< HEAD
-=======
-            # Padrão para 9ano, 2ano DS, 3ano Regular e outros (regra de 32 aulas)
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
             final_subject_score = raw_subject_score / 32.0
             
         total_score += final_subject_score
@@ -386,10 +279,6 @@ def get_forum_posts(lesson_id: int = None):
         if lesson_id:
             query = query.eq("lesson_id", lesson_id)
         else:
-<<<<<<< HEAD
-=======
-            # Fórum geral mostra posts sem aula associada
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
             query = query.is_("lesson_id", "null")
         response = query.execute()
         return response.data
@@ -476,7 +365,7 @@ def get_class_by_code(code: str):
     res = supabase.table("classes").select("id").eq("code", code).execute()
     return res.data[0] if res.data else None
 
-<<<<<<< HEAD
+
 def upsert_subject(name: str, type: str = 'regular'):
     if not is_db_connected(): return None
     res = supabase.table("subjects").select("id").eq("name", name).eq("type", type).execute()
@@ -508,7 +397,7 @@ def link_subject_to_class(class_id: int, subject_id: int):
         supabase.table("class_subjects").insert({"class_id": class_id, "subject_id": subject_id}).execute()
 
 def get_subjects():
-<<<<<<< HEAD
+
     if not is_db_connected(): return []
     response = supabase.table("subjects").select("*").execute()
     return response.data
@@ -518,7 +407,7 @@ def get_subject_by_name(name: str):
     res = supabase.table("subjects").select("id").eq("name", name).execute()
     if res.data:
         return res.data[0]
-=======
+
     """Busca todas as disciplinas."""
     if not is_db_connected(): return []
     try:
@@ -546,20 +435,20 @@ def get_subject_by_name(name: str):
         return res.data[0]
     
     # Tenta busca case-insensitive (ignora maiúsculas/minúsculas)
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
+
     res = supabase.table("subjects").select("id").ilike("name", name).execute()
     return res.data[0] if res.data else None
 
 def get_user_enrollment(username: str):
-<<<<<<< HEAD
+
     if not is_db_connected(): return None
     try:
-=======
+
     """Busca a matrícula (turma) de um usuário."""
     if not is_db_connected(): return None
     try:
-        # O username do app é o user_username na tabela de matrículas
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
+        # O username do app é o user_username na tabela de matrícul
+        
         response = supabase.table("student_enrollments").select("class_id").eq("user_username", username).limit(1).execute()
         return response.data[0] if response.data else None
     except Exception as e:
