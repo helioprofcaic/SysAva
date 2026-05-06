@@ -45,12 +45,19 @@ class GeradorAulaGemini:
         if os.path.exists(path_escola):
             try:
                 with open(path_escola, 'r', encoding='utf-8') as f:
+
+                    return f.readline().strip()
+            except Exception as e:
+                print(f"[Aviso] Erro ao ler Escola.txt: {e}")
+        return "Escola Técnica Estadual" # Valor padrão final
+
                     nome = f.readline().strip()
                     if nome:
                         return nome
             except Exception as e:
                 print(f"[Aviso] Erro ao ler Escola.txt: {e}")
         return "Escola Técnica Estadual"
+
 
     def _carregar_competencias_curriculo(self, disciplina):
         """
@@ -107,7 +114,7 @@ class GeradorAulaGemini:
             )
         else:
             # ROTA 1: Busca no arquivo de lista (Cronograma)
-<<<<<<< HEAD
+
             print(f">>> [DEBUG] Gerando via ROTA 1 (Cronograma) para {disciplina} - Aula {numero_aula}")
             
             semana_str = f"S{int(semana):02d}"
@@ -133,7 +140,6 @@ class GeradorAulaGemini:
             if not caminho_lista:
                 # Fallback final: se nada foi encontrado, usa o primeiro da lista para o erro ser informativo
                 caminho_lista = opcoes_caminho[0]
-
             contexto_str = self.contexto_mgr.obter_contexto_geracao(
                 usar_arquivos=False,
                 arquivo_lista_path=caminho_lista,
