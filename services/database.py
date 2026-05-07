@@ -46,7 +46,7 @@ def get_user(username: str):
 def get_all_users():
     if not is_db_connected(): return []
     try:
-        response = supabase.table("app_users").select("username, name, role, ra").execute()
+        response = supabase.table("app_users").select("id, username, name, role, ra").execute()
         return response.data
     except Exception:
         return []
@@ -437,7 +437,7 @@ def get_students_by_class(class_id: int):
         enrollments_res = supabase.table("student_enrollments").select("user_username").eq("class_id", class_id).execute()
         if not enrollments_res.data: return []
         usernames = [e['user_username'] for e in enrollments_res.data]
-        users_res = supabase.table("app_users").select("username, name, ra, role").in_("username", usernames).execute()
+        users_res = supabase.table("app_users").select("id, username, name, ra, role").in_("username", usernames).execute()
         return users_res.data
     except Exception as e:
         print(f"Erro ao buscar alunos da turma {class_id}: {e}")

@@ -32,6 +32,7 @@ Esta aba permite executar scripts Python (`.py`) para realizar tarefas de backen
 - **`audit_backup.py`**: Realiza uma contagem de registros nas tabelas principais e cria um backup do banco de dados em um arquivo SQLite na mesma pasta.
 - **`friction_radar.py`**: Analisa as disciplinas em busca de "pontos de fricção" (aulas sem quiz, baixo engajamento, etc.) e gera um relatório.
 - **`focus_report.py`**: Gera um relatório de todas as vezes que os alunos saíram da tela durante uma avaliação.
+- **`student_scores.py`**: Permite gerenciar as notas gerais dos alunos e adicionar pontos qualitativos diários.
 
 ---
 

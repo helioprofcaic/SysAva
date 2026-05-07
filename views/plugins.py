@@ -5,6 +5,7 @@ import re
 import sys
 import subprocess
 import base64
+import importlib.util
 
 # Tenta importar o visualizador de PDF, se não existir, a funcionalidade ficará desabilitada.
 try:
@@ -28,6 +29,31 @@ def find_local_pdfs():
                         pdf_files[relative_path] = os.path.join(root, file)
     return pdf_files
 
+def render_plugin_integrated(plugin_path):
+    """
+    Importa e executa um plugin dentro do contexto atual do Streamlit.
+    Isso evita o erro de 'missing ScriptRunContext'.
+    """
+    try:
+        module_name = os.path.basename(plugin_path).replace(".py", "")
+        # Define o nome do módulo no sys.modules para evitar conflitos
+        spec = importlib.util.spec_from_file_location(module_name, plugin_path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
+        
+        # Procura por pontos de entrada conhecidos no plugin (como o da Agenda)
+        if hasattr(module, "show_agenda"):
+            module.show_agenda()
+        elif hasattr(module, "show_student_scores"):
+            module.show_student_scores()
+        elif hasattr(module, "show_page"):
+            module.show_page()
+        elif hasattr(module, "main"):
+            module.main()
+    except Exception as e:
+        st.error(f"Erro ao integrar plugin: {e}")
+
 def show_page():
     st.header("🧩 Extensões e Plugins")
 
@@ -40,7 +66,7 @@ def show_page():
     Esta seção permite executar funcionalidades nativas e scripts Python externos para estender as capacidades do SysAva.
     """)
 
-    tab_native, tab_external = st.tabs(["🔌 Plugins Nativos", "📂 Plugins Externos (data/repo/plugins)"])
+    tab_native, tab_external, tab_agenda, tab_scores = st.tabs(["🔌 Plugins Nativos", "📂 Plugins Externos", "📅 Minha Agenda", "📊 Gestão de Notas"])
 
     # --- Aba de Plugins Nativos ---
     with tab_native:
@@ -101,44 +127,42 @@ def show_page():
         if not os.path.exists(plugins_dir):
             st.info(f"Para adicionar plugins externos, crie a pasta `{plugins_dir}` e coloque seus arquivos `.py` nela.")
         else:
-            try:
-                plugin_files = [f for f in os.listdir(plugins_dir) if f.endswith(".py")]
-                if not plugin_files:
-                    st.info(f"Nenhum plugin (`.py`) encontrado na pasta `{plugins_dir}`.")
-                else:
-                    st.success(f"Encontrados {len(plugin_files)} plugins:")
-                    for plugin_file in plugin_files:
-                        plugin_path = os.path.join(plugins_dir, plugin_file)
-                        with st.expander(f"**{plugin_file}**"):
-                            # Tenta ler a docstring do arquivo para exibir como descrição
-                            try:
-                                with open(plugin_path, 'r', encoding='utf-8') as f:
-                                    content = f.read()
-                                    docstring_match = re.match(r'^\s*"""(.*?)"""', content, re.DOTALL)
-                                    if docstring_match:
-                                        st.caption(docstring_match.group(1).strip())
-                                    else:
-                                        st.caption("Nenhuma descrição (docstring) encontrada no início do script.")
-                            except Exception:
-                                st.caption("Não foi possível ler a descrição do arquivo.")
+            # Removemos a lógica de 'active_plugin' daqui para não ficar estranho,
+            # deixando esta aba apenas para gerenciamento e execução de scripts rápidos.
+            
+            plugin_files = [f for f in os.listdir(plugins_dir) if f.endswith(".py")]
+            st.success(f"Encontrados {len(plugin_files)} plugins:")
+            for plugin_file in plugin_files:
+                plugin_path = os.path.join(plugins_dir, plugin_file)
+                with st.expander(f"**{plugin_file}**"):
+                    try:
+                        with open(plugin_path, 'r', encoding='utf-8') as f:
+                            content = f.read()
+                            docstring_match = re.match(r'^\s*"""(.*?)"""', content, re.DOTALL)
+                            if docstring_match:
+                                st.caption(docstring_match.group(1).strip())
+                    except Exception:
+                        st.caption("Sem descrição.")
 
-                            if st.button(f"Executar {plugin_file}", key=f"run_{plugin_file}"):
-                                with st.spinner(f"Executando {plugin_file}..."):
-                                    # Usamos sys.executable para garantir que o script rode com o mesmo interpretador Python do Streamlit
-                                    result = subprocess.run(
-                                        [sys.executable, plugin_path],
-                                        capture_output=True,
-                                        text=True,
-                                        encoding='utf-8'
-                                    )
-                                    st.markdown("---")
-                                    st.markdown("#### ✅ Resultado da Execução:")
-                                    if result.stdout:
-                                        st.code(result.stdout, language='bash')
-                                    if result.stderr:
-                                        st.error("Ocorreram erros durante a execução:")
-                                        st.code(result.stderr, language='bash')
-                                    if not result.stdout and not result.stderr:
-                                        st.info("O script foi executado mas não produziu nenhuma saída no console.")
-            except Exception as e:
-                st.error(f"Ocorreu um erro ao listar os plugins: {e}")
+                    if st.button(f"Executar no Terminal", key=f"run_{plugin_file}"):
+                        with st.spinner(f"Executando..."):
+                            result = subprocess.run([sys.executable, plugin_path], capture_output=True, text=True, encoding='utf-8')
+                            st.code(result.stdout if result.stdout else "Executado sem saída.")
+
+    # --- Aba de Agenda (Dedicada) ---
+    with tab_agenda:
+        agenda_path = os.path.join("data", "repo", "plugins", "agenda.py")
+        if os.path.exists(agenda_path):
+            render_plugin_integrated(agenda_path)
+        else:
+            st.info("O plugin de agenda não foi encontrado em `data/repo/plugins/agenda.py`.")
+
+    # --- Aba de Gestão de Notas ---
+    with tab_scores:
+        scores_path = os.path.join("data", "repo", "plugins", "student_scores.py")
+        if os.path.exists(scores_path):
+            render_plugin_integrated(scores_path)
+        else:
+            st.info("O plugin de gestão de notas não foi encontrado em `data/repo/plugins/student_scores.py`.")
+
+            # Estado para controlar qual plugin está ativo na interface

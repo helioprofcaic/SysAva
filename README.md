@@ -54,6 +54,7 @@ SysAva/
 │   ├── auth.py           # Lógica de autenticação (criptografia)
 │   └── database.py       # Acesso centralizado ao banco de dados
 ├── .env                  # Credenciais para o script de seeding
+├── commits.ps1           # Utilitário interativo para Git
 ├── app.py                # Ponto de entrada e roteador principal
 └── requirements.txt      # Dependências do projeto
 ```

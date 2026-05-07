@@ -19,6 +19,9 @@ data/Turmas/**
 
 data/rascunhos/*
 data/repo/*
+data/repo/plugins/*json
+data/repo/plugins/*.db
+!data/repo/plugins/
 docs/*.txt
 data/credentials.json
 
