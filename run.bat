@@ -66,7 +66,7 @@ echo.
 
 :ask_students
 echo.
-<<<<<<< HEAD
+
 CHOICE /C sn /T 10 /D n /M "Deseja popular o banco com os ALUNOS? A importacao sera ignorada em 10 segundos..."
 
 REM CHOICE define ERRORLEVEL: 1 para 's', 2 para 'n' (ou timeout)
@@ -75,7 +75,7 @@ if %errorlevel% == 2 goto start_app
 
 echo.
 goto start_app
-=======
+
 set /p seed_choice=Voce deseja popular o banco de dados com os ALUNOS? (s/n): 
 if /i "%seed_choice%"=="s" (
     goto seed_students
@@ -85,7 +85,7 @@ if /i "%seed_choice%"=="n" (
 )
 echo Resposta invalida. Por favor, digite 's' para sim ou 'n' para nao.
 goto ask_students
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
+
 
 :seed_students
 REM Popula o banco de dados com os alunos
@@ -102,7 +102,7 @@ goto start_app
 :start_app
 REM Forca o modo local ignorando o secrets.toml
 set FORCE_LOCAL_MODE=1
-<<<<<<< HEAD
+
 REM Lê o nome da escola do arquivo de configuração para exibir na mensagem
 set "SCHOOL_CONFIG_FILE=data\Turmas\Escola.txt"
 set school_name=SysAva
@@ -111,11 +111,11 @@ if exist "%SCHOOL_CONFIG_FILE%" set /p school_name=<"%SCHOOL_CONFIG_FILE%"
 REM Executa a aplicacao
 echo.
 echo Iniciando o %school_name%...
-=======
+
 
 REM Executa a aplicacao
 echo.
 echo Iniciando o SysAva CETI Raldir...
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
+
 call "%VENV_DIR%\Scripts\streamlit.exe" run app.py
 pause

@@ -229,20 +229,14 @@ def show_admin_view():
                 
                 # 2. Lista de Submissões
                 submissions = db.get_assessment_submissions_with_users(assessment['id'])
-<<<<<<< HEAD
-
-                # Chave para o estado da sessão
-                session_key = f"data_editor_{assessment['id']}"
                 original_data_key = f"original_data_{assessment['id']}"
-=======
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
                 
                 if not submissions:
                     st.info("Nenhum aluno realizou esta prova ainda.")
                 else:
                     # --- Montagem dos dados para exibição e exportação ---
                     with st.spinner("Buscando scores dos alunos..."):
-<<<<<<< HEAD
+
                         # 1. Pega todas as questões da avaliação para montar as colunas
                         questions = db.get_assessment_questions(assessment['id'])
                         
@@ -270,27 +264,6 @@ def show_admin_view():
                             for header, question in question_headers.items():
                                 answer_text = "---" # Padrão
                                 ans = answers_map.get(question['id'])
-                                
-                                if ans:
-                                    if question['question_type'] == 'objective':
-                                        options = question.get('options', [])
-                                        user_idx = ans.get('selected_option_index', -1)
-                                        if 0 <= user_idx < len(options):
-                                            # Pega a letra da alternativa (A, B, C...)
-                                            answer_text = chr(65 + user_idx)
-                                        else:
-                                            answer_text = "N/R" # Não respondeu
-                                    else: # Subjective
-                                        answer_text = "SUBJ"
-                                
-                                student_row[header] = answer_text
-
-                            table_data.append(student_row)
-
-                        # Adiciona um ID único para cada linha para o data_editor
-                        df = pd.DataFrame(table_data).reset_index()
-
-                        # Armazena os dados originais na sessão para comparação
                         # Limpa o cache se a avaliação mudar
                         if st.session_state.get('last_assessment_id_for_cache') != assessment['id']:
                             if original_data_key in st.session_state:
@@ -302,25 +275,6 @@ def show_admin_view():
                         
                         original_df = pd.DataFrame(st.session_state[original_data_key]).reset_index()
                     
-=======
-                        table_data = []
-                        for sub in submissions:
-                            user_info = sub.get('app_users', {})
-                            username = sub.get('user_username')
-                            score_geral = db.get_student_score(username).get('total', 0) if username else 0
-                            
-                            table_data.append({
-                                "Nome": user_info.get('name'),
-                                "RA": user_info.get('ra'),
-                                "Score Plataforma": score_geral,
-                                "Data Envio": sub['submitted_at'],
-                                "Nota Prova": sub['score'] if sub['score'] is not None else "Não avaliado",
-                                "_submission": sub # hidden column to retrieve object
-                            })
-                    
-                    df = pd.DataFrame(table_data)
-
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
                     # --- Métricas e Exportação ---
                     df_display = df.drop(columns=['_submission'])
                     csv = df_display.to_csv(index=False).encode('utf-8')
@@ -335,173 +289,16 @@ def show_admin_view():
                     )
                     
                     st.markdown("### 📝 Submissões dos Alunos")
-<<<<<<< HEAD
-
-                    # --- Configuração dinâmica das colunas do data_editor ---
-                    column_config = {
-                        "Nome": st.column_config.TextColumn("Nome do Aluno", width="large", disabled=True),
-                        "Nota": st.column_config.NumberColumn("Nota Final", help="Digite a nota do aluno aqui.", min_value=0.0, max_value=10.0, step=0.5, format="%.2f", width="small"),
-                        "Visualizar": st.column_config.CheckboxColumn("👁️", help="Marque para visualizar a prova respondida.", width="small"),
-                        "index": None, 
-                        # Garante que a coluna de objeto seja preservada, mas não exibida
-                        "_submission": None,
-                        "_user_info": None
-                    }
-                    # Adiciona as colunas de questão dinamicamente
-                    for header in question_headers.keys():
-                        column_config[header] = st.column_config.TextColumn(header, width="small", disabled=True)
-
-                    # --- NOVO: Editor de Notas em Lote ---
-                    edited_df = st.data_editor(
-                        df,
-                        column_config=column_config,
-                        use_container_width=True,
-                        hide_index=True,
-                        num_rows="dynamic" # Permite que a tabela cresça
-                    )
-
+                    # Mantendo apenas a versão moderna (Batch Editor)
+                    column_config = {"Nome": st.column_config.TextColumn("Nome do Aluno", width="large", disabled=True), "Nota": st.column_config.NumberColumn("Nota Final", min_value=0.0, max_value=10.0, step=0.5, format="%.2f"), "Visualizar": st.column_config.CheckboxColumn("👁️"), "index": None, "_submission": None, "_user_info": None}
+                    for h in question_headers.keys(): column_config[h] = st.column_config.TextColumn(h, width="small", disabled=True)
+                    edited_df = st.data_editor(df, column_config=column_config, use_container_width=True, hide_index=True)
                     if st.button("💾 Salvar Todas as Notas Alteradas", type="primary", use_container_width=True):
-                        updates = []
-                        # Itera sobre o dataframe editado para encontrar mudanças
-                        for index, row in edited_df.iterrows():
-                            original_row = original_df.loc[original_df['index'] == row['index']]
-                            if not original_row.empty:
-                                original_score = original_row.iloc[0]['Nota']
-                                new_score = row['Nota']
-
-                                # Verifica se a nota mudou (e não é nula)
-                                if new_score is not None and (pd.isna(original_score) or str(original_score) == "Não avaliado" or original_score != new_score):
-                                    # Pega o objeto _submission da tabela original (original_df), não da editada (row)
-                                    # Isso evita o erro 'str' object has no attribute 'get'
-                                    submission_object = original_row.iloc[0]['_submission']
-                                    
-                                    updates.append({
-                                        'submission_id': submission_object.get('id'),
-                                        'score': new_score
-                                    })
-                        
-                        if not updates:
-                            st.toast("Nenhuma nota foi alterada.")
-                        else:
-                            with st.spinner(f"Salvando {len(updates)} notas..."):
-                                errors = []
-                                for update in updates:
-                                    _, err = db.update_submission_score(update['submission_id'], update['score'])
-                                    if err:
-                                        errors.append(f"ID {update['submission_id']}: {err}")
-                                
-                                if errors:
-                                    st.error("Algumas notas não puderam ser salvas:")
-                                    st.json(errors)
-                                else:
-                                    st.success(f"{len(updates)} notas foram salvas com sucesso!")
-                                    # Limpa o cache para forçar a recarga dos dados na próxima vez
-                                    if original_data_key in st.session_state:
-                                        del st.session_state[original_data_key]
-                                    st.rerun()
-                    
-                    # --- Lógica de Visualização Individual ---
-                    view_row = edited_df[edited_df.Visualizar].iloc[0] if not edited_df[edited_df.Visualizar].empty else None
-
-                    if view_row is not None:
-                        sub_to_view = view_row['_submission']
-                        user_to_view = view_row['_user_info']
-
-                        with st.dialog("Visualização da Prova"):
-                            st.info(f"Exibindo respostas de **{user_to_view.get('name')}**")
-                            school_info = db.get_school()
-                            school_name = school_info['name'] if school_info else "Escola Técnica"
-                            
-                            # Reutiliza as questões já buscadas
-                            answers = db.get_submission_answers(sub_to_view['id'])
-                            answers_map = {a['question_id']: a for a in answers}
-                            
-                            html_content = generate_printable_view(
-                                school_name, selected_subject, selected_class, 
-                                user_to_view.get('name'), user_to_view.get('ra'), sub_to_view.get('score'),
-                                questions, answers_map
-                            )
-                            components.html(html_content, height=600, scrolling=True)
-=======
-                    st.dataframe(df_display, use_container_width=True, hide_index=True)
-                    
-                    st.divider()
-                    st.markdown("### 🔎 Correção Individual")
-                    
-                    # Seletor de Aluno para Correção
-                    student_options = {f"{s['Nome']} ({s['RA']})": s['_submission'] for s in table_data}
-                    selected_student_key = st.selectbox("Selecione o Aluno para corrigir:", list(student_options.keys()))
-                    
-                    student_sub = student_options[selected_student_key]
-                    
-                    if st.button("🖨️ Visualizar Impressão"):
-                        school_info = db.get_school()
-                        school_name = school_info['name'] if school_info else "Escola Técnica"
-                        
-                        questions = db.get_assessment_questions(assessment['id'])
-                        answers = db.get_submission_answers(student_sub['id'])
-                        answers_map = {a['question_id']: a for a in answers}
-                        
-                        html_content = generate_printable_view(
-                            school_name, 
-                            selected_subject, 
-                            selected_class, 
-                            student_sub['app_users']['name'], 
-                            student_sub['app_users']['ra'], 
-                            student_sub['score'], 
-                            questions, 
-                            answers_map
-                        )
-                        components.html(html_content, height=600, scrolling=True)
-
-                    with st.form("grading_form"):
-                        st.markdown(f"**Aluno:** {student_sub['app_users']['name']}")
-                        st.markdown(f"**Nota Atual:** {student_sub['score'] if student_sub['score'] is not None else 'N/A'}")
-                        st.divider()
-                        
-                        # Busca perguntas e respostas
-                        questions = db.get_assessment_questions(assessment['id'])
-                        answers = db.get_submission_answers(student_sub['id'])
-                        answers_map = {a['question_id']: a for a in answers}
-                        
-                        # Exibe a prova respondida
-                        for i, q in enumerate(questions):
-                            ans = answers_map.get(q['id'])
-                            st.markdown(f"**Questão {i+1}:** {q['question_text']}")
-                            
-                            if q['question_type'] == 'objective':
-                                user_idx = ans['selected_option_index'] if ans else -1
-                                correct_idx = q['correct_option_index']
-                                options = q.get('options', [])
-                                
-                                user_text = options[user_idx] if 0 <= user_idx < len(options) else "Não respondeu"
-                                correct_text = options[correct_idx] if 0 <= correct_idx < len(options) else "Erro"
-                                
-                                if user_idx == correct_idx:
-                                    st.success(f"Resposta do Aluno: {user_text} (Correta)")
-                                else:
-                                    st.error(f"Resposta do Aluno: {user_text}")
-                                    st.caption(f"Resposta Correta: {correct_text}")
-                                    
-                            elif q['question_type'] == 'subjective':
-                                st.info(f"✍️ Resposta Subjetiva:")
-                                st.text_area("Texto:", value=ans['answer_text'] if ans else "", disabled=True)
-                                if ans and ans.get('answer_link'):
-                                    st.markdown(f"🔗 **Link enviado:** [{ans['answer_link']}]({ans['answer_link']})")
-                                else:
-                                    st.caption("Nenhum link enviado.")
-                            
-                            st.divider()
-                        
-                        new_grade = st.number_input("Nota Final", min_value=0.0, max_value=10.0, value=float(student_sub['score'] or 0.0), step=0.5)
-                        
-                        if st.form_submit_button("💾 Salvar Nota"):
-                            _, err = db.update_submission_score(student_sub['id'], new_grade)
-                            if err: st.error(f"Erro: {err}")
-                            else: 
-                                st.success("Nota atualizada com sucesso!")
-                                st.rerun()
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
+                        for idx, row in edited_df.iterrows():
+                            orig = original_df.loc[original_df['index'] == row['index']].iloc[0]
+                            if row['Nota'] is not None and (pd.isna(orig['Nota']) or orig['Nota'] != row['Nota']):
+                                db.update_submission_score(orig['_submission'].get('id'), row['Nota'])
+                        st.success("Notas atualizadas!"); st.rerun()
 
 def show_student_view():
     username = st.session_state.get('username')
@@ -548,41 +345,24 @@ def show_student_view():
                     st.subheader(f"{assessment['type']} - {assessment['title']}")
                 
                 # Verifica se já foi feita
-<<<<<<< HEAD
+
                 submissions = db.get_student_submissions(username, assessment['id'])
                 attempts = len(submissions)
 
                 if attempts > 0:
                     best_score = -1
                     is_corrected = False
-                    for sub in submissions:
-                        score = sub.get('score')
-                        if score is not None:
+                    for sub in submissions: 
+                        s = sub.get('score')
+                        if s is not None: 
                             is_corrected = True
-                            if score > best_score:
-                                best_score = score
+                            if s > best_score: best_score = s
                     
-                    if is_corrected:
-                        st.caption(f"Você realizou esta avaliação {attempts} vez(es). Sua melhor nota foi:")
-                        with col1:
-                            st.success(f"**Melhor Nota: {best_score}**")
-                    else:
-                        st.caption(f"Você já realizou esta avaliação {attempts} vez(es). Aguarde a correção.")
+                    if is_corrected: st.success(f"**Melhor Nota: {best_score}**")
+                    else: st.caption("Aguardando correção.")
 
                 if attempts < 2:
-=======
-                submission = db.get_student_submission(username, assessment['id'])
-                
-                if submission:
-                    score = submission.get('score')
-                    with col2:
-                        if score is not None:
-                            st.success(f"Nota: {score}")
-                        else:
-                            st.success("✅ Concluída")
-                    st.caption("Avaliação corrigida." if score is not None else "Você já realizou esta avaliação. Aguarde a correção.")
-                else:
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
+                    st.caption("Você ainda não realizou esta avaliação.")
                     # Lógica de Bloqueio MN1
                     is_locked = False
                     lock_reason = []
@@ -628,7 +408,7 @@ def show_student_view():
                         st.progress(min(stats['lessons']/15, 1.0), text="Progresso de Aulas")
                     else:
                         with col2:
-<<<<<<< HEAD
+
                             label = f"Iniciar {'Nova ' if attempts > 0 else ''}Tentativa ({attempts + 1}/2)"
                             if st.button(label, key=f"start_{assessment['id']}_{attempts}"):
                                 st.session_state.active_assessment = assessment
@@ -638,14 +418,7 @@ def show_student_view():
                         st.success("✅ Concluído")
                     st.caption("Você já utilizou todas as suas tentativas para esta avaliação.")
                 st.divider()
-    
-=======
-                            if st.button("Iniciar Prova", key=f"start_{assessment['id']}"):
-                                st.session_state.active_assessment = assessment
-                                st.rerun()
-                st.divider()
 
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     # --- ÁREA DE REALIZAÇÃO DA PROVA ---
     else:
         assessment = st.session_state.active_assessment
@@ -653,7 +426,7 @@ def show_student_view():
         if st.button("Cancelar / Voltar"):
             del st.session_state.active_assessment
             st.rerun()
-<<<<<<< HEAD
+
 
         # --- NOVO: Detector de Perda de Foco ---
         if st_javascript is None:
@@ -675,8 +448,7 @@ def show_student_view():
                 st.error("⚠️ **Atenção:** Detectamos que você saiu da tela da prova. Esta ação foi registrada.")
                 db.add_user_history(username, f"Perdeu o foco durante a avaliação: {assessment['title']}")
             st.rerun()
-=======
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
+
         
         questions = db.get_assessment_questions(assessment['id'])
         
@@ -704,7 +476,7 @@ def show_student_view():
                 if any((a['type'] == 'objective' and a['value'] == -1) for a in answers):
                     st.error("Responda todas as questões objetivas.")
                 else:
-<<<<<<< HEAD
+
                     with st.spinner("Corrigindo e enviando sua avaliação..."):
                         # --- LÓGICA DE AUTOCORREÇÃO ---
                         objective_score = 0
@@ -732,15 +504,7 @@ def show_student_view():
                             st.rerun()
                         else:
                             st.error(f"Erro ao enviar: {err}")
-=======
-                    success, err = db.submit_assessment(username, assessment['id'], answers)
-                    if success:
-                        st.success("Avaliação enviada com sucesso!")
-                        del st.session_state.active_assessment
-                        st.rerun()
-                    else:
-                        st.error(f"Erro ao enviar: {err}")
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
+
 
 def show_page():
     st.header("📊 Avaliações e Provas")

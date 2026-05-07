@@ -155,21 +155,12 @@ def show_teacher_dashboard():
             st.dataframe(df[['Aluno', 'lessons', 'quizzes', 'forum']].rename(columns={'lessons': 'Aulas', 'quizzes': 'Quizzes', 'forum': 'Fórum'}), use_container_width=True)
 
 def show_page():
-<<<<<<< HEAD
-    # Lógica para identificar a escola (Exemplo de como poderia funcionar)
-    # Em um sistema multi-tenant real, a escola seria definida no login.
     school_info = db.get_school()
     school_name = school_info.get('name') if school_info else None
-
     user_name = st.session_state.get('usuario', 'Usuário')
     st.title(f"Bem-vindo, {user_name}!")
-
     if school_name:
         st.caption(f"Instituição: **{school_name}**")
-
-=======
-    st.title(f"Bem-vindo, {st.session_state.get('usuario', 'Usuário')}!")
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     st.markdown("---")
 
     role = st.session_state.get('role')

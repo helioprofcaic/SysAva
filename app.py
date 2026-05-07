@@ -14,12 +14,6 @@ from views import home, aulas, forum, quiz, avaliacoes, admin, login, register, 
 from services import database, auth
 import config
 
-# Busca o nome da escola dinamicamente
-school_name = config.get_school_name()
-
-st.set_page_config(page_title=school_name, layout="wide", page_icon="🎓")
-
-
 # Define o tema da aplicação
 st.markdown(
     """

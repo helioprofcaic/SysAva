@@ -17,21 +17,12 @@ def markdown_to_html(text):
     text = re.sub(r'\*(.*?)\*', r'<em>\1</em>', text)
     text = re.sub(r'`(.*?)`', r'<code>\1</code>', text)
     # Lists (simples)
-<<<<<<< HEAD
     text = re.sub(r'^\s*[\*\-]\s+(.*)', r'<li>\1</li>', text, flags=re.M)
-=======
-    text = re.sub(r'^\s*[\*\-]\s+(.*)', r'<li>\1</li>', text, flags=re.MULTILINE)
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     # Envolve listas em tags <ul>
     if '<li>' in text:
         text = f"<ul>{text}</ul>".replace('</ul><br><ul>', '')
     # Newlines para <br>
     text = text.replace('\n', '<br>')
-<<<<<<< HEAD
-    # Limpeza de <br> extras em volta das listas
-=======
-    # Limpeza de <br> extras
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
     text = re.sub(r'<br>\s*(<(?:li|ul|/ul)>)', r'\1', text)
     text = re.sub(r'(<(?:/li|ul|/ul)>)\s*<br>', r'\1', text)
     return text
@@ -271,28 +262,13 @@ def show_student_view(class_id):
 
         # --- VISTA DA LISTA DE AULAS ---
         if st.session_state.get('view_mode') == 'list':
-<<<<<<< HEAD
             show_lesson_list(subject_id, selected_subject_name)
-=======
-            lessons = db.get_lessons_for_subject(subject_id)
-            if not lessons:
-                st.info("Esta disciplina ainda não possui aulas cadastradas.")
-                return
-            
-            st.subheader(f"Aulas de {selected_subject_name}")
-            for lesson in lessons:
-                if st.button(lesson['title'], key=f"lesson_{lesson['id']}", use_container_width=True):
-                    db.add_user_history(st.session_state.get('username'), f"Acessou a aula: {lesson['title']} | subject_id:{subject_id}")
-                    st.session_state.selected_lesson = lesson
-                    st.session_state.view_mode = 'detail'
-                    st.rerun()
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
         
         # --- VISTA DETALHADA DA AULA ---
         else: # view_mode == 'detail'
             show_lesson_detail()
 
-<<<<<<< HEAD
+
 def get_lesson_number(title):
     """Extrai o número da aula do título."""
     match = re.search(r'Aula\s*(\d+)', title, re.IGNORECASE)
@@ -432,8 +408,7 @@ def render_lessons(lessons, visited_lesson_titles, completed_quiz_titles, quiz_m
         with col_status:
             st.markdown(f'<div class="circle {status_class}" title="{tooltip}"></div>', unsafe_allow_html=True)
 
-=======
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
+
 def show_admin_view():
     """Renderiza a view de admin, com seletores de turma e disciplina."""
     if st.session_state.get('view_mode') == 'detail':
@@ -482,15 +457,9 @@ def show_admin_view():
             subject_id = subject_options[selected_subject_name]
             st.divider()
 
-<<<<<<< HEAD
-            # --- VISTA DA LISTA DE AULAS (para admin) ---
-            # A view de admin não precisa dos indicadores de progresso do aluno,
-            # mas pode se beneficiar do agrupamento.
             lessons = db.get_lessons_for_subject(subject_id)
             st.subheader(f"Aulas de {selected_subject_name}")
-
             grouped_lessons = group_lessons(lessons, selected_subject_name, selected_class_name)
-
             for group_title, lessons_in_group in grouped_lessons.items():
                 with st.expander(f"**{group_title}**", expanded=True):
                     for lesson in lessons_in_group:
@@ -498,39 +467,10 @@ def show_admin_view():
                             st.session_state.selected_lesson = lesson
                             st.session_state.view_mode = 'detail'
                             st.rerun()
-=======
-            lessons = db.get_lessons_for_subject(subject_id)
-            st.subheader(f"Aulas de {selected_subject_name}")
-            for lesson in lessons:
-                if st.button(lesson['title'], key=f"lesson_{lesson['id']}", use_container_width=True):
-                    st.session_state.selected_lesson = lesson
-                    st.session_state.view_mode = 'detail'
-                    st.rerun()
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
 
 def show_page():
     st.header("📺 Sala de Aula Virtual")
-
-<<<<<<< HEAD
-    # Injeta CSS para os indicadores de status (bolinhas)
-    st.markdown("""
-        <style>
-        .circle {
-            height: 12px;
-            width: 12px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-top: 12px;
-            border: 1px solid rgba(0,0,0,0.2);
-        }
-        .circle-green { background-color: #28a745; box-shadow: 0 0 5px #28a745; }
-        .circle-orange { background-color: #fd7e14; box-shadow: 0 0 5px #fd7e14; }
-        .circle-gray { background-color: #6c757d; }
-        </style>
-    """, unsafe_allow_html=True)
-
-=======
->>>>>>> 95026d0c64133e89236c7c4e1f640204e9f988a9
+    st.markdown("""<style>.circle {height: 12px;width: 12px;border-radius: 50%;display: inline-block;margin-top: 12px;border: 1px solid rgba(0,0,0,0.2);}.circle-green { background-color: #28a745; box-shadow: 0 0 5px #28a745; }.circle-orange { background-color: #fd7e14; box-shadow: 0 0 5px #fd7e14; }.circle-gray { background-color: #6c757d; }</style>""", unsafe_allow_html=True)
     # Gerencia a visualização entre lista e detalhe da aula
     if 'view_mode' not in st.session_state:
         st.session_state.view_mode = 'list'
