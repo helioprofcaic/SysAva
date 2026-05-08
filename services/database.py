@@ -46,9 +46,10 @@ def get_user(username: str):
 def get_all_users():
     if not is_db_connected(): return []
     try:
-        response = supabase.table("app_users").select("id, username, name, role, ra").execute()
+        response = supabase.table("app_users").select("*").execute()
         return response.data
-    except Exception:
+    except Exception as e:
+        print(f"❌ DEBUG: Erro em get_all_users: {e}")
         return []
 
 def create_user(username: str, hashed_password: str, name: str, ra: str, role: str = 'student'):
@@ -278,8 +279,7 @@ def get_forum_posts(lesson_id: int = None):
         query = supabase.table("forum_posts").select("*").order("created_at", desc=True)
         if lesson_id:
             query = query.eq("lesson_id", lesson_id)
-        else:
-            query = query.is_("lesson_id", "null")
+        # Se lesson_id for None, não aplica o filtro de 'null', permitindo ver todo o histórico no Fórum Geral
         response = query.execute()
         return response.data
     except Exception as e:
@@ -437,7 +437,7 @@ def get_students_by_class(class_id: int):
         enrollments_res = supabase.table("student_enrollments").select("user_username").eq("class_id", class_id).execute()
         if not enrollments_res.data: return []
         usernames = [e['user_username'] for e in enrollments_res.data]
-        users_res = supabase.table("app_users").select("id, username, name, ra, role").in_("username", usernames).execute()
+        users_res = supabase.table("app_users").select("*").in_("username", usernames).execute()
         return users_res.data
     except Exception as e:
         print(f"Erro ao buscar alunos da turma {class_id}: {e}")

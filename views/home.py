@@ -102,7 +102,15 @@ def show_teacher_dashboard():
         selected_subject_id_teacher = subject_options_teacher[selected_subject_name_teacher]
 
         # 3. Seletor de Aluno (Filtrado pela Turma)
-        students = db.get_students_by_class(class_id_score)
+        if db.is_db_connected():
+            students = db.get_students_by_class(class_id_score)
+        else:
+            students = [
+                {'id': 'mock-1', 'name': 'Aluno Teste 1', 'username': 'aluno1', 'role': 'student'},
+                {'id': 'mock-2', 'name': 'Aluno Teste 2', 'username': 'aluno2', 'role': 'student'}
+            ]
+            st.info("💡 Exibindo alunos de teste (Modo Offline)")
+
         if not students:
             st.warning("Nenhum aluno encontrado nesta turma.")
         else:

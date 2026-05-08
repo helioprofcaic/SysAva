@@ -47,6 +47,12 @@ def render_plugin_integrated(plugin_path):
             module.show_agenda()
         elif hasattr(module, "show_student_scores"):
             module.show_student_scores()
+        elif hasattr(module, "show_attendance_plugin"):
+            module.show_attendance_plugin()
+        elif hasattr(module, "show_daily_activities"):
+            module.show_daily_activities()
+        elif hasattr(module, "show_grade_semanal"):
+            module.show_grade_semanal()
         elif hasattr(module, "show_page"):
             module.show_page()
         elif hasattr(module, "main"):
@@ -66,10 +72,31 @@ def show_page():
     Esta seção permite executar funcionalidades nativas e scripts Python externos para estender as capacidades do SysAva.
     """)
 
-    tab_native, tab_external, tab_agenda, tab_scores = st.tabs(["🔌 Plugins Nativos", "📂 Plugins Externos", "📅 Minha Agenda", "📊 Gestão de Notas"])
+    # Substituímos st.tabs por um seletor de rádio horizontal para controle de execução.
+    # O Streamlit avalia o conteúdo de todas as abas no st.tabs, o que causava a poluição do sidebar.
+    # Com o if/elif, apenas o código (e o sidebar) do plugin selecionado é processado.
+    menu_options = ["Nativos", "Externos", "Agenda", "Atividades", "Notas", "Frequência", "Grade"]
+    icons = {
+        "Nativos": "🔌", 
+        "Externos": "📂", 
+        "Agenda": "📅", 
+        "Atividades": "🎯",
+        "Notas": "📊", 
+        "Frequência": "📝",
+        "Grade": "🗓️"
+    }
+    
+    selected_tab = st.radio(
+        "Menu de Plugins",
+        options=menu_options,
+        format_func=lambda x: f"{icons[x]} {x}",
+        horizontal=True,
+        label_visibility="collapsed"
+    )
+    st.divider()
 
     # --- Aba de Plugins Nativos ---
-    with tab_native:
+    if selected_tab == "Nativos":
         with st.expander("🎓 Gerador de Certificados (Exemplo)"):
             st.info("Exemplo de integração de um componente para gerar certificados de conclusão.")
 
@@ -118,7 +145,7 @@ def show_page():
                         st.error(f"Não foi possível abrir o PDF: {e}")
 
     # --- Aba de Plugins Externos ---
-    with tab_external:
+    elif selected_tab == "Externos":
         st.markdown("### 📂 Executar Plugins Externos")
         st.warning("⚠️ **Atenção:** Esta funcionalidade executa scripts Python diretamente. Use apenas scripts de fontes confiáveis.")
 
@@ -150,19 +177,41 @@ def show_page():
                             st.code(result.stdout if result.stdout else "Executado sem saída.")
 
     # --- Aba de Agenda (Dedicada) ---
-    with tab_agenda:
+    elif selected_tab == "Agenda":
         agenda_path = os.path.join("data", "repo", "plugins", "agenda.py")
         if os.path.exists(agenda_path):
             render_plugin_integrated(agenda_path)
         else:
             st.info("O plugin de agenda não foi encontrado em `data/repo/plugins/agenda.py`.")
 
+    # --- Aba de Atividades Diárias ---
+    elif selected_tab == "Atividades":
+        activities_path = os.path.join("data", "repo", "plugins", "daily_activities.py")
+        if os.path.exists(activities_path):
+            render_plugin_integrated(activities_path)
+        else:
+            st.info("O plugin de atividades não foi encontrado.")
+
     # --- Aba de Gestão de Notas ---
-    with tab_scores:
+    elif selected_tab == "Notas":
         scores_path = os.path.join("data", "repo", "plugins", "student_scores.py")
         if os.path.exists(scores_path):
             render_plugin_integrated(scores_path)
         else:
             st.info("O plugin de gestão de notas não foi encontrado em `data/repo/plugins/student_scores.py`.")
 
-            # Estado para controlar qual plugin está ativo na interface
+    # --- Aba de Frequência ---
+    elif selected_tab == "Frequência":
+        attendance_path = os.path.join("data", "repo", "plugins", "student_attendance.py")
+        if os.path.exists(attendance_path):
+            render_plugin_integrated(attendance_path)
+        else:
+            st.info("O plugin de frequência não foi encontrado em `data/repo/plugins/student_attendance.py`.")
+
+    # --- Aba de Grade Semanal ---
+    elif selected_tab == "Grade":
+        grade_path = os.path.join("data", "repo", "plugins", "grade_semanal.py")
+        if os.path.exists(grade_path):
+            render_plugin_integrated(grade_path)
+        else:
+            st.info("O plugin de grade semanal não foi encontrado.")
