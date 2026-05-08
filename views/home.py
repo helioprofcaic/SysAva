@@ -65,7 +65,7 @@ def show_teacher_dashboard():
 
     # 1. Atalhos
     st.markdown("#### Ações Rápidas")
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
         if st.button("📝 Gerenciar Avaliações", use_container_width=True):
             st.session_state.page = "Avaliações"
@@ -73,6 +73,10 @@ def show_teacher_dashboard():
     with col2:
         if st.button("📚 Gerenciar Conteúdo (Aulas, Quizzes)", use_container_width=True):
             st.session_state.page = "Admin"
+            st.rerun()
+    with col3:
+        if st.button("🧩 Central de Plugins", use_container_width=True):
+            st.session_state.page = "Plugins"
             st.rerun()
     
     st.divider()
