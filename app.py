@@ -18,11 +18,30 @@ import config
 st.markdown(
     """
     <style>
-    /* Força o fundo escuro e a cor do texto branca para todo o app */
-    html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
-        background-color: #333333;
-        color: white;
-    }
+        /* Modern UI Theme */
+        [data-testid="stAppViewContainer"] {
+            background: linear-gradient(135deg, #1e1e2f 0%, #121212 100%);
+            color: #e0e0e0;
+        }
+        [data-testid="stHeader"] {
+            background: rgba(0,0,0,0);
+        }
+        /* Card Style para seções */
+        div.stButton > button {
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: 1px solid #4a4a6a;
+        }
+        div.stButton > button:hover {
+            border-color: #00ffa3;
+            color: #00ffa3;
+            box-shadow: 0 0 10px rgba(0, 255, 163, 0.2);
+        }
+        /* Melhora a visibilidade de inputs */
+        .stTextInput input, .stTextArea textarea {
+            background-color: #262636 !important;
+            color: #ffffff !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -83,6 +102,7 @@ def main():
             if st.session_state.get('role') in ['admin', 'teacher']:
                 opcoes_menu.append("Admin")
                 opcoes_menu.append("Plugins")
+                opcoes_menu.append("Gerador de Aulas")
             
             # Identifica qual opção deve estar marcada no menu
             current_page = st.session_state.get('page', 'Home')

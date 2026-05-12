@@ -105,14 +105,61 @@ def get_turma_label(name):
     return name
 
 def load_grade():
+    """Carrega a grade combinando o arquivo local com os dados do Supabase."""
+    grade = {}
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    return {}
+            grade = json.load(f)
+    
+    # Sincronização Online
+    if db and hasattr(db, 'supabase'):
+        try:
+            response = db.supabase.table("weekly_schedule").select("*").execute()
+            for row in response.data:
+                c_n = row['class_name']
+                day = row['day_of_week']
+                slot = row['time_slot']
+                subj = row['subject_name']
+                
+                if c_n not in grade:
+                    grade[c_n] = {d: {} for d in DIAS_SEMANA}
+                    grade[c_n]["config_horarios"] = HORARIOS_PADRAO
+                
+                if day not in grade[c_n]: grade[c_n][day] = {}
+                grade[c_n][day][slot] = subj
+        except Exception:
+            pass # Continua com o local se falhar a rede
+    return grade
 
 def save_grade(data):
+    """Salva a grade localmente e faz o upsert para o Supabase."""
     with open(DATA_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
+
+    if db and hasattr(db, 'supabase'):
+        records = []
+        prof = st.session_state.get('usuario', 'Professor') if 'streamlit' in sys.modules else 'CLI'
+        
+        for c_name, content in data.items():
+            for day, slots in content.items():
+                if day == "config_horarios": continue
+                for slot, sub in slots.items():
+                    records.append({
+                        "class_name": c_name,
+                        "day_of_week": day,
+                        "time_slot": slot,
+                        "subject_name": sub,
+                        "professor_name": prof
+                    })
+        
+        if records:
+            try:
+                db.supabase.table("weekly_schedule").upsert(
+                    records, 
+                    on_conflict="class_name, day_of_week, time_slot"
+                ).execute()
+            except Exception as e:
+                print(f"Erro na sincronização: {e}")
 
 def show_grade_semanal():
     """Interface visual para o SysAva."""
@@ -362,6 +409,13 @@ def menu_edicao():
             else:
                 if horario_selecionado in grade[turma_nome][dia_selecionado]:
                     del grade[turma_nome][dia_selecionado][horario_selecionado]
+                    # Remove do banco de dados também se estiver online
+                    if db and hasattr(db, 'supabase'):
+                        db.supabase.table("weekly_schedule").delete().match({
+                            "class_name": turma_nome,
+                            "day_of_week": dia_selecionado,
+                            "time_slot": horario_selecionado
+                        }).execute()
                     print("🗑️ Removido.")
             
             # Salva a cada modificação para garantir persistência

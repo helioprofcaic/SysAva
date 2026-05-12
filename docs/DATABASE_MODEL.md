@@ -137,6 +137,30 @@ create table public.schedules (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+
+CREATE TABLE attendance (
+    id BIGSERIAL PRIMARY KEY,
+    student_name TEXT NOT NULL,
+    student_number INT,
+    is_present BOOLEAN DEFAULT TRUE,
+    class_name TEXT NOT NULL,
+    date DATE NOT NULL,
+    professor_name TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (student_name, class_name, date) -- Evita duplicatas
+);
+
+CREATE TABLE weekly_schedule (
+    id BIGSERIAL PRIMARY KEY,
+    class_name TEXT NOT NULL,
+    day_of_week TEXT NOT NULL,
+    time_slot TEXT NOT NULL,
+    subject_name TEXT NOT NULL,
+    professor_name TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (class_name, day_of_week, time_slot) -- Impede conflitos de horário na mesma turma
+);
+
 -- =============================================================================
 -- 🧹 COMANDOS ÚTEIS (MANUTENÇÃO)
 -- =============================================================================

@@ -78,7 +78,7 @@ def run_seeder():
             while j < len(lines):
                 # É uma disciplina se a próxima linha NÃO for um código de turma
                 if (j + 1 >= len(lines)) or not lines[j+1].startswith("Código da Turma:"):
-                    subject_name = lines[j]
+                    subject_name = lines[j].replace("Disciplina:", "").strip()
                     print(f"    - Vinculando disciplina: {subject_name}")
                     subject_id = db.upsert_subject(name=subject_name)
                     if subject_id:

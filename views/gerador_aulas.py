@@ -1,28 +1,54 @@
 import streamlit as st
 import os
 import re
+import time
 from services.generate_lessons_gemini import GeradorAulaGemini, DATA_DIR
 from services.ai_generation import generate_content_with_fallback, generate_content_local_lm_studio, configure_api
+from services import database as db
+from services import quiz_parser
 
 def show_page():
     st.header("🎓 Gerador de Planos de Aula (Gemini)")
     st.markdown("---")
 
+    # Inicializa o estado para armazenar o contexto antes de usar no stepper
+    if 'gerador_contexto' not in st.session_state:
+        st.session_state.gerador_contexto = None
+
+    if 'arquivos_encontrados' not in st.session_state:
+        st.session_state.arquivos_encontrados = None
+
     # --- SIDEBAR: Configurações ---
     with st.sidebar:
+        st.header("⚙️ Contexto Acadêmico")
+        
+        # --- Integração Direta com o Banco de Dados ---
+        classes = db.get_classes()
+        class_options = {c['name']: c['id'] for c in classes}
+        turma_selecionada = st.selectbox("1. Selecione a Turma", ["Selecione..."] + list(class_options.keys()))
+        
+        disciplina_selecionada = "Selecione..."
+        subject_id = None
+        if turma_selecionada != "Selecione...":
+            class_id = class_options[turma_selecionada]
+            subjects = db.get_subjects_for_class(class_id)
+            subject_options = {s['name']: s['id'] for s in subjects}
+            disciplina_selecionada = st.selectbox("2. Selecione a Disciplina", ["Selecione..."] + list(subject_options.keys()))
+            if disciplina_selecionada != "Selecione...":
+                subject_id = subject_options[disciplina_selecionada]
+
         st.divider()
-        st.header("⚙️ Configuração do Gerador")
         
         modo_operacao = st.radio(
-            "Fonte de Contexto:",
+            "3. Fonte de Contexto (Material Base):",
             ("📂 Arquivos da Pasta (Rota 2)", "📝 Lista de Cronograma (Rota 1)"),
-            help="Rota 2 lê PDFs e Links da pasta da turma. Rota 1 lê o arquivo 'lista de aulas.txt'."
+            help="Rota 2 lê PDFs e Materiais da pasta física. Rota 1 usa o tema definido no cronograma."
         )
         
         usar_arquivos = "Rota 2" in modo_operacao
 
         st.divider()
-        st.header("🤖 Modelo de IA")
+        st.header("🤖 Inteligência Artificial")
         
         ia_source_option = st.radio(
             "Escolha o modelo de IA:",
@@ -36,43 +62,44 @@ def show_page():
         if ia_source == "gemini":
             api_key_gemini = st.text_input("Chave de API do Google Gemini", type="password", help="Necessária para usar o Gemini.")
 
-        st.subheader("Seleção")
-        
-        # Tenta listar as Turmas disponíveis na pasta data/Turmas
-        path_turmas = os.path.join(DATA_DIR, "Turmas")
-        turmas_disponiveis = []
-        if os.path.exists(path_turmas):
-            turmas_disponiveis = [d for d in os.listdir(path_turmas) if os.path.isdir(os.path.join(path_turmas, d))]
-        
-        turma_selecionada = st.selectbox("Turma", ["Selecione..."] + turmas_disponiveis)
-        
-        # Tenta listar Disciplinas dentro da Turma
-        disciplinas_disponiveis = []
-        if turma_selecionada and turma_selecionada != "Selecione...":
-            path_disciplinas = os.path.join(path_turmas, turma_selecionada)
-            if os.path.exists(path_disciplinas):
-                disciplinas_disponiveis = [d for d in os.listdir(path_disciplinas) if os.path.isdir(os.path.join(path_disciplinas, d))]
-        
-        disciplina_selecionada = st.selectbox("Disciplina", ["Selecione..."] + disciplinas_disponiveis)
-        
+        st.divider()
+        st.header("🎨 Estilo e Metodologia")
+        with st.expander("Customizar Geração", expanded=False):
+            ai_persona = st.text_area("Persona (Ator)", 
+                value="Um professor especialista, didático e motivador, que utiliza exemplos práticos e linguagem acessível.",
+                help="Ex: 'Um tutor técnico focado em certificações' ou 'Um mentor de carreira'.")
+            
+            metodologia = st.selectbox("Metodologia", 
+                ["Aula Expositiva Dialogada", "Aprendizagem Baseada em Problemas (PBL)", "Sala de Aula Invertida", "Estudo de Caso", "Gamificação"],
+                index=0)
+            
+            estrutura_aula = st.text_area("Estrutura Obrigatória", 
+                value="1. Título; 2. Objetivos; 3. Introdução; 4. Conteúdo Teórico; 5. Exemplo Prático; 6. Conclusão; 7. Quiz.",
+                help="Determine a ordem e os tópicos que não podem faltar no Markdown.")
+
+        st.divider()
         c_sem, c_aula = st.columns(2)
         with c_sem:
-            semana = st.number_input("Semana (Pasta)", min_value=1, max_value=50, value=1)
+            semana = st.number_input("Semana", min_value=1, max_value=50, value=1)
         with c_aula:
-            numero_aula = st.number_input("Nº Aula", min_value=0, max_value=200, value=1, help="Defina 0 para listar arquivos da pasta da semana manualmente.")
+            numero_aula = st.number_input("Aula Nº", min_value=0, max_value=200, value=1)
 
     # --- ÁREA PRINCIPAL ---
     # Removido o st.columns para um layout de coluna única, melhorando a legibilidade.
 
-    # Inicializa o estado para armazenar o contexto
-    if 'gerador_contexto' not in st.session_state:
-        st.session_state.gerador_contexto = None
+    # --- PROGRESS STEPPER ---
+    step = 1
+    if st.session_state.gerador_contexto: step = 2
+    if 'aula_gerada' in st.session_state: step = 3
+    
+    cols_step = st.columns(3)
+    steps = ["1. Contexto", "2. Geração AI", "3. Integração"]
+    for i, s in enumerate(steps):
+        status = "🔵" if step == i+1 else "✅" if step > i+1 else "⚪"
+        cols_step[i].markdown(f"**{status} {s}**")
+    st.divider()
 
-    # Novo estado para armazenar arquivos encontrados antes de ler
-    if 'arquivos_encontrados' not in st.session_state:
-        st.session_state.arquivos_encontrados = None
-
-    st.info("ℹ️ **Como funciona:**\n\n1. Selecione os filtros e clique em **Buscar Contexto**.\n2. Selecione os arquivos desejados (Rota 2).\n3. Clique em **Gerar Plano de Aula**.")
+    st.info("💡 **Fluxo de Trabalho:** Selecione a **Turma/Disciplina** na barra lateral ➡️ **Buscar Contexto** ➡️ **Gerar Aula** ➡️ **Salvar no Banco**.")
     
     # Sobrescrita de modo para Aula 0
     if numero_aula == 0:
@@ -182,7 +209,10 @@ def show_page():
                             contexto_str=contexto_para_ia,
                             school_name=school_name_ui,
                             professor_name=professor_name_ui,
-                            numero_aula=numero_aula
+                            numero_aula=numero_aula,
+                            persona=ai_persona,
+                            metodologia=metodologia,
+                            estrutura=estrutura_aula
                         )
                         
                         st.session_state['last_prompt'] = prompt
@@ -195,6 +225,7 @@ def show_page():
                         
                         if response and hasattr(response, 'text'):
                             st.session_state['aula_gerada'] = response.text
+                            st.session_state['generated_subject_id'] = subject_id
                             st.success("Aula gerada com sucesso!")
                         else:
                             st.error("Falha ao receber resposta da IA. Verifique a API Key, cotas ou a conexão com o servidor local.")
@@ -233,12 +264,32 @@ def show_page():
                     if safe_title:
                         nome_arquivo = f"{safe_title}.md"
                 
-                st.download_button(
-                    label="💾 Baixar Plano (.md)",
-                    data=conteudo_aula,
-                    file_name=nome_arquivo,
-                    mime="text/markdown"
-                )
+                col_exp1, col_exp2 = st.columns(2)
+                with col_exp1:
+                    st.download_button(
+                        label="💾 Baixar Arquivo (.md)",
+                        data=conteudo_aula,
+                        file_name=nome_arquivo,
+                        mime="text/markdown",
+                        use_container_width=True
+                    )
+                with col_exp2:
+                    if st.button("🚀 Salvar no Banco de Dados", type="primary", use_container_width=True):
+                        target_sid = st.session_state.get('generated_subject_id')
+                        if target_sid:
+                            with st.spinner("Integrando ao sistema..."):
+                                # Separa conteúdo da aula e do quiz
+                                lesson_content, quiz_content = quiz_parser.split_lesson_and_quiz(conteudo_aula)
+                                # Upsert da aula
+                                lesson_title_clean = nome_arquivo.replace(".md", "")
+                                lesson_id = db.upsert_lesson(lesson_title_clean, target_sid, lesson_content, "")
+                                
+                                if quiz_content and lesson_id:
+                                    quiz_parser.process_quiz_content(lesson_id, quiz_content, lesson_title_clean)
+                                
+                                st.success(f"Aula '{lesson_title_clean}' salva com sucesso no banco de dados!")
+                        else:
+                            st.error("Erro: Contexto da disciplina perdido. Selecione a disciplina novamente antes de salvar.")
             else:
                 st.info("Clique em 'Gerar Plano de Aula com IA' para ver o resultado aqui.")
         

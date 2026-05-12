@@ -1,0 +1,821 @@
+[
+    {
+        "Nº":1,
+        "Nome do Aluno":"ANA KAROLLINY OLIVEIRA DOS SANTOS",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":2,
+        "Nome do Aluno":"ANA LARISSA BARROS DOS SANTOS",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":3,
+        "Nome do Aluno":"CARLA EDUARDA DE ARAUJO FURTADO",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":4,
+        "Nome do Aluno":"ERASMO CASSIANO DE SOUSA ALVES",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":5,
+        "Nome do Aluno":"FERNANDO GLEYSON DOS SANTOS SOARES",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":6,
+        "Nome do Aluno":"ISADORA FERNANDA DA SILVA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":7,
+        "Nome do Aluno":"JANAYRA SOARES BRANDÃO",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":8,
+        "Nome do Aluno":"JOSÉ ISAC ARAUJO DA SILVA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":9,
+        "Nome do Aluno":"JUNIO GABRIEL SILVA LIMA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":10,
+        "Nome do Aluno":"LÁZARO DE SOUSA SILVA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":11,
+        "Nome do Aluno":"MANOEL HENRIQUE DE AZEVEDO SALES",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":12,
+        "Nome do Aluno":"MARIA ALICE SILVA MOURA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":13,
+        "Nome do Aluno":"MARIA CLARA DOS SANTOS RODRIGUES DE SOUZA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":14,
+        "Nome do Aluno":"MARIA CRYSTHIELY DA SILVA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":15,
+        "Nome do Aluno":"MARIA FERNANDA DOS SANTOS LIMA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":16,
+        "Nome do Aluno":"MATHEUS SOUSA SILVA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":17,
+        "Nome do Aluno":"PAULA CRISTINA DA SILVA DE SOUSA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":18,
+        "Nome do Aluno":"ROMULO GABRIEL OLIVEIRA SOARES",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":19,
+        "Nome do Aluno":"VICTOR MANOEL DA COSTA DOS SANTOS",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-04-30"
+    },
+    {
+        "Nº":1,
+        "Nome do Aluno":"ANDRESSA FELIPA NERY ARAUJO",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":2,
+        "Nome do Aluno":"ANTONIO ALBERTO DE SOUSA SILVA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":3,
+        "Nome do Aluno":"CLEISON ROBERTO LEMOS DOS SANTOS",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":4,
+        "Nome do Aluno":"DANIELI KARINNY NOGUEIRA DA SILVA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":5,
+        "Nome do Aluno":"EMANUEL CESAR ANDRADE NERY",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":6,
+        "Nome do Aluno":"EVANIELLY CRISTINA MOREIRA DA SILVA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":7,
+        "Nome do Aluno":"FABIANO PEREIRA CARDOSO",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":8,
+        "Nome do Aluno":"FRANCISCO JOEL FERREIRA DOS SANTOS",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":9,
+        "Nome do Aluno":"GILVAN ANTONIO RIBEIRO DE MACEDO FILHO",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":10,
+        "Nome do Aluno":"GISELLY DE ALMEIDA SOUSA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":11,
+        "Nome do Aluno":"JULIA GABRIELLA DE OLIVEIRA SALES",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":12,
+        "Nome do Aluno":"KARLISON EMANUEL DA HORA TORRES",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":13,
+        "Nome do Aluno":"LUARA CRISTINE VISGUEIRA DE SOUSA LEMOS",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":14,
+        "Nome do Aluno":"MARIA CLARA OLIVEIRA BRANDAO",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":15,
+        "Nome do Aluno":"MARIA VITÓRIA DOS REIS SOUSA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":16,
+        "Nome do Aluno":"MATHEUS SOUSA COSTA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":17,
+        "Nome do Aluno":"PEDRO HENRIQUE PEREIRA GARCIAS",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":18,
+        "Nome do Aluno":"SARAH BEATRIZ DE OLIVEIRA DIAS",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":19,
+        "Nome do Aluno":"YARA CRISTINA PARGA SANTOS",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":20,
+        "Nome do Aluno":"YASMIN LORRANY VIEIRA DE SOUSA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-04"
+    },
+    {
+        "Nº":1,
+        "Nome do Aluno":"ANA KAROLLINY OLIVEIRA DOS SANTOS",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":2,
+        "Nome do Aluno":"ANA LARISSA BARROS DOS SANTOS",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":3,
+        "Nome do Aluno":"CARLA EDUARDA DE ARAUJO FURTADO",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":4,
+        "Nome do Aluno":"ERASMO CASSIANO DE SOUSA ALVES",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":5,
+        "Nome do Aluno":"FERNANDO GLEYSON DOS SANTOS SOARES",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":6,
+        "Nome do Aluno":"ISADORA FERNANDA DA SILVA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":7,
+        "Nome do Aluno":"JANAYRA SOARES BRANDÃO",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":8,
+        "Nome do Aluno":"JOSÉ ISAC ARAUJO DA SILVA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":9,
+        "Nome do Aluno":"JUNIO GABRIEL SILVA LIMA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":10,
+        "Nome do Aluno":"LÁZARO DE SOUSA SILVA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":11,
+        "Nome do Aluno":"MANOEL HENRIQUE DE AZEVEDO SALES",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":12,
+        "Nome do Aluno":"MARIA ALICE SILVA MOURA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":13,
+        "Nome do Aluno":"MARIA CLARA DOS SANTOS RODRIGUES DE SOUZA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":14,
+        "Nome do Aluno":"MARIA CRYSTHIELY DA SILVA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":15,
+        "Nome do Aluno":"MARIA FERNANDA DOS SANTOS LIMA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":16,
+        "Nome do Aluno":"MATHEUS SOUSA SILVA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":17,
+        "Nome do Aluno":"PAULA CRISTINA DA SILVA DE SOUSA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":18,
+        "Nome do Aluno":"ROMULO GABRIEL OLIVEIRA SOARES",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":19,
+        "Nome do Aluno":"VICTOR MANOEL DA COSTA DOS SANTOS",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-05"
+    },
+    {
+        "Nº":1,
+        "Nome do Aluno":"ANDRESSA FELIPA NERY ARAUJO",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":2,
+        "Nome do Aluno":"ANTONIO ALBERTO DE SOUSA SILVA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":3,
+        "Nome do Aluno":"CLEISON ROBERTO LEMOS DOS SANTOS",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":4,
+        "Nome do Aluno":"DANIELI KARINNY NOGUEIRA DA SILVA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":5,
+        "Nome do Aluno":"EMANUEL CESAR ANDRADE NERY",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":6,
+        "Nome do Aluno":"EVANIELLY CRISTINA MOREIRA DA SILVA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":7,
+        "Nome do Aluno":"FABIANO PEREIRA CARDOSO",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":8,
+        "Nome do Aluno":"FRANCISCO JOEL FERREIRA DOS SANTOS",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":9,
+        "Nome do Aluno":"GILVAN ANTONIO RIBEIRO DE MACEDO FILHO",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":10,
+        "Nome do Aluno":"GISELLY DE ALMEIDA SOUSA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":11,
+        "Nome do Aluno":"JULIA GABRIELLA DE OLIVEIRA SALES",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":12,
+        "Nome do Aluno":"KARLISON EMANUEL DA HORA TORRES",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":13,
+        "Nome do Aluno":"LUARA CRISTINE VISGUEIRA DE SOUSA LEMOS",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":14,
+        "Nome do Aluno":"MARIA CLARA OLIVEIRA BRANDAO",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":15,
+        "Nome do Aluno":"MARIA VITÓRIA DOS REIS SOUSA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":16,
+        "Nome do Aluno":"MATHEUS SOUSA COSTA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":17,
+        "Nome do Aluno":"PEDRO HENRIQUE PEREIRA GARCIAS",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":18,
+        "Nome do Aluno":"SARAH BEATRIZ DE OLIVEIRA DIAS",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":19,
+        "Nome do Aluno":"YARA CRISTINA PARGA SANTOS",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":20,
+        "Nome do Aluno":"YASMIN LORRANY VIEIRA DE SOUSA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-06"
+    },
+    {
+        "Nº":1,
+        "Nome do Aluno":"ANA KAROLLINY OLIVEIRA DOS SANTOS",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":2,
+        "Nome do Aluno":"ANA LARISSA BARROS DOS SANTOS",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":3,
+        "Nome do Aluno":"CARLA EDUARDA DE ARAUJO FURTADO",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":4,
+        "Nome do Aluno":"ERASMO CASSIANO DE SOUSA ALVES",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":5,
+        "Nome do Aluno":"FERNANDO GLEYSON DOS SANTOS SOARES",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":6,
+        "Nome do Aluno":"ISADORA FERNANDA DA SILVA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":7,
+        "Nome do Aluno":"JANAYRA SOARES BRANDÃO",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":8,
+        "Nome do Aluno":"JOSÉ ISAC ARAUJO DA SILVA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":9,
+        "Nome do Aluno":"JUNIO GABRIEL SILVA LIMA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":10,
+        "Nome do Aluno":"LÁZARO DE SOUSA SILVA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":11,
+        "Nome do Aluno":"MANOEL HENRIQUE DE AZEVEDO SALES",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":12,
+        "Nome do Aluno":"MARIA ALICE SILVA MOURA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":13,
+        "Nome do Aluno":"MARIA CLARA DOS SANTOS RODRIGUES DE SOUZA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":14,
+        "Nome do Aluno":"MARIA CRYSTHIELY DA SILVA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":15,
+        "Nome do Aluno":"MARIA FERNANDA DOS SANTOS LIMA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":16,
+        "Nome do Aluno":"MATHEUS SOUSA SILVA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":17,
+        "Nome do Aluno":"PAULA CRISTINA DA SILVA DE SOUSA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":18,
+        "Nome do Aluno":"ROMULO GABRIEL OLIVEIRA SOARES",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":19,
+        "Nome do Aluno":"VICTOR MANOEL DA COSTA DOS SANTOS",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-B (Técnico DS)",
+        "Data":"2026-05-07"
+    },
+    {
+        "Nº":1,
+        "Nome do Aluno":"ANDRESSA FELIPA NERY ARAUJO",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":2,
+        "Nome do Aluno":"ANTONIO ALBERTO DE SOUSA SILVA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":3,
+        "Nome do Aluno":"CLEISON ROBERTO LEMOS DOS SANTOS",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":4,
+        "Nome do Aluno":"DANIELI KARINNY NOGUEIRA DA SILVA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":5,
+        "Nome do Aluno":"EMANUEL CESAR ANDRADE NERY",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":6,
+        "Nome do Aluno":"EVANIELLY CRISTINA MOREIRA DA SILVA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":7,
+        "Nome do Aluno":"FABIANO PEREIRA CARDOSO",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":8,
+        "Nome do Aluno":"FRANCISCO JOEL FERREIRA DOS SANTOS",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":9,
+        "Nome do Aluno":"GILVAN ANTONIO RIBEIRO DE MACEDO FILHO",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":10,
+        "Nome do Aluno":"GISELLY DE ALMEIDA SOUSA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":11,
+        "Nome do Aluno":"JULIA GABRIELLA DE OLIVEIRA SALES",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":12,
+        "Nome do Aluno":"KARLISON EMANUEL DA HORA TORRES",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":13,
+        "Nome do Aluno":"LUARA CRISTINE VISGUEIRA DE SOUSA LEMOS",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":14,
+        "Nome do Aluno":"MARIA CLARA OLIVEIRA BRANDAO",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":15,
+        "Nome do Aluno":"MARIA VITÓRIA DOS REIS SOUSA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":16,
+        "Nome do Aluno":"MATHEUS SOUSA COSTA",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":17,
+        "Nome do Aluno":"PEDRO HENRIQUE PEREIRA GARCIAS",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":18,
+        "Nome do Aluno":"SARAH BEATRIZ DE OLIVEIRA DIAS",
+        "Presença":true,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":19,
+        "Nome do Aluno":"YARA CRISTINA PARGA SANTOS",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    },
+    {
+        "Nº":20,
+        "Nome do Aluno":"YASMIN LORRANY VIEIRA DE SOUSA",
+        "Presença":false,
+        "Turma":"2ª SÉRIE - Turma: I-A (Técnico DS)",
+        "Data":"2026-05-11"
+    }
+]

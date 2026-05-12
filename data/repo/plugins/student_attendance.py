@@ -19,6 +19,7 @@ ATTENDANCE_FILE = os.path.join(PLUGIN_DIR, "student_attendance.json")
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
+BACKUP_DIR = os.path.join(project_root, "data", "frequencia")
 
 try:
     from services import database as db
@@ -64,16 +65,49 @@ def show_attendance_plugin():
 
     class_id = class_options[selected_class_name]
     students = db.get_students_by_class(class_id)
-
+    
     if not students:
         st.warning(f"Nenhum aluno encontrado na turma {selected_class_name}.")
         return
 
+    # Ordenar alunos por nome para definir o número na lista (Nº)
+    students = sorted(students, key=lambda x: x['name'])
+
     # 2. Carregar Dados de Frequência
     attendance_data = load_json(ATTENDANCE_FILE)
-    
-    # Estrutura: { "class_id": { "date": { "username": "status" } } }
     class_key = str(class_id)
+    
+    # Procurar outras datas anteriores em backups json na pasta data/frequencia
+    if os.path.exists(BACKUP_DIR):
+        # Mapeamento para converter Nome em Username no formato legado
+        name_to_user = {s['name']: s['username'] for s in students}
+
+        for file in os.listdir(BACKUP_DIR):
+            if file.endswith(".json"):
+                backup_json = load_json(os.path.join(BACKUP_DIR, file))
+                
+                # Caso 1: Formato Legado (Lista)
+                if isinstance(backup_json, list):
+                    for entry in backup_json:
+                        # Filtra pela turma selecionada no backup
+                        if entry.get("Turma") == selected_class_name:
+                            d_k = entry.get("Data")
+                            u_name = name_to_user.get(entry.get("Nome do Aluno"))
+                            
+                            if u_name and d_k:
+                                if class_key not in attendance_data: attendance_data[class_key] = {}
+                                if d_k not in attendance_data[class_key]: attendance_data[class_key][d_k] = {}
+                                # Prioriza o dado do arquivo principal se já existir
+                                if u_name not in attendance_data[class_key][d_k]:
+                                    status = "Presente" if entry.get("Presença") else "Falta"
+                                    attendance_data[class_key][d_k][u_name] = status
+                
+                # Caso 2: Formato Novo (Dicionário)
+                elif isinstance(backup_json, dict):
+                    for c_k, dates in backup_json.items():
+                        if c_k not in attendance_data: attendance_data[c_k] = {}
+                        attendance_data[c_k].update(dates)
+
     if class_key not in attendance_data:
         attendance_data[class_key] = {}
     if date_key not in attendance_data[class_key]:
@@ -88,17 +122,19 @@ def show_attendance_plugin():
     # Preparamos um DataFrame para o editor
     df_attendance = pd.DataFrame([
         {
+            "Nº": i + 1,
             "Username": s['username'], 
             "Nome": s['name'], 
             "Status": day_attendance.get(s['username'], "Presente")
         }
-        for s in students
+        for i, s in enumerate(students)
     ])
 
     # O data_editor permite editar o status como um dropdown em uma tabela compacta
     edited_df = st.data_editor(
         df_attendance,
         column_config={
+            "Nº": st.column_config.NumberColumn("Nº", disabled=True, width="small"),
             "Username": None, # Oculta a coluna de ID técnico
             "Nome": st.column_config.TextColumn("Estudante", disabled=True, width="large"),
             "Status": st.column_config.SelectboxColumn(
@@ -117,7 +153,42 @@ def show_attendance_plugin():
 
     if st.button("💾 Salvar Chamada do Dia", use_container_width=True, type="primary"):
         attendance_data[class_key][date_key] = new_entries
+        
+        # 1. Atualiza o JSON de origem (student_attendance.json) com todos os dados mesclados
         save_json(ATTENDANCE_FILE, attendance_data)
+
+        # 2. Popula tudo no banco de dados (Sincronização completa da turma)
+        if db and hasattr(db, 'supabase'):
+            professor = st.session_state.get('usuario', 'Professor')
+            db_records = []
+            
+            # Mapeamento auxiliar para recuperar nome e número rapidamente
+            user_info_map = {s['username']: {"name": s['name'], "n": i+1} for i, s in enumerate(students)}
+            
+            # Percorre todas as datas desta turma (originais + backups mesclados)
+            for d_key, entries in attendance_data[class_key].items():
+                for u_name, status in entries.items():
+                    if u_name in user_info_map:
+                        db_records.append({
+                            "student_name": user_info_map[u_name]["name"],
+                            "student_number": user_info_map[u_name]["n"],
+                            "is_present": status in ["Presente", "Atraso"],
+                            "class_name": selected_class_name,
+                            "date": d_key,
+                            "professor_name": professor
+                        })
+            
+            if db_records:
+                try:
+                    # O parâmetro on_conflict utiliza a definição da constraint UNIQUE (student_name, class_name, date)
+                    db.supabase.table("attendance").upsert(
+                        db_records, 
+                        on_conflict="student_name, class_name, date"
+                    ).execute()
+                    st.info(f"Sincronizados {len(db_records)} registros (incluindo backups) com o servidor.")
+                except Exception as e:
+                    st.error(f"Erro ao sincronizar com o banco de dados: {e}")
+
         st.success(f"Chamada de {selected_date.strftime('%d/%m/%Y')} salva com sucesso!")
         st.rerun()
 

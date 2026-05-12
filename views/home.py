@@ -154,9 +154,13 @@ def show_teacher_dashboard():
                 st.info("Esta turma não possui alunos matriculados.")
                 return
 
-            progress_data = [db.get_user_progress_stats(s['username']) for s in students]
-            df = pd.DataFrame(progress_data)
-            df['Aluno'] = [s['name'] for s in students]
+            combined_data = []
+            for s in students:
+                progress = db.get_user_progress_stats(s['username'])
+                progress['Aluno'] = s['name'] # Adiciona o nome do aluno ao dicionário de progresso
+                combined_data.append(progress)
+            
+            df = pd.DataFrame(combined_data)
 
             m_col1, m_col2, m_col3 = st.columns(3)
             m_col1.metric("Nº de Alunos", len(students))

@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from services import database as db
 from services import auth
 from services import ai_generation as ai
@@ -9,6 +10,58 @@ import pandas as pd
 import time
 import os
 import random
+
+def generate_printable_answer_key_html(school_name, subject_name, type_label, export_data):
+    """Gera uma visualização HTML formatada para impressão do gabarito."""
+    date_str = pd.Timestamp.now().strftime("%d/%m/%Y")
+    
+    rows_html = ""
+    for item in export_data:
+        rows_html += f"""
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">{item['Nº']}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 1.1em;"><strong>{item['Letra']}</strong></td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">{item['Enunciado']}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">{item['Resposta Correta']}</td>
+        </tr>
+        """
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Gabarito - {subject_name}</title>
+        <style>
+            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }}
+            .header {{ text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 30px; }}
+            .header h1 {{ margin: 0; font-size: 22px; }}
+            .header p {{ margin: 5px 0; color: #666; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
+            th {{ background-color: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; text-align: left; }}
+            @media print {{
+                .no-print {{ display: none !important; }}
+                body {{ margin: 0; padding: 0; }}
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="no-print" style="text-align: center; margin-bottom: 20px;">
+            <button onclick="window.print()" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🖨️ CLIQUE PARA IMPRIMIR / PDF</button>
+        </div>
+        <div class="header">
+            <h1>{school_name}</h1>
+            <p><strong>Gabarito Oficial:</strong> {subject_name} | <strong>Origem:</strong> {type_label}</p>
+            <p><strong>Data de Emissão:</strong> {date_str}</p>
+        </div>
+        <table style="font-size: 0.9em;">
+            <thead><tr><th style="text-align: center; width: 40px;">Nº</th><th style="text-align: center; width: 50px;">Letra</th><th>Enunciado</th><th style="width: 250px;">Resposta Correta</th></tr></thead>
+            <tbody>{rows_html}</tbody>
+        </table>
+    </body>
+    </html>
+    """
+    return html
 
 def show_page():
     st.header("🛡️ Painel Administrativo")
@@ -22,11 +75,11 @@ def show_page():
     main_section = st.radio("Seção", ["⚙️ Configurações Gerais", "📚 Configurações de Conteúdos"], horizontal=True)
 
     tab_config = tab1 = tab5 = tab6 = tab2 = tab_training = tab3 = tab4 = tab_audit = tab_reviewer = tab7 = None
-
+    
     if main_section == "⚙️ Configurações Gerais":
         tab_config, tab1, tab5, tab6 = st.tabs(["⚙️ Setup", "👥 Usuários", "🤖 Simulador", "📊 Relatórios"])
     else:
-        tab2, tab_training, tab3, tab4, tab_audit, tab_reviewer, tab7 = st.tabs(["📖 Aulas", "🚀 Treinamentos", "📝 Quizzes", "🎓 Avaliações", "🔍 Auditoria", "🔑 Gabaritos", "✨ Gerador AI"])
+        tab2, tab_training, tab3, tab4, tab_audit, tab_reviewer = st.tabs(["📖 Aulas", "🚀 Treinamentos", "📝 Quizzes", "🎓 Avaliações", "🔍 Auditoria", "🔑 Gabaritos"])
 
     if tab_config:
         with tab_config:
@@ -247,7 +300,7 @@ def show_page():
             selected_class_name = st.selectbox("Selecione a Turma para gerenciar", options=["-- Selecione --"] + list(class_options.keys()))
 
             if selected_class_name != "-- Selecione --":
-                class_id = class_options[selected_class_name]
+                class_id = int(class_options[selected_class_name])
 
                 with st.expander("➕ Criar Nova Disciplina e Vincular a esta Turma"):
                     with st.form("new_subject_form", clear_on_submit=True):
@@ -371,7 +424,7 @@ def show_page():
                 st.info("Nenhum treinamento criado ainda. Crie um no formulário acima.")
             else:
                 selected_training_name = st.selectbox("Selecione o Treinamento para gerenciar:", options=list(training_subjects.keys()))
-                training_id = training_subjects[selected_training_name]
+                training_id = int(training_subjects[selected_training_name])
 
                 # 2. Vincular turmas
                 st.markdown("#### Vincular Turmas a este Treinamento")
@@ -385,7 +438,7 @@ def show_page():
                     "Selecione todas as turmas que participarão deste treinamento:",
                     options=list(class_map.keys()),
                     format_func=lambda class_id: class_map[class_id],
-                    default=linked_class_ids
+                    default=list(linked_class_ids) if linked_class_ids else []
                 )
 
                 if st.button("💾 Salvar Vínculos de Turmas"):
@@ -429,7 +482,7 @@ def show_page():
                 selected_class_name_qz = st.selectbox("Selecione a Turma", options=["-- Selecione --"] + list(class_options.keys()), key="sel_class_qz_t3")
 
                 if selected_class_name_qz != "-- Selecione --":
-                    class_id_qz = class_options[selected_class_name_qz]
+                    class_id_qz = int(class_options[selected_class_name_qz])
                     subjects = db.get_subjects_for_class(class_id_qz)
 
                     if not subjects:
@@ -439,7 +492,7 @@ def show_page():
                         selected_subject_name_qz = st.selectbox("Selecione a Disciplina", options=["-- Selecione --"] + list(subject_options.keys()), key="sel_subj_qz_t3")
 
                         if selected_subject_name_qz != "-- Selecione --":
-                            subject_id_qz = subject_options[selected_subject_name_qz]
+                            subject_id_qz = int(subject_options[selected_subject_name_qz])
                             lessons = db.get_lessons_for_subject(subject_id_qz)
 
                             if not lessons:
@@ -449,7 +502,7 @@ def show_page():
                                 selected_lesson_title = st.selectbox("Selecione a Aula", options=["-- Selecione --"] + list(lesson_map.keys()), key="sel_lesson_qz_t3")
 
                                 if selected_lesson_title != "-- Selecione --":
-                                    lesson_id = lesson_map[selected_lesson_title]
+                                    lesson_id = int(lesson_map[selected_lesson_title])
                                     st.divider()
 
                                     # Verifica se já existe quiz para esta aula
@@ -518,7 +571,7 @@ def show_page():
             selected_class_name_av = st.selectbox("Selecione a Turma", options=["-- Selecione --"] + list(class_options.keys()), key="sel_class_av")
 
             if selected_class_name_av != "-- Selecione --":
-                class_id_av = class_options[selected_class_name_av]
+                class_id_av = int(class_options[selected_class_name_av])
                 subjects = db.get_subjects_for_class(class_id_av)
                 subject_options = {s['name']: s['id'] for s in subjects}
 
@@ -528,7 +581,7 @@ def show_page():
                     selected_subject_name_av = st.selectbox("Selecione a Disciplina", options=["-- Selecione --"] + list(subject_options.keys()), key="sel_subj_av")
 
                     if selected_subject_name_av != "-- Selecione --":
-                        subject_id_av = subject_options[selected_subject_name_av]
+                        subject_id_av = int(subject_options[selected_subject_name_av])
 
                         st.divider()
 
@@ -634,7 +687,7 @@ def show_page():
                                     selected_keys = st.multiselect(
                                         "Selecione as questões para importar:",
                                         options=list(q_options.keys()),
-                                        default=st.session_state.get(session_key_rand, [])
+                                        default=list(st.session_state.get(session_key_rand, []))
                                     )
 
                                     if st.button(f"📥 Importar {len(selected_keys)} Questões Selecionadas", key=f"imp_sel_{assessment['id']}"):
@@ -688,12 +741,12 @@ def show_page():
             
             subject_id_aud = None
             if selected_class_name_aud != "-- Todas as Turmas --":
-                class_id_aud = class_options_aud[selected_class_name_aud]
+                class_id_aud = int(class_options_aud[selected_class_name_aud])
                 subjects_aud = db.get_subjects_for_class(class_id_aud)
                 subj_opt_aud = {s['name']: s['id'] for s in subjects_aud}
                 selected_subject_name_aud = st.selectbox("Selecione a Disciplina", options=["-- Todas as Disciplinas --"] + list(subj_opt_aud.keys()), key="sel_subj_aud")
                 if selected_subject_name_aud != "-- Todas as Disciplinas --":
-                    subject_id_aud = subj_opt_aud[selected_subject_name_aud]
+                    subject_id_aud = int(subj_opt_aud[selected_subject_name_aud])
 
             if 'audit_results' not in st.session_state:
                 st.session_state.audit_results = None
@@ -844,7 +897,7 @@ def show_page():
                 sel_class = st.selectbox("Selecione a Turma:", list(class_options.keys()), key="rev_class_sel", index=list(class_options.keys()).index(st.session_state.rev_sel_class) if st.session_state.rev_sel_class in class_options else 0)
                 st.session_state.rev_sel_class = sel_class
 
-                subjects = db.get_subjects_for_class(class_options[sel_class])
+                subjects = db.get_subjects_for_class(int(class_options[sel_class]))
                 if not subjects:
                     st.warning("Nenhuma disciplina vinculada.")
                 else:
@@ -853,7 +906,7 @@ def show_page():
                     sel_subject = st.selectbox("Selecione a Disciplina:", list(subject_options.keys()), key="rev_subj_sel", index=list(subject_options.keys()).index(st.session_state.rev_sel_subject) if st.session_state.rev_sel_subject in subject_options else 0)
                     st.session_state.rev_sel_subject = sel_subject
 
-                    subject_id = subject_options[sel_subject]
+                    subject_id = int(subject_options[sel_subject])
 
                     review_type = st.radio("Qual banco revisar?", ["Banco Mestre (Quizzes)", "Provas Geradas (Avaliações)"], horizontal=True, key="rev_type_radio")
                     
@@ -875,6 +928,42 @@ def show_page():
             if 'rev_questions' in st.session_state and st.session_state.rev_questions:
                 st.divider()
                 st.markdown(f"**Total de Questões Carregadas:** {len(st.session_state.rev_questions)}")
+                
+                # --- Funcionalidade de Exportação de Gabarito ---
+                export_data = []
+                for idx, q in enumerate(st.session_state.rev_questions):
+                    opts = q.get('options', [])
+                    c_idx = q.get('correct_option_index', 0)
+                    # Fallback para caso o índice esteja fora do range
+                    correct_text = opts[c_idx] if 0 <= c_idx < len(opts) else "N/A"
+                    correct_letter = chr(65 + c_idx) if 0 <= c_idx < len(opts) else "?"
+                    
+                    export_data.append({
+                        "Nº": idx + 1,
+                        "ID": q['id'],
+                        "Enunciado": q['question_text'],
+                        "Letra": correct_letter,
+                        "Resposta Correta": correct_text
+                    })
+                
+                df_export = pd.DataFrame(export_data)
+
+                col_exp1, col_exp2 = st.columns(2)
+                with col_exp1:
+                    st.download_button(
+                        label="📥 Exportar Gabarito (CSV)",
+                        data=df_export.to_csv(index=False).encode('utf-8-sig'),
+                        file_name=f"gabarito_{sel_subject.replace(' ', '_')}_{st.session_state.rev_type}.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
+                with col_exp2:
+                    if st.button("🖨️ PDF para Impressão", use_container_width=True):
+                        school_info = db.get_school()
+                        school_name = school_info['name'] if school_info else "Escola Técnica"
+                        html_print = generate_printable_answer_key_html(school_name, sel_subject, st.session_state.rev_type.upper(), export_data)
+                        components.html(html_print, height=600, scrolling=True)
+                        st.stop()
                 
                 for i, q in enumerate(st.session_state.rev_questions):
                     q_id = q['id']
@@ -1004,137 +1093,3 @@ def show_page():
                 st.download_button("📥 Baixar Relatório Completo (CSV)", data=csv, file_name="relatorio_atividades.csv", mime="text/csv")
             else:
                 st.info("Nenhuma atividade registrada com os filtros atuais.")
-
-    if tab7:
-        with tab7:
-            st.subheader("🤖 Gerador de Aulas com IA (Gemini)")
-            st.markdown("Cole o cronograma, analise a estrutura e gere as aulas automaticamente no banco de dados.")
-
-            # 1. Seleção de Contexto
-            classes = db.get_classes()
-            class_options = {c['name']: c['id'] for c in classes}
-            sel_class_name = st.selectbox("1. Selecione a Turma", ["-- Selecione --"] + list(class_options.keys()), key="gen_class")
-
-            if sel_class_name != "-- Selecione --":
-                class_id = class_options[sel_class_name]
-                subjects = db.get_subjects_for_class(class_id)
-                subject_options = {s['name']: s['id'] for s in subjects}
-
-                sel_subject_name = st.selectbox("2. Selecione a Disciplina", ["-- Selecione --"] + list(subject_options.keys()), key="gen_subj")
-
-                if sel_subject_name != "-- Selecione --":
-                    subject_id = subject_options[sel_subject_name]
-
-                    # Recupera último cronograma salvo
-                    last_schedule = db.get_latest_schedule(subject_id)
-
-                    cronograma_text = st.text_area("3. Cole o texto do Cronograma aqui:", value=last_schedule if last_schedule else "", height=200)
-
-                    api_key = st.text_input("4. Chave de API do Google Gemini", type="password", help="Necessária para gerar o conteúdo.")
-
-                    if st.button("🔍 Analisar Cronograma"):
-                        if not api_key:
-                            st.error("Por favor, insira a Chave de API.")
-                        elif not cronograma_text:
-                            st.warning("Cole o texto do cronograma.")
-                        else:
-                            ai.configure_api(api_key)
-                            with st.spinner("Interpretando cronograma..."):
-                                # Salva cronograma no banco
-                                db.create_schedule(subject_id, cronograma_text)
-
-                                # Analisa estrutura
-                                plan = ai.parse_cronograma(cronograma_text)
-
-                                if plan:
-                                    st.session_state['lesson_plan'] = plan
-                                    st.success(f"Identificadas {len(plan)} aulas no cronograma.")
-                                else:
-                                    st.error("Não foi possível extrair aulas do texto. Verifique o formato.")
-
-                    # Exibe plano e permite geração
-                    if 'lesson_plan' in st.session_state and st.session_state.get('lesson_plan'):
-                        plan = st.session_state['lesson_plan']
-
-                        # Verifica conflitos com aulas existentes no banco
-                        existing_lessons = db.get_lessons_for_subject(subject_id)
-                        existing_titles = [l['title'] for l in existing_lessons]
-
-                        st.divider()
-                        st.write("### 📋 Plano de Aulas Identificado")
-
-                        lessons_to_generate = []
-                        conflicting_ids = []
-
-                        for lesson in plan:
-                            # Lógica simples de conflito: verifica se o tema está contido em algum título existente
-                            # ou se existe uma aula com o mesmo número (se conseguíssemos extrair o numero do titulo)
-                            found_lesson = next((l for l in existing_lessons if lesson['topic'] in l['title']), None)
-                            is_conflict = found_lesson is not None
-                            if is_conflict:
-                                conflicting_ids.append(found_lesson['id'])
-
-                            status = "✅ Já existe (Pular)" if is_conflict else "🆕 Será gerada"
-
-                            col1, col2, col3 = st.columns([0.1, 0.7, 0.2])
-                            col1.write(f"**#{lesson['lesson_number']}**")
-                            col2.write(lesson['topic'])
-                            col3.caption(status)
-
-                            if not is_conflict:
-                                lessons_to_generate.append(lesson)
-
-                        if conflicting_ids:
-                            if st.button(f"🗑️ Excluir {len(set(conflicting_ids))} aulas conflitantes deste cronograma"):
-                                for lid in set(conflicting_ids):
-                                    db.delete_lesson(lid)
-                                st.success("Aulas excluídas com sucesso! Clique em 'Analizar Cronograma' novamente para atualizar.")
-                                del st.session_state['lesson_plan']
-                                st.rerun()
-
-                        if lessons_to_generate:
-                            st.info(f"Serão geradas {len(lessons_to_generate)} novas aulas.")
-
-                            if st.button("🚀 Iniciar Geração Automática"):
-                                ai.configure_api(api_key)
-                                progress_bar = st.progress(0)
-                                status_text = st.empty()
-
-                                for i, lesson in enumerate(lessons_to_generate):
-                                    status_text.text(f"Gerando aula {lesson['lesson_number']}: {lesson['topic']}...")
-
-                                    # Gera conteúdo
-                                    # Busca dados da escola e professor para o template
-                                    school_info = db.get_school()
-                                    school_name_gen = school_info['name'] if school_info else "Escola Técnica"
-                                    prof_name_gen = st.session_state.get('usuario', 'Professor')
-
-                                    content = ai.generate_lesson_markdown(sel_subject_name, sel_class_name, lesson['topic'], lesson['lesson_number'], school_name_gen, prof_name_gen)
-
-                                    if content:
-                                        # Popula no banco (Aula + Quiz se houver)
-                                        # Aqui usamos uma lógica simplificada de inserção direta
-                                        # Extrai titulo do markdown gerado
-                                        title_match = re.search(r'^#\s+.*Aula\s*\d+:\s*(.*)', content, re.IGNORECASE)
-                                        final_title = f"Aula {lesson['lesson_number']}: {lesson['topic']}"
-
-                                        # Separa conteúdo da aula e do quiz
-                                        lesson_content, quiz_content = quiz_parser.split_lesson_and_quiz(content)
-
-                                        # Insere aula (apenas o conteúdo didático)
-                                        lesson_id = db.upsert_lesson(final_title, subject_id, lesson_content, "")
-
-                                        # Processa e salva o quiz (se existir)
-                                        if quiz_content and lesson_id:
-                                            quiz_parser.process_quiz_content(lesson_id, quiz_content, final_title)
-
-                                    progress_bar.progress((i + 1) / len(lessons_to_generate))
-                                    time.sleep(1) # Rate limit preventivo
-
-                                status_text.text("✅ Processo concluído!")
-                                st.success("Todas as aulas foram geradas e salvas no banco de dados!")
-                                # Limpa o plano para evitar re-cliques acidentais
-                                del st.session_state['lesson_plan']
-                                st.rerun()
-                        else:
-                            st.success("Todas as aulas do cronograma já parecem estar cadastradas!")
