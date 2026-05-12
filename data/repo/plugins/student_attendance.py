@@ -76,12 +76,29 @@ def show_attendance_plugin():
     # 2. Carregar Dados de Frequência
     attendance_data = load_json(ATTENDANCE_FILE)
     class_key = str(class_id)
-    
+
+    # Mapeamento auxiliar para converter Nome em Username (necessário para banco e backups)
+    name_to_user = {s['name']: s['username'] for s in students}
+
+    # --- Sincronização Cloud: Carregar do Banco de Dados ---
+    if db and hasattr(db, 'supabase'):
+        try:
+            # Busca registros existentes para esta turma no banco
+            res = db.supabase.table("attendance").select("*").eq("class_name", selected_class_name).execute()
+            if res.data:
+                if class_key not in attendance_data: attendance_data[class_key] = {}
+                for rec in res.data:
+                    dt = rec['date']
+                    u_name = name_to_user.get(rec['student_name'])
+                    if u_name:
+                        if dt not in attendance_data[class_key]: attendance_data[class_key][dt] = {}
+                        # O banco armazena boolean (is_present). O plugin usa strings para status.
+                        attendance_data[class_key][dt][u_name] = "Presente" if rec['is_present'] else "Falta"
+        except Exception:
+            pass # Falha silenciosa: se o banco falhar, usa o cache local/backups
+
     # Procurar outras datas anteriores em backups json na pasta data/frequencia
     if os.path.exists(BACKUP_DIR):
-        # Mapeamento para converter Nome em Username no formato legado
-        name_to_user = {s['name']: s['username'] for s in students}
-
         for file in os.listdir(BACKUP_DIR):
             if file.endswith(".json"):
                 backup_json = load_json(os.path.join(BACKUP_DIR, file))

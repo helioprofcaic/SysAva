@@ -1,17 +1,15 @@
-# Ambiente Virtual
-.venv/
-venv/
-.sysenv/
-
-# Arquivos de Cache do Python
+# Ambientes Virtuais e Cache Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+.sysenv/
+*.py[cod]
 
-# Arquivos de Segredos e Configuração Local
-.env
+# Dados Locais e Backups (Migrados para Cloud)
+data/repo/plugins/*.json
+data/frequencia/*.json
+data/*.log
+
 .streamlit/secrets.toml
+.env
 
 # Ignorar todo o conteúdo de data/Turmas (preservando apenas a pasta)
 data/Turmas/**
