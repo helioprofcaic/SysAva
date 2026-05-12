@@ -209,6 +209,13 @@ def show_grade_semanal():
         turmas = list(grade.keys())
         selected_turmas = st.multiselect("Selecione as Turmas para comparar", turmas, default=turmas[:2] if len(turmas) >= 2 else turmas[:1])
 
+        st.divider()
+        if st.button("📤 Sincronizar com Nuvem", use_container_width=True, help="Envia os dados locais para o banco de dados"):
+            with st.spinner("Subindo dados..."):
+                save_grade(grade)
+                st.success("Base de dados atualizada!")
+                st.rerun()
+
     if selected_turmas:
         st.subheader(f"Mapa Comparativo: {', '.join(selected_turmas)}")
 

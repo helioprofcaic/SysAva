@@ -52,6 +52,10 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
+REM Popula a grade horaria
+echo Populando a grade horária semanal no banco de dados...
+"%VENV_DIR%\Scripts\python.exe" scripts/seed_grade.py
+
 REM Popula o banco de dados com as aulas
 echo.
 echo Populando o banco de dados com as aulas em lote... 
