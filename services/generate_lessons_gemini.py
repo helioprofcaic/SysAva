@@ -138,7 +138,7 @@ class GeradorAulaGemini:
             )
         return contexto_str
 
-    def gerar_prompt_aula(self, turma, disciplina, semana, contexto_str: str, school_name: str = "Escola Técnica Estadual", professor_name: str = "Professor(a) Assistente", numero_aula: int = None, titulo_personalizado: str = None):
+    def gerar_prompt_aula(self, turma, disciplina, semana, contexto_str: str, school_name: str = "Escola Técnica Estadual", professor_name: str = "Professor(a) Assistente", numero_aula: int = None, titulo_personalizado: str = None, persona: str = None, metodologia: str = None, estrutura: str = None):
         """
         Gera o prompt final para o LLM a partir de um contexto já fornecido,
         usando o template estruturado que gera um plano de aula completo com quiz.
@@ -177,12 +177,14 @@ class GeradorAulaGemini:
 
         # 4. Montagem do Prompt
         prompt = f"""
-Atue como um Professor Assistente de {disciplina}, especialista em criação de materiais didáticos para o {nivel_pedagogico}.
+{persona if persona else f"Atue como um Professor Assistente de {disciplina}, especialista em criação de materiais didáticos para o {nivel_pedagogico}."}
 Público-Alvo: {nivel_pedagogico} de escola pública ({turma}).
 {instrucao_nivel}
+Metodologia: {metodologia if metodologia else "Aula Expositiva Dialogada"}.
 Use uma linguagem acessível, motivadora, com muitas analogias do cotidiano e cultura pop.
 
 Crie o conteúdo de uma aula em formato Markdown seguindo ESTRITAMENTE o modelo abaixo.
+Estrutura obrigatória a ser seguida: {estrutura if estrutura else "Conforme modelo abaixo"}
 
 DADOS DA AULA:
 - Semana: {semana}
