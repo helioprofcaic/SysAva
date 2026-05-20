@@ -264,19 +264,31 @@ def show_admin_view():
                             for header, question in question_headers.items():
                                 answer_text = "---" # Padrão
                                 ans = answers_map.get(question['id'])
+                                if ans:
+                                    if question['question_type'] == 'objective':
+                                        idx = ans.get('selected_option_index')
+                                        opts = question.get('options', [])
+                                        if idx is not None and 0 <= idx < len(opts):
+                                            answer_text = opts[idx]
+                                    else:
+                                        answer_text = ans.get('answer_text', '')
+                                student_row[header] = answer_text
+                            table_data.append(student_row)
+
                         # Limpa o cache se a avaliação mudar
                         if st.session_state.get('last_assessment_id_for_cache') != assessment['id']:
                             if original_data_key in st.session_state:
                                 del st.session_state[original_data_key]
                         st.session_state['last_assessment_id_for_cache'] = assessment['id']
 
-                        if original_data_key not in st.session_state:
+                        # Força a atualização se o cache estiver vazio ou se o número de submissões divergir do banco
+                        if original_data_key not in st.session_state or not st.session_state[original_data_key] or len(st.session_state[original_data_key]) != len(table_data):
                             st.session_state[original_data_key] = table_data
                         
-                        original_df = pd.DataFrame(st.session_state[original_data_key]).reset_index()
+                        df = pd.DataFrame(st.session_state[original_data_key]).reset_index()
                     
                     # --- Métricas e Exportação ---
-                    df_display = df.drop(columns=['_submission'])
+                    df_display = df.drop(columns=['index', '_submission', '_user_info'], errors='ignore')
                     csv = df_display.to_csv(index=False).encode('utf-8')
 
                     col_metrics, col_export = st.columns([0.7, 0.3])
@@ -295,7 +307,7 @@ def show_admin_view():
                     edited_df = st.data_editor(df, column_config=column_config, use_container_width=True, hide_index=True)
                     if st.button("💾 Salvar Todas as Notas Alteradas", type="primary", use_container_width=True):
                         for idx, row in edited_df.iterrows():
-                            orig = original_df.loc[original_df['index'] == row['index']].iloc[0]
+                            orig = df.loc[df['index'] == row['index']].iloc[0]
                             if row['Nota'] is not None and (pd.isna(orig['Nota']) or orig['Nota'] != row['Nota']):
                                 db.update_submission_score(orig['_submission'].get('id'), row['Nota'])
                         st.success("Notas atualizadas!"); st.rerun()
