@@ -32,24 +32,29 @@ except ImportError as e:
 def run_audit():
     """Realiza uma contagem de registros nas tabelas principais."""
     print("\n--- INICIANDO AUDITORIA RÁPIDA ---")
-    
+
+    # Mapeamento de tabelas para labels amigáveis (As 12 tabelas principais)
+    audit_targets = {
+        "app_users": "Usuários",
+        "classes": "Turmas",
+        "subjects": "Disciplinas",
+        "lessons": "Aulas",
+        "quizzes": "Quizzes",
+        "quiz_questions": "Questões de Quiz",
+        "assessments": "Avaliações (Provas)",
+        "assessment_questions": "Questões de Prova",
+        "attendance": "Registros de Frequência",
+        "weekly_schedule": "Grade Horária",
+        "student_enrollments": "Matrículas",
+        "class_subjects": "Vínculos Turma/Disc"
+    }
+
     try:
-        users = db.supabase.table("app_users").select("*", count='exact').execute().count
-        classes = db.supabase.table("classes").select("*", count='exact').execute().count
-        subjects = db.supabase.table("subjects").select("*", count='exact').execute().count
-        lessons = db.supabase.table("lessons").select("*", count='exact').execute().count
-        quizzes = db.supabase.table("quizzes").select("*", count='exact').execute().count
-        quiz_questions = db.supabase.table("quiz_questions").select("*", count='exact').execute().count
-        assessments = db.supabase.table("assessments").select("*", count='exact').execute().count
-        
-        print(f"✅ Usuários: {users}")
-        print(f"✅ Turmas: {classes}")
-        print(f"✅ Disciplinas: {subjects}")
-        print(f"✅ Aulas: {lessons}")
-        print(f"✅ Quizzes: {quizzes}")
-        print(f"✅ Questões de Quiz: {quiz_questions}")
-        print(f"✅ Avaliações (Provas): {assessments}")
-        print("--- AUDITORIA CONCLUÍDA ---\n")
+        for table, label in audit_targets.items():
+            res = db.supabase.table(table).select("*", count='exact').execute()
+            print(f"✅ {label}: {res.count}")
+
+        print(f"--- AUDITORIA CONCLUÍDA ({len(audit_targets)} tabelas) ---\n")
 
     except Exception as e:
         print(f"❌ Erro durante a auditoria: {e}")
@@ -61,9 +66,9 @@ def run_backup():
 
     # Tabelas a serem backupeadas
     TABLES_TO_BACKUP = [
-        'app_users', 'classes', 'subjects', 'class_subjects', 'student_enrollments',
-        'lessons', 'quizzes', 'quiz_questions', 'assessments', 'assessment_questions',
-        'student_assessments', 'student_assessment_answers', 'forum_posts', 'user_history'
+        'app_users', 'classes', 'subjects', 'lessons', 'quizzes', 'quiz_questions',
+        'assessments', 'assessment_questions', 'attendance', 'weekly_schedule',
+        'student_enrollments', 'class_subjects'
     ]
 
     # Nome do arquivo de backup

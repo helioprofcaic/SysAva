@@ -41,9 +41,13 @@ if not exist ".env" (
     goto start_app
 )
 
-REM Popula o banco de dados com a estrutura da escola
+:ask_seed_data
 echo.
-echo Populando o banco de dados com a estrutura da escola (turmas e disciplinas)... 
+CHOICE /C sn /T 10 /D n /M "Deseja conferir e atualizar a ESTRUTURA da escola (turmas/disciplinas)? Ignorando em 10s..."
+if %errorlevel% == 2 goto skip_seed_data
+
+REM Popula o banco de dados com a estrutura da escola
+echo Populando a estrutura da escola... 
 "%VENV_DIR%\Scripts\python.exe" scripts/seed_data.py
 if %errorlevel% neq 0 (
     echo.
@@ -51,6 +55,7 @@ if %errorlevel% neq 0 (
     pause
     exit /b 1
 )
+:skip_seed_data
 
 REM Popula a grade horaria
 echo Populando a grade horária semanal no banco de dados...

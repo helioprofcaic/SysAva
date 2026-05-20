@@ -45,6 +45,8 @@ def render_plugin_integrated(plugin_path):
         # Procura por pontos de entrada conhecidos no plugin (como o da Agenda)
         if hasattr(module, "show_agenda"):
             module.show_agenda()
+        elif hasattr(module, "show_class_registry"):
+            module.show_class_registry()
         elif hasattr(module, "show_student_scores"):
             module.show_student_scores()
         elif hasattr(module, "show_attendance_plugin"):
@@ -75,11 +77,12 @@ def show_page():
     # Substituímos st.tabs por um seletor de rádio horizontal para controle de execução.
     # O Streamlit avalia o conteúdo de todas as abas no st.tabs, o que causava a poluição do sidebar.
     # Com o if/elif, apenas o código (e o sidebar) do plugin selecionado é processado.
-    menu_options = ["Nativos", "Externos", "Agenda", "Atividades", "Notas", "Frequência", "Grade"]
+    menu_options = ["Nativos", "Externos", "Agenda", "Registro", "Atividades", "Notas", "Frequência", "Grade"]
     icons = {
         "Nativos": "🔌", 
         "Externos": "📂", 
         "Agenda": "📅", 
+        "Registro": "📋",
         "Atividades": "🎯",
         "Notas": "📊", 
         "Frequência": "📝",
@@ -183,6 +186,14 @@ def show_page():
             render_plugin_integrated(agenda_path)
         else:
             st.info("O plugin de agenda não foi encontrado em `data/repo/plugins/agenda.py`.")
+
+    # --- Aba de Registro de Aula ---
+    elif selected_tab == "Registro":
+        registry_path = os.path.join("data", "repo", "plugins", "class_registry.py")
+        if os.path.exists(registry_path):
+            render_plugin_integrated(registry_path)
+        else:
+            st.info("O plugin de registro de aula não foi encontrado em `data/repo/plugins/class_registry.py`.")
 
     # --- Aba de Atividades Diárias ---
     elif selected_tab == "Atividades":

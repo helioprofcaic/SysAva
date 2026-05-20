@@ -32,7 +32,9 @@ def show_page():
         if turma_selecionada != "Selecione...":
             class_id = class_options[turma_selecionada]
             subjects = db.get_subjects_for_class(class_id)
-            subject_options = {s['name']: s['id'] for s in subjects}
+            # Filtra cabeçalhos indesejados que podem ter vindo da importação (ex: "Disciplinas:")
+            subject_options = {s['name']: s['id'] for s in subjects 
+                              if s['name'].strip().lower() not in ['disciplinas:', 'disciplinas']}
             disciplina_selecionada = st.selectbox("2. Selecione a Disciplina", ["Selecione..."] + list(subject_options.keys()))
             if disciplina_selecionada != "Selecione...":
                 subject_id = subject_options[disciplina_selecionada]

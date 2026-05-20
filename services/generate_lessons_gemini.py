@@ -60,10 +60,10 @@ class GeradorAulaGemini:
         if os.path.exists(path_json):
             try:
                 with open(path_json, 'r', encoding='utf-8') as f:
-                    db = json.load(f)
+                    curriculo_data = json.load(f)
                     # Busca em todos os segmentos (BASICO, EPT, etc.)
                     term_busca = disciplina.upper()
-                    for segmento, conteudos in db.items():
+                    for segmento, conteudos in curriculo_data.items():
                         if term_busca in conteudos:
                             dados_disciplina = conteudos[term_busca]
                             break

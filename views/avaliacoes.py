@@ -447,7 +447,6 @@ def show_student_view():
             if focus_lost:
                 st.error("⚠️ **Atenção:** Detectamos que você saiu da tela da prova. Esta ação foi registrada.")
                 db.add_user_history(username, f"Perdeu o foco durante a avaliação: {assessment['title']}")
-            st.rerun()
 
         
         questions = db.get_assessment_questions(assessment['id'])

@@ -1,8 +1,72 @@
-2026-05-13 20:41:03.449 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-05-20 06:18:53.857 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
 Iniciando importação de aulas em lote a partir de: D:\Florestan\Apps\SysAva\data\Turmas
 
+ Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'INTELIGÊNCIA ARTIFICIAL' -> Semana 'S01'
+    ⏭️  Aula 'Aula 1 fundamentos e ética' já consta no logs.txt. Pulando.
+
  Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S01'
+    ✅ Aula 'Aula 1: Tecnologia, Sociedade e o Futuro do Trabalho' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '📝 Quiz: Introdução à Computação' criado.
+      -> Processando conteúdo do quiz...
+        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
+        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
+      -> 🔑 Seção de Gabarito encontrada.
+        ✅ Questão 3 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito aplicado: Questão 1 = B (Opção 2)
+          -> Gabarito aplicado: Questão 2 = C (Opção 3)
+          -> Gabarito aplicado: Questão 3 = B (Opção 2)
+      -> Salvando 3 questões no banco...
+        ✅ Questão 1 salva com sucesso.
+        ✅ Questão 2 salva com sucesso.
+        ✅ Questão 3 salva com sucesso.
+    ✅ Aula 'Aula 2: Desvendando a Web e o Combate às Fake News' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '📝 Quiz: O Mestre do Inspecionar' criado.
+      -> Processando conteúdo do quiz...
+        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
+        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
+      -> 🔑 Seção de Gabarito encontrada.
+        ✅ Questão 3 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito aplicado: Questão 1 = B (Opção 2)
+          -> Gabarito aplicado: Questão 2 = C (Opção 3)
+          -> Gabarito aplicado: Questão 3 = C (Opção 3)
+      -> Salvando 3 questões no banco...
+        ✅ Questão 1 salva com sucesso.
+        ✅ Questão 2 salva com sucesso.
+        ✅ Questão 3 salva com sucesso.
+    ✅ Aula 'Aula 3: Aplicando o Pensamento Computacional no Mundo Real' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '📝 Quiz: O Mestre do Pensamento' criado.
+      -> Processando conteúdo do quiz...
+        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
+        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
+      -> 🔑 Seção de Gabarito encontrada.
+        ✅ Questão 3 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito aplicado: Questão 1 = B (Opção 2)
+          -> Gabarito aplicado: Questão 2 = C (Opção 3)
+          -> Gabarito aplicado: Questão 3 = B (Opção 2)
+      -> Salvando 3 questões no banco...
+        ✅ Questão 1 salva com sucesso.
+        ✅ Questão 2 salva com sucesso.
+        ✅ Questão 3 salva com sucesso.
+    ✅ Aula 'Aula 4: Inteligência Artificial e o Futuro das Profissões' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '✅ Gabarito' criado.
+      -> Processando conteúdo do quiz...
+      -> 🔑 Seção de Gabarito encontrada.
+          ⚠️  Gabarito para questão 1 não encontrado no buffer.
+          ⚠️  Gabarito para questão 2 não encontrado no buffer.
+          ⚠️  Gabarito para questão 3 não encontrado no buffer.
+      -> Salvando 0 questões no banco...
     ⏭️  Aula 'Documentacao tecnica' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Pygame tutorial' já consta no logs.txt. Pulando.
 
-Processo concluído. Total de aulas importadas: 0
+ Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S02'
+    ⏭️  Aula 'Aula 20 grafos vs. árvores na rede social' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'INTELIGÊNCIA ARTIFICIAL' -> Semana 'S01'
+    ⏭️  Aula 'Aula 3 classificação e regressão' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Notebook ia- classificaçãovs.regressão' já consta no logs.txt. Pulando.
+
+Processo concluído. Total de aulas importadas: 4
