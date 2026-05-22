@@ -1,64 +1,14 @@
-2026-05-20 06:18:53.857 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-05-22 12:47:24.710 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
 Iniciando importação de aulas em lote a partir de: D:\Florestan\Apps\SysAva\data\Turmas
 
  Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'INTELIGÊNCIA ARTIFICIAL' -> Semana 'S01'
     ⏭️  Aula 'Aula 1 fundamentos e ética' já consta no logs.txt. Pulando.
 
  Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S01'
-    ✅ Aula 'Aula 1: Tecnologia, Sociedade e o Futuro do Trabalho' importada/atualizada.
-      -> 💬 Post de fórum criado.
-      -> 📝 Quiz '📝 Quiz: Introdução à Computação' criado.
-      -> Processando conteúdo do quiz...
-        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
-        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
-      -> 🔑 Seção de Gabarito encontrada.
-        ✅ Questão 3 identificada (aguardando gabarito/salvamento)...
-          -> Gabarito aplicado: Questão 1 = B (Opção 2)
-          -> Gabarito aplicado: Questão 2 = C (Opção 3)
-          -> Gabarito aplicado: Questão 3 = B (Opção 2)
-      -> Salvando 3 questões no banco...
-        ✅ Questão 1 salva com sucesso.
-        ✅ Questão 2 salva com sucesso.
-        ✅ Questão 3 salva com sucesso.
-    ✅ Aula 'Aula 2: Desvendando a Web e o Combate às Fake News' importada/atualizada.
-      -> 💬 Post de fórum criado.
-      -> 📝 Quiz '📝 Quiz: O Mestre do Inspecionar' criado.
-      -> Processando conteúdo do quiz...
-        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
-        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
-      -> 🔑 Seção de Gabarito encontrada.
-        ✅ Questão 3 identificada (aguardando gabarito/salvamento)...
-          -> Gabarito aplicado: Questão 1 = B (Opção 2)
-          -> Gabarito aplicado: Questão 2 = C (Opção 3)
-          -> Gabarito aplicado: Questão 3 = C (Opção 3)
-      -> Salvando 3 questões no banco...
-        ✅ Questão 1 salva com sucesso.
-        ✅ Questão 2 salva com sucesso.
-        ✅ Questão 3 salva com sucesso.
-    ✅ Aula 'Aula 3: Aplicando o Pensamento Computacional no Mundo Real' importada/atualizada.
-      -> 💬 Post de fórum criado.
-      -> 📝 Quiz '📝 Quiz: O Mestre do Pensamento' criado.
-      -> Processando conteúdo do quiz...
-        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
-        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
-      -> 🔑 Seção de Gabarito encontrada.
-        ✅ Questão 3 identificada (aguardando gabarito/salvamento)...
-          -> Gabarito aplicado: Questão 1 = B (Opção 2)
-          -> Gabarito aplicado: Questão 2 = C (Opção 3)
-          -> Gabarito aplicado: Questão 3 = B (Opção 2)
-      -> Salvando 3 questões no banco...
-        ✅ Questão 1 salva com sucesso.
-        ✅ Questão 2 salva com sucesso.
-        ✅ Questão 3 salva com sucesso.
-    ✅ Aula 'Aula 4: Inteligência Artificial e o Futuro das Profissões' importada/atualizada.
-      -> 💬 Post de fórum criado.
-      -> 📝 Quiz '✅ Gabarito' criado.
-      -> Processando conteúdo do quiz...
-      -> 🔑 Seção de Gabarito encontrada.
-          ⚠️  Gabarito para questão 1 não encontrado no buffer.
-          ⚠️  Gabarito para questão 2 não encontrado no buffer.
-          ⚠️  Gabarito para questão 3 não encontrado no buffer.
-      -> Salvando 0 questões no banco...
+    ⏭️  Aula 'Aula 1 tecnologia, sociedade e o futuro do trabalho' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 2 desvendando a web e o combate às fake news' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 3 aplicando o pensamento computacional no mundo real' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 4 inteligência artificial e o futuro das profissões' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Documentacao tecnica' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Pygame tutorial' já consta no logs.txt. Pulando.
 
@@ -69,4 +19,23 @@ Iniciando importação de aulas em lote a partir de: D:\Florestan\Apps\SysAva\da
     ⏭️  Aula 'Aula 3 classificação e regressão' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Notebook ia- classificaçãovs.regressão' já consta no logs.txt. Pulando.
 
-Processo concluído. Total de aulas importadas: 4
+ Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'MENTORIAS TEC II' -> Semana 'setup'
+    ✅ Aula '--- Configurações Iniciais ---' importada/atualizada.
+      -> 💬 Post de fórum criado.
+    ✅ Aula 'Usamos o $PSScriptRoot para garantir que as pastas fiquem junto com o script' importada/atualizada.
+      -> 💬 Post de fórum criado.
+    ✅ Aula 'Conta Pessoal (Padrão)' importada/atualizada.
+      -> 💬 Post de fórum criado.
+    ✅ Aula 'Setup PowerShell' importada/atualizada.
+      -> 💬 Post de fórum criado.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO ORIENTADA À OBJETOS - POO' -> Semana 'S01'
+    ⏭️  Aula 'Aula 4 primeiro programa em java' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 5 primeiro programa em python' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Atividades poo' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Scripts poo java.ps1' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Scripts py.ps1' já consta no logs.txt. Pulando.
+    ✅ Aula 'Definimos o caminho base' importada/atualizada.
+      -> 💬 Post de fórum criado.
+
+Processo concluído. Total de aulas importadas: 5
