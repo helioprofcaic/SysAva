@@ -74,12 +74,12 @@ def show_page():
 
     main_section = st.radio("Seção", ["⚙️ Configurações Gerais", "📚 Configurações de Conteúdos"], horizontal=True)
 
-    tab_config = tab1 = tab5 = tab6 = tab2 = tab_training = tab3 = tab4 = tab_audit = tab_reviewer = tab7 = None
+    tab_config = tab1 = tab5 = tab6 = tab2 = tab_turmas = tab_training = tab3 = tab4 = tab_audit = tab_reviewer = tab7 = None
     
     if main_section == "⚙️ Configurações Gerais":
         tab_config, tab1, tab5, tab6 = st.tabs(["⚙️ Setup", "👥 Usuários", "🤖 Simulador", "📊 Relatórios"])
     else:
-        tab2, tab_training, tab3, tab4, tab_audit, tab_reviewer = st.tabs(["📖 Aulas", "🚀 Treinamentos", "📝 Quizzes", "🎓 Avaliações", "🔍 Auditoria", "🔑 Gabaritos"])
+        tab2, tab_turmas, tab_training, tab3, tab4, tab_audit, tab_reviewer = st.tabs(["📖 Aulas", "🏫 Turmas", "🚀 Treinamentos", "📝 Quizzes", "🎓 Avaliações", "🔍 Auditoria", "🔑 Gabaritos"])
 
     if tab_config:
         with tab_config:
@@ -317,6 +317,7 @@ def show_page():
 
                 # Seletor de Disciplina (baseado na turma)
                 subjects = db.get_subjects_for_class(class_id)
+                subjects = [s for s in subjects if s.get('is_active', True)]
                 subject_options = {s['name']: s['id'] for s in subjects}
 
                 if not subjects:
@@ -367,7 +368,7 @@ def show_page():
 
                     st.write(f"Aulas de **{selected_subject_name}** ({selected_class_name}):")
                     lessons = db.get_lessons_for_subject(subject_id)
-                    st.dataframe(lessons, use_container_width=True, column_config={"id": "ID", "title": "Título", "video_url": "Link", "created_at": "Criado em"})
+                    st.dataframe(lessons, width="stretch", column_config={"id": "ID", "title": "Título", "video_url": "Link", "created_at": "Criado em"})
 
                     if lessons:
                         with st.expander("🗑️ Excluir Aulas (Individual ou Lote)"):
@@ -394,6 +395,115 @@ def show_page():
                                         st.success("Aulas excluídas com sucesso!")
                                         time.sleep(0.5)
                                         st.rerun()
+
+    if tab_turmas:
+        with tab_turmas:
+            st.subheader("🏫 Gestão e Isolamento de Turmas")
+            
+            # 1. Seleção de Turma
+            classes = db.get_classes()
+            if not classes:
+                st.warning("Nenhuma turma cadastrada.")
+            else:
+                class_options = {c['name']: c['id'] for c in classes}
+                selected_class_name = st.selectbox("Selecione a Turma para configurar:", ["-- Selecione --"] + list(class_options.keys()), key="class_mgmt_sel")
+                
+                if selected_class_name != "-- Selecione --":
+                    class_id = class_options[selected_class_name]
+                    
+                    # --- PROBLEMA 1: Ativação/Desativação de Disciplinas ---
+                    st.markdown("#### 🔌 Ativar/Desativar Disciplinas (Filtro Visual)")
+                    st.caption("Desative disciplinas que não estão em vigor no momento para diminuir a carga visual nos seletores.")
+                    
+                    subjects_links = []
+                    if db.is_db_connected():
+                        # Busca os links diretamente para pegar o status 'is_active'
+                        try:
+                            res = db.supabase.table("class_subjects").select("*, subjects(name, duration_type)").eq("class_id", class_id).execute()
+                            subjects_links = res.data if res.data else []
+                        except Exception as e:
+                            st.error(f"Erro ao buscar disciplinas vinculadas: {e}")
+                    
+                    if not subjects_links:
+                        st.info("Nenhuma disciplina vinculada a esta turma.")
+                    else:
+                        # Monta dataframe para edição
+                        df_links = []
+                        for link in subjects_links:
+                            df_links.append({
+                                "id": link['id'],
+                                "Disciplina": link['subjects']['name'] if link.get('subjects') else "N/A",
+                                "Tipo": "Modular" if link.get('subjects') and link['subjects'].get('duration_type') == 'mensal' else "Anual",
+                                "Ativo": link.get('is_active', True)
+                            })
+                        
+                        df_links_pd = pd.DataFrame(df_links)
+                        edited_links = st.data_editor(
+                            df_links_pd,
+                            column_config={
+                                "id": None,
+                                "Disciplina": st.column_config.TextColumn(disabled=True),
+                                "Tipo": st.column_config.TextColumn(disabled=True),
+                                "Ativo": st.column_config.CheckboxColumn("Ativo", help="Se desmarcado, a disciplina será ocultada nos seletores desta turma.")
+                            },
+                            hide_index=True,
+                            width="stretch",
+                            key=f"editor_links_{class_id}"
+                        )
+                        
+                        if st.button("💾 Salvar Status das Disciplinas", width="stretch"):
+                            for idx, row in edited_links.iterrows():
+                                orig = df_links_pd.iloc[idx]
+                                if row['Ativo'] != orig['Ativo']:
+                                    db.supabase.table("class_subjects").update({"is_active": row['Ativo']}).eq("id", row['id']).execute()
+                            st.success("Configurações de visibilidade atualizadas!")
+                            st.rerun()
+
+                    st.divider()
+
+                    # --- PROBLEMA 2: Isolamento por Matriz (Clonagem) ---
+                    st.markdown("#### 🌳 Instanciar Disciplina Matriz (Isolamento)")
+                    st.info("Cria uma cópia exclusiva de uma disciplina matriz para esta turma, garantindo isolamento total de Fórum, Quizzes e Notas.")
+                    
+                    all_subjects = db.get_subjects()
+                    # Filtra apenas disciplinas que não são 'training'
+                    matrix_options = {s['name']: s['id'] for s in all_subjects if s.get('type') != 'training'}
+                    
+                    selected_matrix = st.selectbox("Escolha a Disciplina Matriz (Origem):", ["-- Selecione --"] + list(matrix_options.keys()))
+                    
+                    if selected_matrix != "-- Selecione --":
+                        matrix_id = matrix_options[selected_matrix]
+                        new_subject_name = st.text_input("Nome da Nova Disciplina Isolada:", value=f"{selected_matrix} ({selected_class_name})")
+                        
+                        st.warning("⚠️ **Atenção:** Ao instanciar uma disciplina, os alunos desta turma começarão com **0% de progresso** na nova cópia. O histórico de aulas e quizzes da Matriz **não** será transferido, garantindo o isolamento total.")
+                        
+                        if st.button("🚀 Criar Instância Isolada para esta Turma", type="primary", width="stretch"):
+                            with st.spinner("Clonando estrutura de aulas e quizzes..."):
+                                # 1. Criar a nova disciplina
+                                new_sub_id = db.upsert_subject(new_subject_name)
+                                if new_sub_id:
+                                    # 2. Vincular à turma
+                                    db.link_subject_to_class(class_id, new_sub_id)
+                                    
+                                    # 3. Clonar Aulas, Quizzes e Questões
+                                    lessons = db.get_lessons_for_subject(matrix_id)
+                                    for l in lessons:
+                                        new_l_data, err = db.create_lesson(l['title'], new_sub_id, l.get('description', ''), l.get('video_url', ''))
+                                        if not err and new_l_data:
+                                            new_lesson_id = new_l_data[0]['id']
+                                            old_quiz = db.get_quiz_for_lesson(l['id'])
+                                            if old_quiz:
+                                                new_quiz_data, q_err = db.create_quiz(new_lesson_id, old_quiz['title'])
+                                                if not q_err and new_quiz_data:
+                                                    new_quiz_id = new_quiz_data[0]['id']
+                                                    old_questions = db.get_quiz_questions(old_quiz['id'])
+                                                    for q in old_questions:
+                                                        db.create_quiz_question(new_quiz_id, q['question_text'], q['options'], q['correct_option_index'])
+                                    
+                                    st.success(f"Disciplina '{new_subject_name}' instanciada e isolada!")
+                                    st.balloons()
+                                    time.sleep(1)
+                                    st.rerun()
 
     if tab_training:
         with tab_training:
@@ -466,7 +576,7 @@ def show_page():
                                 st.rerun()
 
                 lessons = db.get_lessons_for_subject(training_id)
-                st.dataframe(lessons, use_container_width=True, column_config={"id": "ID", "title": "Título", "video_url": "Link", "created_at": "Criado em"})
+                st.dataframe(lessons, width="stretch", column_config={"id": "ID", "title": "Título", "video_url": "Link", "created_at": "Criado em"})
 
 
     if tab3:
@@ -484,6 +594,7 @@ def show_page():
                 if selected_class_name_qz != "-- Selecione --":
                     class_id_qz = int(class_options[selected_class_name_qz])
                     subjects = db.get_subjects_for_class(class_id_qz)
+                    subjects = [s for s in subjects if s.get('is_active', True)]
 
                     if not subjects:
                         st.warning("Esta turma ainda não possui disciplinas cadastradas.")
@@ -573,6 +684,7 @@ def show_page():
             if selected_class_name_av != "-- Selecione --":
                 class_id_av = int(class_options[selected_class_name_av])
                 subjects = db.get_subjects_for_class(class_id_av)
+                subjects = [s for s in subjects if s.get('is_active', True)]
                 subject_options = {s['name']: s['id'] for s in subjects}
 
                 if not subjects:
@@ -910,7 +1022,7 @@ def show_page():
 
                     review_type = st.radio("Qual banco revisar?", ["Banco Mestre (Quizzes)", "Provas Geradas (Avaliações)"], horizontal=True, key="rev_type_radio")
                     
-                    if st.button("🚀 Carregar Questões para Revisão", use_container_width=True):
+                    if st.button("🚀 Carregar Questões para Revisão", width="stretch"):
                         if review_type == "Banco Mestre (Quizzes)":
                             questions = db.get_all_quiz_questions_for_subject(subject_id)
                             st.session_state.rev_questions = questions
@@ -955,10 +1067,10 @@ def show_page():
                         data=df_export.to_csv(index=False).encode('utf-8-sig'),
                         file_name=f"gabarito_{sel_subject.replace(' ', '_')}_{st.session_state.rev_type}.csv",
                         mime="text/csv",
-                        use_container_width=True
+                        width="stretch"
                     )
                 with col_exp2:
-                    if st.button("🖨️ PDF para Impressão", use_container_width=True):
+                    if st.button("🖨️ PDF para Impressão", width="stretch"):
                         school_info = db.get_school()
                         school_name = school_info['name'] if school_info else "Escola Técnica"
                         html_print = generate_printable_answer_key_html(school_name, sel_subject, st.session_state.rev_type.upper(), export_data)
@@ -1045,7 +1157,7 @@ def show_page():
 
                     with col_sim:
                         st.markdown("#### ✅ Simular Conclusão Total")
-                        if st.button("🚀 Simular Todas as Atividades"):
+                        if st.button("🚀 Simular Todas as Atividades", width="stretch"):
                             with st.spinner("Simulando..."):
                                 _, err = db.simulate_student_activities(selected_student_username)
                                 if err: st.error(f"Erro na simulação: {err}")
@@ -1081,7 +1193,7 @@ def show_page():
 
             if history_data:
                 # Exibe tabela
-                st.dataframe(history_data, use_container_width=True, column_config={
+                st.dataframe(history_data, width="stretch", column_config={
                     "username": "Usuário",
                     "activity": "Ação Realizada",
                     "timestamp": "Data/Hora"

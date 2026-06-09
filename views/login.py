@@ -14,6 +14,12 @@ def show_page():
                 # Remove espaços extras que podem causar erro
                 user = user.strip()
 
+                # Tenta capturar o IP do dispositivo do aluno
+                try:
+                    remote_ip = st.context.headers.get("X-Forwarded-For", "127.0.0.1").split(",")[0]
+                except:
+                    remote_ip = "127.0.0.1"
+
                 user_data = db.get_user(user)
                 if user_data:
                     if auth.check_password(password, user_data['password']):
@@ -22,7 +28,7 @@ def show_page():
                         # Armazena o username (RA) para consultas de matrícula
                         st.session_state['username'] = user
                         st.session_state['role'] = user_data.get('role', 'student')
-                        db.add_user_history(user, "Realizou login")
+                        db.add_user_history(user, f"Realizou login (IP: {remote_ip})")
                         session_id = auth.create_session(user, st.session_state['role'], st.session_state['usuario'])
                         st.query_params["session_id"] = session_id
                         st.session_state.page = 'Home'

@@ -409,14 +409,21 @@ def get_subjects_for_class(class_id: int):
     """Busca todas as disciplinas associadas a uma turma."""
     if not is_db_connected(): return []
     try:
-        # 1. Buscar os subject_ids da tabela de junção
-        response = supabase.table("class_subjects").select("subject_id").eq("class_id", class_id).execute()
+        # Busca usando join para trazer o status is_active da tabela de ligação class_subjects
+        response = supabase.table("class_subjects").select("is_active, subjects(*)").eq("class_id", class_id).execute()
         if not response.data:
             return []
-        
-        subject_ids = [item['subject_id'] for item in response.data]
-        subjects_response = supabase.table("subjects").select("*").in_("id", subject_ids).order("name").execute()
-        return subjects_response.data
+
+        # Achata a estrutura para que o objeto disciplina contenha o campo is_active
+        processed = []
+        for item in response.data:
+            if item.get('subjects'):
+                subj = item['subjects']
+                subj['is_active'] = item.get('is_active', True)
+                processed.append(subj)
+
+        # Retorna a lista ordenada por nome
+        return sorted(processed, key=lambda x: x['name'])
     except Exception as e:
         print(f"Erro ao buscar disciplinas da turma {class_id}: {e}")
         return []

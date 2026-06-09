@@ -15,6 +15,8 @@ def show_student_home():
     subjects = []
     if enrollment:
         subjects = db.get_subjects_for_class(enrollment['class_id'])
+        # Filtra para que o aluno não veja scores de matérias desativadas na home
+        subjects = [s for s in subjects if s.get('is_active', True)]
     
     subject_options = {"Visão Geral (Todas)": None}
     if subjects:
@@ -67,15 +69,15 @@ def show_teacher_dashboard():
     st.markdown("#### Ações Rápidas")
     col1, col2, col3 = st.columns(3)
     with col1:
-        if st.button("📝 Gerenciar Avaliações", use_container_width=True):
+        if st.button("📝 Gerenciar Avaliações", width="stretch"):
             st.session_state.page = "Avaliações"
             st.rerun()
     with col2:
-        if st.button("📚 Gerenciar Conteúdo (Aulas, Quizzes)", use_container_width=True):
+        if st.button("📚 Gerenciar Conteúdo (Aulas, Quizzes)", width="stretch"):
             st.session_state.page = "Admin"
             st.rerun()
     with col3:
-        if st.button("🧩 Central de Plugins", use_container_width=True):
+        if st.button("🧩 Central de Plugins", width="stretch"):
             st.session_state.page = "Plugins"
             st.rerun()
     
@@ -94,6 +96,9 @@ def show_teacher_dashboard():
         
         # 2. Seletor de Disciplina
         subjects = db.get_subjects_for_class(class_id_score)
+        # Filtra disciplinas inativas no dashboard do professor
+        subjects = [s for s in subjects if s.get('is_active', True)]
+
         subject_options_teacher = {"Visão Geral (Todas)": None}
         if subjects:
             subject_options_teacher.update({s['name']: s['id'] for s in subjects})
@@ -168,7 +173,7 @@ def show_teacher_dashboard():
             m_col3.metric("Média de Quizzes Feitos", f"{df['quizzes'].mean():.1f}")
 
             st.markdown("##### Engajamento por Aluno")
-            st.dataframe(df[['Aluno', 'lessons', 'quizzes', 'forum']].rename(columns={'lessons': 'Aulas', 'quizzes': 'Quizzes', 'forum': 'Fórum'}), use_container_width=True)
+            st.dataframe(df[['Aluno', 'lessons', 'quizzes', 'forum']].rename(columns={'lessons': 'Aulas', 'quizzes': 'Quizzes', 'forum': 'Fórum'}), width="stretch")
 
 def show_page():
     school_info = db.get_school()

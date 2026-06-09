@@ -1,8 +1,13 @@
-2026-05-22 12:47:24.710 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-06-09 09:17:36.448 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
 Iniciando importação de aulas em lote a partir de: D:\Florestan\Apps\SysAva\data\Turmas
 
  Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'INTELIGÊNCIA ARTIFICIAL' -> Semana 'S01'
+    ⏭️  Aula 'Aula 05 redes neurais' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 1 fundamentos e ética' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 2 machine learning básico' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 3 classificação e regressão' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 4 pln' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 5 redes neurais' já consta no logs.txt. Pulando.
 
  Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S01'
     ⏭️  Aula 'Aula 1 tecnologia, sociedade e o futuro do trabalho' já consta no logs.txt. Pulando.
@@ -15,27 +20,41 @@ Iniciando importação de aulas em lote a partir de: D:\Florestan\Apps\SysAva\da
  Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMACAO ESTRUTURADA' -> Semana 'S02'
     ⏭️  Aula 'Aula 20 grafos vs. árvores na rede social' já consta no logs.txt. Pulando.
 
+ Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO ORIENTADA À OBJETOS - POO' -> Semana 'S02'
+    ⏭️  Aula 'Aula 10 estruturas de seleção e controle de fluxo em poo' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 11 estruturas de repetição (loops)' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 12 estruturas de repetição for e controle de fluxo' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 13 consolidação da orientação a objetos com java' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 9 fundamentos da programação orientada a objetos (poo)' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Desafio aula9' já consta no logs.txt. Pulando.
+
  Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'INTELIGÊNCIA ARTIFICIAL' -> Semana 'S01'
+    ⏭️  Aula 'Aula 10 como os robôs buscam algo no mundo real — aprendendo com algoritmos de busca' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 11 entendendo como os sistemas especialistas decidem — sem pensar como nós' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 9 robótica e inteligência artificial' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 3 classificação e regressão' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Notebook ia- classificaçãovs.regressão' já consta no logs.txt. Pulando.
 
+ Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'INTELIGÊNCIA ARTIFICIAL' -> Semana 'S02'
+    ⏭️  Aula 'Aula 12 desvendando a lógica fuzzy do um pouco quente ao sistema inteligente' já consta no logs.txt. Pulando.
+
  Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'MENTORIAS TEC II' -> Semana 'setup'
-    ✅ Aula '--- Configurações Iniciais ---' importada/atualizada.
-      -> 💬 Post de fórum criado.
-    ✅ Aula 'Usamos o $PSScriptRoot para garantir que as pastas fiquem junto com o script' importada/atualizada.
-      -> 💬 Post de fórum criado.
-    ✅ Aula 'Conta Pessoal (Padrão)' importada/atualizada.
-      -> 💬 Post de fórum criado.
-    ✅ Aula 'Setup PowerShell' importada/atualizada.
-      -> 💬 Post de fórum criado.
+    ⏭️  Aula 'Login git aluno' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Setup dirs' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Setup github' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Setup shell' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PENSAMENTO COMPUTACIONAL II' -> Semana 'S01'
+    ⏭️  Aula 'Aula 5 desvendando o google colab e o poder do python! (1)' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 7 organizando o baú e distribuindo o loot primeiros passos com coleções e loops em python!' já consta no logs.txt. Pulando.
 
  Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO ORIENTADA À OBJETOS - POO' -> Semana 'S01'
     ⏭️  Aula 'Aula 4 primeiro programa em java' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 5 primeiro programa em python' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 6 objetos e classes em java' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Atividades poo' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Scripts poo java.ps1' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Scripts py.ps1' já consta no logs.txt. Pulando.
-    ✅ Aula 'Definimos o caminho base' importada/atualizada.
-      -> 💬 Post de fórum criado.
+    ⏭️  Aula 'Scripts setup folders 2ads' já consta no logs.txt. Pulando.
 
-Processo concluído. Total de aulas importadas: 5
+Processo concluído. Total de aulas importadas: 0

@@ -170,7 +170,7 @@ def show_lesson_detail():
         col_print, col_save = st.columns(2)
         
         with col_print:
-            if st.button("🖨️ Imprimir Aula com Gabarito", use_container_width=True):
+            if st.button("🖨️ Imprimir Aula com Gabarito", width="stretch"):
                 if not quiz or not questions:
                     st.warning("Esta aula não tem quiz para imprimir.")
                 else:
@@ -191,7 +191,7 @@ def show_lesson_detail():
                 data=md_content,
                 file_name=f"{safe_filename}.md",
                 mime="text/markdown",
-                use_container_width=True
+                width="stretch"
             )
             
         st.divider()
@@ -207,7 +207,7 @@ def show_lesson_detail():
 
     # Botão para o Fórum
     with col1:
-        if st.button("💬 Acessar Fórum da Aula", use_container_width=True):
+        if st.button("💬 Acessar Fórum da Aula", width="stretch"):
             st.session_state.context_lesson_id = lesson['id']
             st.session_state.page = 'Fórum'
             st.rerun()
@@ -216,16 +216,19 @@ def show_lesson_detail():
     with col2:
         quiz = db.get_quiz_for_lesson(lesson['id'])
         if quiz:
-            if st.button("📝 Fazer Quiz da Aula", use_container_width=True):
+            if st.button("📝 Fazer Quiz da Aula", width="stretch"):
                 st.session_state.context_quiz_id = quiz['id']
                 st.session_state.page = 'Quiz'
                 st.rerun()
         else:
-            st.button("📝 Sem quiz para esta aula", use_container_width=True, disabled=True)
+            st.button("📝 Sem quiz para esta aula", width="stretch", disabled=True)
 
 def show_student_view(class_id):
     """Renderiza a view do aluno, com disciplinas e aulas filtradas por sua turma."""
     subjects = db.get_subjects_for_class(class_id)
+    # Filtra apenas as disciplinas marcadas como ativas para reduzir a carga visual do aluno
+    subjects = [s for s in subjects if s.get('is_active', True)]
+
     if not subjects:
         st.info("Sua turma ainda não tem disciplinas cadastradas. Fale com a secretaria.")
         return
@@ -400,7 +403,7 @@ def render_lessons(lessons, visited_lesson_titles, completed_quiz_titles, quiz_m
 
         col_btn, col_status = st.columns([0.92, 0.08])
         with col_btn:
-            if st.button(lesson['title'], key=f"lesson_{lesson['id']}", use_container_width=True):
+            if st.button(lesson['title'], key=f"lesson_{lesson['id']}", width="stretch"):
                 db.add_user_history(st.session_state.get('username'), f"Acessou a aula: {lesson['title']} | subject_id:{subject_id}")
                 st.session_state.selected_lesson = lesson
                 st.session_state.view_mode = 'detail'
@@ -441,6 +444,9 @@ def show_admin_view():
         
         # 2. Seletor de Disciplina
         subjects = db.get_subjects_for_class(class_id)
+        # Também filtra para o professor/admin para manter a consistência visual no seletor
+        subjects = [s for s in subjects if s.get('is_active', True)]
+
         subject_options = {"-- Selecione uma disciplina --": None}
         subject_options.update({s['name']: s['id'] for s in subjects})
 
@@ -463,7 +469,7 @@ def show_admin_view():
             for group_title, lessons_in_group in grouped_lessons.items():
                 with st.expander(f"**{group_title}**", expanded=True):
                     for lesson in lessons_in_group:
-                        if st.button(lesson['title'], key=f"admin_lesson_{lesson['id']}", use_container_width=True):
+                        if st.button(lesson['title'], key=f"admin_lesson_{lesson['id']}", width="stretch"):
                             st.session_state.selected_lesson = lesson
                             st.session_state.view_mode = 'detail'
                             st.rerun()

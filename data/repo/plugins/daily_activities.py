@@ -38,6 +38,13 @@ def save_json(file_path, data):
     with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
+@st.cache_data(ttl=300)
+def get_cached_student_score(username, subject_id):
+    """Wrapper para cachear a consulta de scores e evitar ConnectionTerminated/Timeouts."""
+    if db:
+        return db.get_student_score(username, filter_subject_id=subject_id)
+    return {'total': 0.0, 'lesson': 0, 'quiz': 0, 'forum': 0}
+
 def get_lesson_number(title):
     match = re.search(r'Aula\s*(\d+)', title, re.IGNORECASE)
     return int(match.group(1)) if match else 0
@@ -54,7 +61,13 @@ def show_daily_activities():
         st.header("Filtros")
         classes = db.get_classes()
         class_options = {c['name']: c['id'] for c in classes}
-        sel_class_name = st.selectbox("Turma", ["-- Selecione --"] + list(class_options.keys()))
+        class_display = {c['name']: f"{c['name']} ({c.get('official_name', 'S/N')})" for c in classes}
+
+        sel_class_name = st.selectbox(
+            "Turma", 
+            ["-- Selecione --"] + list(class_options.keys()),
+            format_func=lambda x: class_display.get(x, x)
+        )
 
         if sel_class_name == "-- Selecione --":
             st.stop()
@@ -88,8 +101,13 @@ def show_daily_activities():
     col1, col2 = st.columns(2)
     if col1.button("📢 Publicar no Fórum como EduBot", use_container_width=True):
         if activity_text:
-            msg = f"🤖 **ATIVIDADE DO DIA ({selected_lesson_title})**:\n\n{activity_text}"
-            _, error = db.add_forum_post("EduBot", msg, lesson_id=selected_lesson['id'])
+            msg = (
+                f"🚀 **ATIVIDADE PRÁTICA: {selected_lesson_title}**\n\n"
+                f"{activity_text}\n\n"
+                "--- \n"
+                "💡 **Dica do EduBot:** Se a atividade envolver código, você pode testar no [Replit](https://replit.com) ou [OnlineGDB](https://www.onlinegdb.com). Poste sua dúvida abaixo!"
+            )
+            _, error = db.add_forum_post("EduBot 🤖", msg, lesson_id=selected_lesson['id'])
             if error:
                 st.error(f"Erro ao publicar: {error}")
             else:
@@ -116,9 +134,12 @@ def show_daily_activities():
             all_scores_data["students_data"][uname] = {"name": s['name'], "daily_qualitative_points": []}
         
         student_json = all_scores_data["students_data"][uname]
+        if "daily_qualitative_points" not in student_json:
+            student_json["daily_qualitative_points"] = []
         
         # Cálculo de engajamento do sistema (conforme home.py)
-        calc = db.get_student_score(uname, filter_subject_id=subject_id)
+        # Usando a versão cacheada para evitar erro de terminação de conexão
+        calc = get_cached_student_score(uname, subject_id)
         system_score = calc['total']
         
         # Filtra pontos qualitativos JÁ ATRIBUÍDOS no bloco atual (1-20 ou 21-40)
@@ -135,11 +156,12 @@ def show_daily_activities():
         table_data.append({
             "Username": uname,
             "Nome": s['name'],
+            "Nota de Hoje": 0.0,
             "🌐 Sis": system_score,
             "⭐ Qualit": round(qual_points_bloco, 1),
             "📈 Total": round(total_atual, 2),
-            "Limite": round(restante, 1),
-            "Nota de Hoje": 0.0
+            "Limite": round(restante, 1)
+            # "Nota de Hoje": 0.0
         })
 
     df_atividades = pd.DataFrame(table_data)
@@ -149,11 +171,12 @@ def show_daily_activities():
         column_config={
             "Username": None,
             "Nome": st.column_config.TextColumn("Estudante", disabled=True, width="large"),
+            "Nota de Hoje": st.column_config.NumberColumn("Pontuar", min_value=0.0, max_value=2.0, step=0.1),
             "🌐 Sis": st.column_config.NumberColumn(disabled=True, format="%.2f"),
             "⭐ Qualit": st.column_config.NumberColumn(disabled=True, format="%.1f"),
             "📈 Total": st.column_config.NumberColumn(disabled=True, format="%.2f"),
-            "Limite": st.column_config.NumberColumn("Disponível", help="Quanto o aluno ainda pode ganhar neste bloco", disabled=True, format="%.1f"),
-            "Nota de Hoje": st.column_config.NumberColumn("Pontuar", min_value=0.0, max_value=2.0, step=0.1)
+            "Limite": st.column_config.NumberColumn("Disponível", help="Quanto o aluno ainda pode ganhar neste bloco", disabled=True, format="%.1f")
+            # "Nota de Hoje": st.column_config.NumberColumn("Pontuar", min_value=0.0, max_value=2.0, step=0.1)
         },
         hide_index=True,
         use_container_width=True,

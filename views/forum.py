@@ -55,8 +55,12 @@ def show_page():
             ts = post.get("created_at", "")
             hora = ts.split("T")[1][:5] if "T" in ts else ts
             
-            with st.chat_message("user" if post['user_name'] == st.session_state['usuario'] else "assistant"):
-                st.write(f"**{post['user_name']}** ({hora}):")
+            # Identifica se é uma postagem do EduBot ou do usuário atual para mudar o avatar
+            is_edubot = "EduBot" in post['user_name']
+            avatar = "🤖" if is_edubot else ("user" if post['user_name'] == st.session_state.get('usuario') else "assistant")
+            
+            with st.chat_message(avatar):
+                st.write(f"**{post['user_name']}** <small>({hora})</small>", unsafe_allow_html=True)
                 st.write(post['message'])
         
         if st.session_state.get('role') == 'admin':

@@ -54,7 +54,15 @@ Painel de controle diário para o professor e alunos.
 
 ---
 
-## 🛠️ Plugins de Manutenção e Auditoria
+## 🖥️ Monitoramento de Laboratório (`lab_monitor.py`)
+Radar de atividade em tempo real para controle de sala.
+
+- **Objetivo:** Identificar desvios de foco (Roblox, Games, Redes Sociais) e intervir remotamente.
+- **Funcionalidades Principais:**
+    - **Heatmap de Atividade:** Lista colorida de PCs indicando quem está jogando ou produzindo.
+    - **Comandos Remotos:** Botões para fechar janelas indesejadas ou enviar alertas aos alunos.
+
+## �️ Plugins de Manutenção e Auditoria
 
 ### 🔍 Radar de Fricção (`friction_radar.py`)
 -   Analisa a saúde pedagógica das disciplinas.

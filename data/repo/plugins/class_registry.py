@@ -100,12 +100,15 @@ def save_json(file_path, data):
 def get_folder_mapping(disciplina):
     """Mapeia o nome da disciplina na grade para o nome da pasta no repositório."""
     mapping = {
-        "Disc.Tec.": "PROG_ESTRUCT",
-        "I.A.": "IA",
-        "P.C. II": "PC_II",
-        "Ment.Tec.II": "MENT_TEC"
+        "PENSAMENTO COMPUTACIONAL II": "PC_II",
+        "MENTORIAS TEC II": "MENT_TEC",
+        "INTELIGÊNCIA ARTIFICIAL": "IA"
     }
-    return mapping.get(disciplina, disciplina.upper().replace(" ", "_")[:12])
+    # Se a disciplina está no mapeamento manual, usa ele.
+    # Caso contrário, tenta usar o nome original (para as modulares que têm o nome da pasta igual ao do banco)
+    if disciplina in mapping:
+        return mapping[disciplina]
+    return disciplina
 
 def load_grade_with_sync():
     """Carrega a grade horária do JSON. Se não existir, baixa do Supabase."""
@@ -142,7 +145,7 @@ def load_grade_with_sync():
             
     return grade
 
-def calculate_lesson_number(start_date, target_date, class_name, subject_name, grade):
+def calculate_lesson_number(start_date, target_date, class_name, subject_name, grade, max_lessons=40):
     """Calcula o número da aula baseado na grade horária e data inicial."""
     if class_name not in grade: return 1
     
@@ -161,11 +164,18 @@ def calculate_lesson_number(start_date, target_date, class_name, subject_name, g
                 lesson_count += 1
         current += timedelta(days=1)
     
-    return max(1, lesson_count)
+    return min(max_lessons, max(1, lesson_count))
 
-def show_class_registry():
-    st.title("📝 Registro de Aula")
+def init_session_state():
+    if 'current_step' not in st.session_state:
+        st.session_state.current_step = 0
+    if 'current_registration_data' not in st.session_state:
+        st.session_state.current_registration_data = {}
+
+def show_content_step():
+    st.title("📝 Registro de Aula - Passo 1: Conteúdo")
     
+    # Load data needed for this step
     grade = load_grade_with_sync()
     curriculo = load_json(CURRICULO_FILE)
     
@@ -177,10 +187,10 @@ def show_class_registry():
     df_catalogo = get_lessons_catalog()
 
     # --- CABEÇALHO DO REGISTRO ---
-    col_header1, col_header2 = st.columns(2)
+    col_header1, col_header2 = st.columns(2) # Changed to 2 columns
     
-    with col_header1:
-        tipo_aula = st.selectbox("Tipo de Aula", ["-- Selecione --", "Teórica", "Prática", "Avaliação", "Laboratório", "Extraordinária"])
+    with col_header1: # Changed to 2 columns
+        tipo_aula = st.selectbox("Tipo de Aula", ["-- Selecione --", "Aula Híbrida", "Aula Remota", "Aula Normal", "Reposição", "Aula Extra"], key="tipo_aula")
         
         classes = list(grade.keys())
         turma_sel = st.selectbox("Turma", ["-- Selecione --"] + classes)
@@ -189,6 +199,29 @@ def show_class_registry():
         data_aula = st.date_input("Data", datetime.now())
         dias_semana_map = {0: "Segunda", 1: "Terça", 2: "Quarta", 3: "Quinta", 4: "Sexta", 5: "Sábado", 6: "Domingo"}
         dia_nome = dias_semana_map[data_aula.weekday()]
+
+        # --- CARREGAMENTO DINÂMICO DE DISCIPLINAS DO BANCO ---
+        subjects_db = []
+        mapping_grade_to_db = {
+            "P.C. II": "PENSAMENTO COMPUTACIONAL II",
+            "Ment.Tec.II": "MENTORIAS TEC II",
+            "I.A.": "INTELIGÊNCIA ARTIFICIAL"
+        }
+        
+        modular_subjects = []
+        subjects_db = []
+        if turma_sel != "-- Selecione --" and db:
+            try:
+                class_id = grade[turma_sel].get("id") # Caso tenha o ID na grade, ou busque por nome
+                # Fallback se a grade não tiver ID: busca pelo nome da classe
+                all_classes = db.get_classes()
+                cid = next((c['id'] for c in all_classes if c['name'] == turma_sel), None)
+                
+                if cid:
+                    subjects_db = db.get_subjects_for_class(cid)
+                    # Filtra modulares usando a nova coluna (duration_type)
+                    modular_subjects = [s['name'] for s in subjects_db if s.get('duration_type') == 'mensal']
+            except: pass
 
         # --- LÓGICA DE FILTRAGEM POR GRADE ---
         componente = ""
@@ -201,10 +234,10 @@ def show_class_registry():
                 st.warning(f"⚠️ Não há aulas previstas na grade para {dia_nome}.")
                 componente_opcoes = ["-- Sem aulas na grade --"]
             else:
-                componente_opcoes = sorted(list(set(aulas_no_dia.values())))
+                componente_opcoes = sorted(list(set(aulas_no_dia.values()))) # Changed to 2 columns
             
-            componente = st.selectbox("Componente", ["-- Selecione --"] + componente_opcoes)
-            
+            componente = st.selectbox("Componente", ["-- Selecione --"] + componente_opcoes, key="componente")
+            # Changed to 2 columns
             if componente != "-- Selecione --" and componente != "-- Sem aulas na grade --":
                 # Filtra apenas os horários em que este componente específico acontece neste dia
                 horarios_opcoes = [h for h, s in aulas_no_dia.items() if s == componente]
@@ -212,61 +245,121 @@ def show_class_registry():
             st.selectbox("Componente", ["-- Selecione a Turma primeiro --"], disabled=True)
 
     horario_sel = st.selectbox("Horário (inicial ~ final)", ["-- Selecione --"] + horarios_opcoes if horarios_opcoes else ["-- Selecione --"])
+    # Changed to 2 columns
+    # --- LÓGICA DE SELEÇÃO DE DISCIPLINA REAL (MODULAR VS ANUAL) ---
+    # 1. Resolve apelidos da grade para nomes reais (Anuais)
+    disciplina_final = mapping_grade_to_db.get(componente, componente) # Changed to 2 columns
+    busca_grade_placeholder = componente # Termo usado para contar aulas na grade
+    
+    if componente == "Disc.Tec.":
+        if not modular_subjects:
+            st.warning("Nenhuma disciplina mensal/modular encontrada no banco para esta turma.")
+            disciplina_final = "-- Selecione o Módulo --"
+        else:
+            disciplina_final = st.selectbox("Módulo Técnico Atual", ["-- Selecione o Módulo --"] + modular_subjects)
+            
+            # Permite ajustar a data de início do módulo para resetar o contador de aulas
+            with st.expander("📅 Ajustar Início do Módulo"):
+                data_inicio_modulo = st.date_input("Data de início deste módulo específico", datetime(2026, 2, 19).date(), key="start_mod")
+                st.caption("O número da aula será contado a partir desta data.")
         
+        if disciplina_final == "-- Selecione o Módulo --":
+            st.stop() # Changed to 2 columns
+    else:
+        data_inicio_modulo = datetime(2026, 2, 19).date()
+
     st.divider()
     st.subheader("Registro de Aula")
 
-    # --- LÓGICA DE CURRÍCULO (BNCC/EPT) ---
+    # --- LÓGICA DE CURRÍCULO (BNCC/EPT) --- # Changed to 2 columns
     # Tenta achar os dados da disciplina no curriculo_db.json
     dados_curriculo = {}
-    if componente:
-        comp_upper = componente.upper()
+    if disciplina_final and disciplina_final != "-- Selecione --":
+        comp_upper = disciplina_final.upper()
         for segmento in curriculo:
             if comp_upper in curriculo[segmento]:
                 dados_curriculo = curriculo[segmento][comp_upper]
                 break
 
     col_cur1, col_cur2 = st.columns(2)
-    
-    with col_cur1:
+    # Changed to 2 columns
+    with col_cur1: # Changed to 2 columns
         comp_especifica = st.selectbox("Competência Específica", 
-                                      ["-- Selecione --", dados_curriculo.get("competencia", "Geral")] if dados_curriculo else ["-- Selecione --"])
+                                      ["-- Selecione --", dados_curriculo.get("competencia", "Geral")] if dados_curriculo else ["-- Selecione --"], key="comp_especifica")
         
-        hab_lista = dados_curriculo.get("habilidades", [])
-        habilidade = st.selectbox("Habilidades", ["-- Selecione --"] + hab_lista if hab_lista else ["-- Selecione --"])
+        hab_lista = dados_curriculo.get("habilidades", []) # Changed to 2 columns
+        habilidade = st.selectbox("Habilidades", ["-- Selecione --"] + hab_lista if hab_lista else ["-- Selecione --"], key="habilidade")
 
-    with col_cur2:
+    with col_cur2: # Changed to 2 columns
         hab_integrada = st.selectbox("Habilidade Integrada", ["-- Selecione --", "Trabalho em Equipe", "Resolução de Problemas", "Ética Profissional"])
         objetivo = st.text_area("Objetivo da Aprendizagem", 
-                               value=f"Capacitar o aluno a compreender e aplicar os conceitos de {componente}." if componente else "")
+                               value=f"Capacitar o aluno a compreender e aplicar os conceitos de {disciplina_final}." if disciplina_final else "")
 
-    objeto_conhecimento = st.text_input("Objeto do Conhecimento", value=componente)
+    objeto_conhecimento = st.text_input("Objeto do Conhecimento", value=disciplina_final)
 
     # --- LÓGICA DE CONTEÚDO AUTOMÁTICO ---
-    # Data de início do ano letivo fornecida: 19/02/2026
-    data_inicio = datetime(2026, 2, 19).date()
+    # Usa a data de início geral ou a do módulo selecionado # Changed to 2 columns
+    data_inicio = data_inicio_modulo # Changed to 2 columns
     
-    if turma_sel != "-- Selecione --" and componente:
-        # 1. Calcula qual o número da aula no cronograma
-        n_aula = calculate_lesson_number(data_inicio, data_aula, turma_sel, componente, grade)
+    sub_id = None
+    if turma_sel != "-- Selecione --" and disciplina_final and disciplina_final != "-- Selecione --":
+        # --- REGRA DE CARGA HORÁRIA (Evita Aula 114) ---
+        num_subjects = len(subjects_db) if (subjects_db and len(subjects_db) > 0) else 10
+        limit_lessons = 400 // num_subjects
+
+        # --- NOVA LÓGICA: Sincronismo entre Histórico iSeduc (Passado) e Lessons SysAva (Presente) ---
+        n_aula = 1
+        if db and db.is_db_connected():
+            try:
+                # 1. Localiza o ID da disciplina atual no banco para precisão na consulta
+                current_sub = next((s for s in subjects_db if s['name'] == disciplina_final), None)
+                if current_sub:
+                    sub_id = current_sub['id']
+                    
+                    # 2. Verifica se a data selecionada já foi registrada no portal oficial (historico_aulas)
+                    dt_str = data_aula.strftime("%d/%m/%Y")
+                    exist_res = db.supabase.table("historico_aulas")\
+                        .select("id, status")\
+                        .eq("data_aula", dt_str)\
+                        .eq("disciplina_id", sub_id)\
+                        .execute()
+                    
+                    if exist_res.data:
+                        st.warning(f"⚠️ Atenção: Já existe um registro oficial ({exist_res.data[0]['status']}) para esta data no iSeduc.")
+
+                    # 3. Determina o número da aula baseando-se na quantidade de registros existentes no histórico
+                    hist_count = db.supabase.table("historico_aulas")\
+                        .select("*", count='exact')\
+                        .eq("disciplina_id", sub_id)\
+                        .execute()
+                    
+                    # A aula sugerida é o total de registros já realizados + 1
+                    n_aula = (hist_count.count if hist_count.count is not None else 0) + 1
+            except Exception:
+                # Fallback para o cálculo baseado em calendário caso o banco esteja inacessível
+                n_aula = calculate_lesson_number(data_inicio, data_aula, turma_sel, busca_grade_placeholder, grade, max_lessons=limit_lessons)
+        else:
+            n_aula = calculate_lesson_number(data_inicio, data_aula, turma_sel, busca_grade_placeholder, grade, max_lessons=limit_lessons)
+            
+        n_aula = min(limit_lessons, n_aula)
         
         # 2. Busca no DataFrame do catálogo pela aula correspondente
         # Filtra por número da aula e tenta encontrar na pasta da disciplina
         match = df_catalogo[
             (df_catalogo['turma'].str.contains(turma_sel, case=False, na=False)) &
             (df_catalogo['aula_num'] == n_aula) & 
-            (df_catalogo['disciplina'].str.contains(get_folder_mapping(componente), case=False, na=False))
+            (df_catalogo['disciplina'].str.contains(get_folder_mapping(disciplina_final), case=False, na=False))
         ]
         
         if not match.empty:
             aula_info = match.iloc[0]
-            conteudo_sugerido = f"Aula {n_aula}: {aula_info['titulo']}\n\n{aula_info['intro']}"
+            lesson_title = f"Aula {n_aula}: {aula_info['titulo']}"
             st.success(f"✅ Conteúdo da Aula {n_aula} extraído com sucesso!")
         elif db and db.is_db_connected():
-            # Caso não encontre localmente, tenta baixar do banco de dados
-            sub_info = db.get_subject_by_name(componente)
-            if sub_info:
-                sid = sub_info['id']
+            # Caso não encontre localmente, tenta baixar do banco de dados (Tabela Lessons - O "Presente")
+            sid = sub_id if sub_id else (db.get_subject_by_name(disciplina_final) or {}).get('id')
+            
+            if sid:
                 db_lessons = db.get_lessons_for_subject(sid)
                 
                 # Busca a aula pelo número no título (ex: "Aula 05" ou "Aula 5")
@@ -278,14 +371,9 @@ def show_class_registry():
                     full_desc = lesson_db.get('description', '')
                     title_db = lesson_db.get('title', '')
                     
-                    # Extrai introdução para o diário
-                    intro_m = re.search(r'##\s+(?:🏁\s+)?Introdução\n+(.*?)\n(?:#|---)', full_desc, re.DOTALL | re.IGNORECASE)
-                    intro_db = intro_m.group(1).strip() if intro_m else "Conteúdo recuperado do banco de dados."
-                    
-                    conteudo_sugerido = f"Aula {n_aula}: {title_db}\n\n{intro_db}"
+                    lesson_title = f"Aula {n_aula}: {title_db}"
                     st.success(f"📥 Aula {n_aula} baixada do banco de dados para o registro!")
                     
-                    # Opção para baixar o arquivo .md completo recuperado
                     st.download_button(
                         label="💾 Baixar arquivo .md desta aula",
                         data=full_desc,
@@ -294,22 +382,31 @@ def show_class_registry():
                         use_container_width=True
                     )
                 else:
-                    conteudo_sugerido = f"Aula {n_aula}: "
+                    lesson_title = f"Aula {n_aula}: "
                     st.info(f"ℹ️ Aula {n_aula} calculada, mas não localizada localmente ou no banco.")
             else:
-                conteudo_sugerido = f"Aula {n_aula}: "
+                lesson_title = f"Aula {n_aula}: "
                 st.info(f"ℹ️ Aula {n_aula} calculada, mas disciplina não encontrada no banco.")
         else:
-            conteudo_sugerido = f"Aula {n_aula}: "
+            lesson_title = f"Aula {n_aula}: "
             st.info(f"ℹ️ Aula {n_aula} calculada, mas arquivo .md não localizado no catálogo.")
-            
+        
+        # Preenchimento automático: Título + Objetivos
+        conteudo_sugerido = f"{lesson_title}. {objetivo}"
     else:
         conteudo_sugerido = ""
 
-    conteudo_abordado = st.text_area("Conteúdo abordado (*)", value=conteudo_sugerido, height=150)
+    # Limitação de 250 caracteres conforme solicitado
+    conteudo_abordado = st.text_area("Conteúdo abordado (*)", value=conteudo_sugerido[:250], height=150, max_chars=250)
     
-    estrategia = st.text_area("Estratégia metodológica (*)", 
-                             placeholder="Informe as estratégias metodológica (ex: Aula expositiva, prática em laboratório...)")
+    # Seletor de estratégias usuais
+    estrategia_opcoes = [
+        "Aula expositiva com uso de quadro branco, pincel e projetor",
+        "Aula prática em laboratório com uso de projetor, computadores e smarphones",
+        "Aula de atividades avaliativas em grupo, seminário, trabalho, pesquisa...",
+        "Aula de atividade avaliativa individual, prova, teste..."
+    ]
+    estrategia = st.selectbox("Estratégia metodológica (*)", estrategia_opcoes, key="estrategia")
 
     # --- BOTÕES DE AÇÃO ---
     st.divider()
@@ -332,7 +429,7 @@ def show_class_registry():
                 "timestamp": datetime.now().isoformat(),
                 "tipo": tipo_aula,
                 "turma": turma_sel,
-                "componente": componente,
+                "componente": disciplina_final,
                 "data": data_aula.isoformat(),
                 "horario": horario_sel,
                 "competencia": comp_especifica,
@@ -353,19 +450,163 @@ def show_class_registry():
                     db.add_user_history(user, f"Registrou aula {n_aula} de {componente} para {turma_sel}")
                 except: pass
 
-            st.success("Registro de aula salvo com sucesso!")
-            st.balloons()
+            st.session_state.current_step = 1
+            st.session_state.current_registration_data = {
+                "tipo_aula": tipo_aula,
+                "turma": turma_sel,
+                "data": data_aula.isoformat(),
+                "componente": disciplina_final,
+                "horario": horario_sel,
+                "competencia": comp_especifica,
+                "habilidade": habilidade,
+                "hab_integrada": hab_integrada,
+                "objetivo": objetivo,
+                "objeto_conhecimento": objeto_conhecimento,
+                "conteudo": conteudo_abordado,
+                "estrategia": estrategia,
+                "n_aula": n_aula,
+                "sub_id": sub_id
+            }
+            st.rerun()
+
+def show_frequencia_step():
+    st.title("📝 Registro de Aula - Passo 2: Frequência")
+    st.write("Dados da aula:", st.session_state.current_registration_data)
+
+    # Placeholder for frequency input
+    st.info("Aqui você adicionaria a lista de alunos e marcaria a frequência.")
+    frequencia_data = st.text_area("Observações sobre Frequência (Ex: Alunos presentes, ausentes, etc.)", key="frequencia_obs")
+    
+    st.session_state.current_registration_data['frequencia_obs'] = frequencia_data
+
+    st.divider()
+    col_btns = st.columns(3)
+    if col_btns[0].button("Voltar", use_container_width=True):
+        st.session_state.current_step = 0
+        st.rerun()
+
+    if col_btns[1].button("Salvar e Avançar", type="primary", use_container_width=True):
+        st.session_state.current_step = 2
+        st.rerun()
+
+def show_recursos_step():
+    st.title("📝 Registro de Aula - Passo 3: Recursos Utilizados")
+    st.write("Dados da aula:", st.session_state.current_registration_data)
+
+    # Placeholder for resources input
+    st.info("Aqui você listaria os recursos didáticos e tecnológicos utilizados.")
+    recursos_data = st.text_area("Recursos Utilizados (Ex: Projetor, Computadores, Livros, Plataformas Online)", key="recursos_utilizados")
+
+    st.session_state.current_registration_data['recursos_utilizados'] = recursos_data
+
+    st.divider()
+    col_btns = st.columns(3)
+    if col_btns[0].button("Voltar", use_container_width=True):
+        st.session_state.current_step = 1
+        st.rerun()
+
+    if col_btns[1].button("Salvar e Avançar", type="primary", use_container_width=True):
+        st.session_state.current_step = 3
+        st.rerun()
+
+def show_atividades_step():
+    st.title("📝 Registro de Aula - Passo 4: Atividades Desenvolvidas")
+    st.write("Dados da aula:", st.session_state.current_registration_data)
+
+    # Placeholder for activities input
+    atividades_data = st.text_area("Atividades Desenvolvidas (Ex: Exercícios em grupo, Discussão, Apresentação)", key="atividades_desenvolvidas")
+
+    st.session_state.current_registration_data['atividades_desenvolvidas'] = atividades_data
+
+    st.divider()
+    col_btns = st.columns(3)
+    if col_btns[0].button("Voltar", use_container_width=True):
+        st.session_state.current_step = 2
+        st.rerun()
+
+    if col_btns[1].button("Finalizar Registro", type="primary", use_container_width=True):
+        finalize_registration()
+
+def finalize_registration():
+    st.title("📝 Registro de Aula - Finalizando...")
+    
+    registries = load_json(REGISTRY_FILE)
+    if "data" not in registries: registries["data"] = []
+    
+    new_entry = {
+        "id": len(registries["data"]) + 1,
+        "timestamp": datetime.now().isoformat(),
+        **st.session_state.current_registration_data
+    }
+    
+    registries["data"].append(new_entry)
+    save_json(REGISTRY_FILE, registries)
+    
+    if db and hasattr(db, 'supabase'):
+        try:
+            user = st.session_state.get('username', 'professor_ext')
+            db.add_user_history(user, f"Registrou aula {new_entry.get('n_aula', 'N/A')} de {new_entry.get('componente', 'N/A')} para {new_entry.get('turma', 'N/A')}")
+        except Exception as e:
+            st.error(f"Erro ao salvar histórico no banco de dados: {e}")
+
+    st.success("Registro de aula salvo com sucesso! Você pode iniciar um novo registro.")
+    st.balloons()
+
+    st.session_state.current_registration_data = {} # Clear data for next registration
+    st.session_state.current_step = 0 # Reset to start a new registration
+    st.rerun()
+
+def show_class_registry():
+    init_session_state()
+
+    if st.session_state.current_step == 0:
+        show_content_step()
+    elif st.session_state.current_step == 1:
+        show_frequencia_step()
+    elif st.session_state.current_step == 2:
+        show_recursos_step()
+    elif st.session_state.current_step == 3:
+        show_atividades_step()
 
     # --- HISTÓRICO RECENTE ---
     with st.expander("📂 Ver Registros Anteriores"):
-        registries = load_json(REGISTRY_FILE)
-        if "data" in registries and registries["data"]:
-            hist_df = pd.DataFrame(registries["data"])
-            st.dataframe(hist_df[["data", "turma", "componente", "tipo", "conteudo"]], hide_index=True)
-        else:
-            st.info("Nenhum registro encontrado.")
+        tab_manual, tab_portal = st.tabs(["📝 Registros Manuais", "🤖 Portal iSeduc (Histórico)"])
+        
+        with tab_manual:
+            registries = load_json(REGISTRY_FILE)
+            if "data" in registries and registries["data"]:
+                hist_df = pd.DataFrame(registries["data"])
+                st.dataframe(hist_df[["data", "turma", "componente", "tipo", "conteudo"]], hide_index=True, use_container_width=True)
+            else:
+                st.info("Nenhum registro manual encontrado localmente.")
 
-    # --- UTILITÁRIOS DE CONSULTA AO BANCO ---
+        with tab_portal:
+            if db and hasattr(db, 'supabase'):
+                try:
+                    # Busca os últimos 50 registros de automação do portal
+                    res = db.supabase.table("historico_aulas").select("*").order("created_at", desc=True).limit(50).execute()
+                    if res.data:
+                        portal_df = pd.DataFrame(res.data)
+                        st.dataframe(
+                            portal_df[["data_aula", "horario", "turma", "disciplina", "status"]],
+                            column_config={
+                                "data_aula": "Data",
+                                "horario": "Horário",
+                                "turma": "Turma",
+                                "disciplina": "Disciplina",
+                                "status": "Status"
+                            },
+                            hide_index=True,
+                            use_container_width=True
+                        )
+                    else:
+                        st.info("Nenhum registro de automação localizado na tabela do portal.")
+                except Exception as e:
+                    st.error(f"Erro ao conectar com historico_aulas: {e}")
+            else:
+                st.warning("Banco de dados indisponível para carregar o histórico do portal.")
+
+    # --- UTILITÁRIOS DE CONSULTA AO BANCO --- # Changed to 2 columns
     st.divider()
     with st.expander("🔍 Utilitários do Banco de Dados"):
         if db and db.is_db_connected():

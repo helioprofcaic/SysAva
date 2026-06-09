@@ -53,6 +53,8 @@ def render_plugin_integrated(plugin_path):
             module.show_attendance_plugin()
         elif hasattr(module, "show_daily_activities"):
             module.show_daily_activities()
+        elif hasattr(module, "show_lab_monitor"):
+            module.show_lab_monitor()
         elif hasattr(module, "show_grade_semanal"):
             module.show_grade_semanal()
         elif hasattr(module, "show_page"):
@@ -77,7 +79,7 @@ def show_page():
     # Substituímos st.tabs por um seletor de rádio horizontal para controle de execução.
     # O Streamlit avalia o conteúdo de todas as abas no st.tabs, o que causava a poluição do sidebar.
     # Com o if/elif, apenas o código (e o sidebar) do plugin selecionado é processado.
-    menu_options = ["Nativos", "Externos", "Agenda", "Registro", "Atividades", "Notas", "Frequência", "Grade"]
+    menu_options = ["Nativos", "Externos", "Monitor", "Agenda", "Registro", "Atividades", "Notas", "Frequência", "Grade"]
     icons = {
         "Nativos": "🔌", 
         "Externos": "📂", 
@@ -86,7 +88,8 @@ def show_page():
         "Atividades": "🎯",
         "Notas": "📊", 
         "Frequência": "📝",
-        "Grade": "🗓️"
+        "Grade": "🗓️",
+        "Monitor": "🖥️"
     }
     
     selected_tab = st.radio(
@@ -178,6 +181,14 @@ def show_page():
                         with st.spinner(f"Executando..."):
                             result = subprocess.run([sys.executable, plugin_path], capture_output=True, text=True, encoding='utf-8')
                             st.code(result.stdout if result.stdout else "Executado sem saída.")
+
+    # --- Aba de Monitoramento de Laboratório ---
+    elif selected_tab == "Monitor":
+        monitor_path = os.path.join("data", "repo", "plugins", "lab_monitor.py")
+        if os.path.exists(monitor_path):
+            render_plugin_integrated(monitor_path)
+        else:
+            st.info("O plugin de monitoramento não foi encontrado em `data/repo/plugins/lab_monitor.py`.")
 
     # --- Aba de Agenda (Dedicada) ---
     elif selected_tab == "Agenda":

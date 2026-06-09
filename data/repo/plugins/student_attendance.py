@@ -54,8 +54,24 @@ def show_attendance_plugin():
         st.header("Configurações")
         classes = db.get_classes()
         class_options = {c['name']: c['id'] for c in classes}
+        class_display = {c['name']: f"{c['name']} ({c.get('official_name', 'S/N')})" for c in classes}
         
-        selected_class_name = st.selectbox("Selecione a Turma", ["-- Selecione --"] + list(class_options.keys()))
+        selected_class_name = st.selectbox(
+            "Selecione a Turma", 
+            ["-- Selecione --"] + list(class_options.keys()),
+            format_func=lambda x: class_display.get(x, x)
+        )
+
+        selected_subject_id = None
+        selected_subject_name = ""
+
+        if selected_class_name != "-- Selecione --":
+            class_id = class_options[selected_class_name]
+            subjects = db.get_subjects_for_class(class_id)
+            subject_options = {s['name']: s['id'] for s in subjects}
+            selected_subject_name = st.selectbox("Selecione a Disciplina", list(subject_options.keys()))
+            selected_subject_id = subject_options[selected_subject_name]
+
         selected_date = st.date_input("Data da Aula", datetime.now())
         date_key = selected_date.isoformat()
 
@@ -63,6 +79,11 @@ def show_attendance_plugin():
         st.info("Selecione uma turma na barra lateral para iniciar a chamada.")
         return
 
+    if not selected_subject_name:
+        st.info("Selecione uma disciplina para registrar a frequência.")
+        return
+
+    subject_key = str(selected_subject_id)
     class_id = class_options[selected_class_name]
     students = db.get_students_by_class(class_id)
     
@@ -83,17 +104,22 @@ def show_attendance_plugin():
     # --- Sincronização Cloud: Carregar do Banco de Dados ---
     if db and hasattr(db, 'supabase'):
         try:
-            # Busca registros existentes para esta turma no banco
-            res = db.supabase.table("attendance").select("*").eq("class_name", selected_class_name).execute()
+            # Busca registros existentes para esta turma e disciplina no banco
+            res = db.supabase.table("attendance")\
+                .select("*")\
+                .eq("class_name", selected_class_name)\
+                .eq("subject_name", selected_subject_name)\
+                .execute()
             if res.data:
                 if class_key not in attendance_data: attendance_data[class_key] = {}
+                if subject_key not in attendance_data[class_key]: attendance_data[class_key][subject_key] = {}
+                
                 for rec in res.data:
                     dt = rec['date']
                     u_name = name_to_user.get(rec['student_name'])
                     if u_name:
-                        if dt not in attendance_data[class_key]: attendance_data[class_key][dt] = {}
-                        # O banco armazena boolean (is_present). O plugin usa strings para status.
-                        attendance_data[class_key][dt][u_name] = "Presente" if rec['is_present'] else "Falta"
+                        if dt not in attendance_data[class_key][subject_key]: attendance_data[class_key][subject_key][dt] = {}
+                        attendance_data[class_key][subject_key][dt][u_name] = "Presente" if rec['is_present'] else "Falta"
         except Exception:
             pass # Falha silenciosa: se o banco falhar, usa o cache local/backups
 
@@ -113,11 +139,12 @@ def show_attendance_plugin():
                             
                             if u_name and d_k:
                                 if class_key not in attendance_data: attendance_data[class_key] = {}
-                                if d_k not in attendance_data[class_key]: attendance_data[class_key][d_k] = {}
+                                if subject_key not in attendance_data[class_key]: attendance_data[class_key][subject_key] = {}
+                                if d_k not in attendance_data[class_key][subject_key]: attendance_data[class_key][subject_key][d_k] = {}
                                 # Prioriza o dado do arquivo principal se já existir
-                                if u_name not in attendance_data[class_key][d_k]:
+                                if u_name not in attendance_data[class_key][subject_key][d_k]:
                                     status = "Presente" if entry.get("Presença") else "Falta"
-                                    attendance_data[class_key][d_k][u_name] = status
+                                    attendance_data[class_key][subject_key][d_k][u_name] = status
                 
                 # Caso 2: Formato Novo (Dicionário)
                 elif isinstance(backup_json, dict):
@@ -127,12 +154,14 @@ def show_attendance_plugin():
 
     if class_key not in attendance_data:
         attendance_data[class_key] = {}
-    if date_key not in attendance_data[class_key]:
-        attendance_data[class_key][date_key] = {}
+    if subject_key not in attendance_data[class_key]:
+        attendance_data[class_key][subject_key] = {}
+    if date_key not in attendance_data[class_key][subject_key]:
+        attendance_data[class_key][subject_key][date_key] = {}
 
-    day_attendance = attendance_data[class_key][date_key]
+    day_attendance = attendance_data[class_key][subject_key][date_key]
 
-    st.subheader(f"Lista de Presença: {selected_class_name}")
+    st.subheader(f"Lista de Presença: {selected_class_name} - {selected_subject_name}")
     st.caption(f"Registro para o dia {selected_date.strftime('%d/%m/%Y')}")
 
     # 3. Interface da Chamada (Tabela Condensada)
@@ -169,7 +198,7 @@ def show_attendance_plugin():
     new_entries = {row['Username']: row['Status'] for _, row in edited_df.iterrows()}
 
     if st.button("💾 Salvar Chamada do Dia", use_container_width=True, type="primary"):
-        attendance_data[class_key][date_key] = new_entries
+        attendance_data[class_key][subject_key][date_key] = new_entries
         
         # 1. Atualiza o JSON de origem (student_attendance.json) com todos os dados mesclados
         save_json(ATTENDANCE_FILE, attendance_data)
@@ -182,8 +211,8 @@ def show_attendance_plugin():
             # Mapeamento auxiliar para recuperar nome e número rapidamente
             user_info_map = {s['username']: {"name": s['name'], "n": i+1} for i, s in enumerate(students)}
             
-            # Percorre todas as datas desta turma (originais + backups mesclados)
-            for d_key, entries in attendance_data[class_key].items():
+            # Percorre todas as datas desta turma e disciplina
+            for d_key, entries in attendance_data[class_key][subject_key].items():
                 for u_name, status in entries.items():
                     if u_name in user_info_map:
                         db_records.append({
@@ -191,16 +220,17 @@ def show_attendance_plugin():
                             "student_number": user_info_map[u_name]["n"],
                             "is_present": status in ["Presente", "Atraso"],
                             "class_name": selected_class_name,
+                            "subject_name": selected_subject_name,
                             "date": d_key,
                             "professor_name": professor
                         })
             
             if db_records:
                 try:
-                    # O parâmetro on_conflict utiliza a definição da constraint UNIQUE (student_name, class_name, date)
+                    # O parâmetro on_conflict agora inclui subject_name para precisão por matéria
                     db.supabase.table("attendance").upsert(
                         db_records, 
-                        on_conflict="student_name, class_name, date"
+                        on_conflict="student_name, class_name, subject_name, date"
                     ).execute()
                     st.info(f"Sincronizados {len(db_records)} registros (incluindo backups) com o servidor.")
                 except Exception as e:
@@ -221,14 +251,14 @@ def show_attendance_plugin():
 
     # 5. Tabela Geral de Histórico (Acumulado)
     st.divider()
-    st.subheader("📊 Relatório Geral de Faltas e Presenças")
+    st.subheader(f"📊 Relatório de Faltas e Presenças: {selected_subject_name}")
     
-    class_history = attendance_data.get(class_key, {})
-    if not class_history:
-        st.info("Nenhum histórico acumulado para esta turma ainda.")
+    subject_history = attendance_data.get(class_key, {}).get(subject_key, {})
+    if not subject_history:
+        st.info(f"Nenhum histórico acumulado para {selected_subject_name} nesta turma.")
     else:
         summary_list = []
-        all_dates = class_history.keys()
+        all_dates = subject_history.keys()
         
         for s in students:
             u = s['username']
@@ -236,7 +266,7 @@ def show_attendance_plugin():
             f_count = 0
             a_count = 0
             for d_key in all_dates:
-                stat = class_history[d_key].get(u)
+                stat = subject_history[d_key].get(u)
                 if stat == "Presente": p_count += 1
                 elif stat == "Falta": f_count += 1
                 elif stat == "Atraso": a_count += 1
@@ -255,6 +285,67 @@ def show_attendance_plugin():
         # Ordenamos por quem tem mais faltas para facilitar a atenção do professor
         df_summary = pd.DataFrame(summary_list).sort_values(by="Faltas ❌", ascending=False)
         st.dataframe(df_summary, hide_index=True, use_container_width=True)
+
+        # 6. Seção de Exportação para Relatórios Externos
+        st.markdown("### 📥 Exportar Registros")
+        c_exp1, c_exp2 = st.columns(2)
+
+        # Exportar Resumo da Disciplina Atual (Cálculo acumulado)
+        csv_summary = df_summary.to_csv(index=False).encode('utf-8')
+        c_exp1.download_button(
+            label=f"📊 Baixar Resumo ({selected_subject_name})",
+            data=csv_summary,
+            file_name=f"resumo_frequencia_{selected_class_name}_{selected_subject_name}_{datetime.now().strftime('%Y%m%d')}.csv",
+            mime="text/csv",
+            use_container_width=True,
+            help="Exporta a tabela de porcentagem de frequência da disciplina selecionada."
+        )
+
+        # Exportar Histórico Detalhado (Todas as datas e disciplinas da turma)
+        full_log = []
+        class_history_all = attendance_data.get(class_key, {})
+        user_to_name = {v: k for k, v in name_to_user.items()}
+        
+        # Mapeia IDs para nomes de disciplinas para o relatório geral
+        all_subjects_class = db.get_subjects_for_class(class_id)
+        sub_map = {str(s['id']): s['name'] for s in all_subjects_class}
+
+        for key, value in class_history_all.items():
+            if not isinstance(value, dict): continue
+            
+            # Verifica se o valor é um dicionário de datas (Formato Novo) 
+            # ou um dicionário de alunos (Formato Antigo/Legado)
+            first_inner = next(iter(value.values()), None)
+            
+            if isinstance(first_inner, dict):
+                # Formato Novo: key=subject_id, value={data: {user: status}}
+                s_name_full = sub_map.get(key, f"Cod:{key}")
+                for dk, entries in value.items():
+                    if isinstance(entries, dict):
+                        for un, st_val in entries.items():
+                            full_log.append({
+                                "Data": dk, "Disciplina": s_name_full,
+                                "Estudante": user_to_name.get(un, un), "Status": st_val
+                            })
+            else:
+                # Formato Legado: key=data, value={user: status}
+                for un, st_val in value.items():
+                    full_log.append({
+                        "Data": key, "Disciplina": "Histórico Legado",
+                        "Estudante": user_to_name.get(un, un), "Status": st_val
+                    })
+        
+        if full_log:
+            df_full = pd.DataFrame(full_log).sort_values(by=["Data", "Disciplina", "Estudante"])
+            csv_full = df_full.to_csv(index=False).encode('utf-8')
+            c_exp2.download_button(
+                label="📁 Baixar Histórico Geral (Turma)",
+                data=csv_full,
+                file_name=f"historico_completo_{selected_class_name}_{datetime.now().strftime('%Y%m%d')}.csv",
+                mime="text/csv",
+                use_container_width=True,
+                help="Exporta um log detalhado de todas as chamadas realizadas para esta turma em todas as matérias."
+            )
 
 if __name__ == "__main__":
     is_streamlit = False

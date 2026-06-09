@@ -196,6 +196,9 @@ def show_admin_view():
     if selected_class != "-- Selecione --":
         class_id = class_options[selected_class]
         subjects = db.get_subjects_for_class(class_id)
+        # Filtra apenas disciplinas ativas para o seletor do professor
+        subjects = [s for s in subjects if s.get('is_active', True)]
+        
         subject_options = {s['name']: s['id'] for s in subjects}
         
         selected_subject = st.selectbox("Disciplina", ["-- Selecione --"] + list(subject_options.keys()))
@@ -304,8 +307,8 @@ def show_admin_view():
                     # Mantendo apenas a versão moderna (Batch Editor)
                     column_config = {"Nome": st.column_config.TextColumn("Nome do Aluno", width="large", disabled=True), "Nota": st.column_config.NumberColumn("Nota Final", min_value=0.0, max_value=10.0, step=0.5, format="%.2f"), "Visualizar": st.column_config.CheckboxColumn("👁️"), "index": None, "_submission": None, "_user_info": None}
                     for h in question_headers.keys(): column_config[h] = st.column_config.TextColumn(h, width="small", disabled=True)
-                    edited_df = st.data_editor(df, column_config=column_config, use_container_width=True, hide_index=True)
-                    if st.button("💾 Salvar Todas as Notas Alteradas", type="primary", use_container_width=True):
+                    edited_df = st.data_editor(df, column_config=column_config, width="stretch", hide_index=True)
+                    if st.button("💾 Salvar Todas as Notas Alteradas", type="primary", width="stretch"):
                         for idx, row in edited_df.iterrows():
                             orig = df.loc[df['index'] == row['index']].iloc[0]
                             if row['Nota'] is not None and (pd.isna(orig['Nota']) or orig['Nota'] != row['Nota']):
@@ -326,6 +329,8 @@ def show_student_view():
         
     class_id = enrollment['class_id']
     subjects = db.get_subjects_for_class(class_id)
+    # Filtra as disciplinas ativas para a visão do aluno
+    subjects = [s for s in subjects if s.get('is_active', True)]
     
     if not subjects:
         st.warning("Nenhuma disciplina encontrada para sua turma.")

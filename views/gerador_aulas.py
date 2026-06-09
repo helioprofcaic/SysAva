@@ -68,15 +68,15 @@ def show_page():
         st.header("🎨 Estilo e Metodologia")
         with st.expander("Customizar Geração", expanded=False):
             ai_persona = st.text_area("Persona (Ator)", 
-                value="Um professor especialista, didático e motivador, que utiliza exemplos práticos e linguagem acessível.",
+                value="Um professor especialista, didático e motivador. IMPORTANTE: Use estritamente o nome da Turma e da Disciplina informados nos parâmetros de configuração, ignorando quaisquer nomes de turmas ou professores diferentes que apareçam no material de contexto/base.",
                 help="Ex: 'Um tutor técnico focado em certificações' ou 'Um mentor de carreira'.")
             
             metodologia = st.selectbox("Metodologia", 
-                ["Aula Expositiva Dialogada", "Aprendizagem Baseada em Problemas (PBL)", "Sala de Aula Invertida", "Estudo de Caso", "Gamificação"],
+                ["Aula Expositiva Dialogada", "Aprendizagem Baseada em Problemas (PBL)", "Sala de Aula Invertida", "Estudo de Caso", "Gamificação", "Hands-on / Coding Challenge"],
                 index=0)
             
             estrutura_aula = st.text_area("Estrutura Obrigatória", 
-                value="1. Título; 2. Objetivos; 3. Introdução; 4. Conteúdo Teórico; 5. Exemplo Prático; 6. Conclusão; 7. Quiz.",
+                value="1. Título; 2. Objetivos; 3. Introdução; 4. Conteúdo Teórico; 5. Exemplo Prático; 6. Desafio Prático (Script); 7. Conclusão; 8. Quiz.",
                 help="Determine a ordem e os tópicos que não podem faltar no Markdown.")
 
         st.divider()
@@ -282,12 +282,31 @@ def show_page():
                             with st.spinner("Integrando ao sistema..."):
                                 # Separa conteúdo da aula e do quiz
                                 lesson_content, quiz_content = quiz_parser.split_lesson_and_quiz(conteudo_aula)
+                                
+                                # Tenta extrair o Desafio Prático para postar no fórum
+                                # O padrão agora permite emojis, números e outros caracteres entre as # e a palavra 'Desafio'
+                                challenge_pattern = r'(?si)(#+.*?(?:Desafio|Atividade)\s+Prático.*?)(?=\n#+|$)'
+                                challenge_match = re.search(challenge_pattern, lesson_content)
+                                challenge_text = challenge_match.group(1).strip() if challenge_match else ""
+                                
                                 # Upsert da aula
                                 lesson_title_clean = nome_arquivo.replace(".md", "")
                                 lesson_id = db.upsert_lesson(lesson_title_clean, target_sid, lesson_content, "")
                                 
                                 if quiz_content and lesson_id:
                                     quiz_parser.process_quiz_content(lesson_id, quiz_content, lesson_title_clean)
+                                
+                                if lesson_id and challenge_text:
+                                    # Prepara a mensagem do fórum enviada pelo EduBot
+                                    forum_msg = (
+                                        f"🚀 **NOVO DESAFIO PRÁTICO DETECTADO!**\n\n"
+                                        f"{challenge_text}\n\n"
+                                        "--- \n"
+                                        "💡 **Dica do EduBot:** Copie este código e teste em um compilador online como [Replit](https://replit.com) ou [OnlineGDB](https://www.onlinegdb.com), ou use seu **VS Code** local. Poste sua solução ou dúvida abaixo!"
+                                    )
+                                    db.add_forum_post("EduBot 🤖", forum_msg, lesson_id=lesson_id)
+                                    db.add_user_history("EduBot 🤖", f"Publicou desafio prático na aula: {lesson_title_clean}")
+                                    st.info("🤖 **EduBot:** Desafio prático identificado e postado no Fórum!")
                                 
                                 st.success(f"Aula '{lesson_title_clean}' salva com sucesso no banco de dados!")
                         else:

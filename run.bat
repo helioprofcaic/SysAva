@@ -28,7 +28,7 @@ echo Atualizando o Pip...
 
 REM Instala/Atualiza dependencias
 echo Verificando dependencias...
-"%VENV_PATH%\Scripts\pip.exe" install --upgrade pip -r requirements.txt 
+"%VENV_PATH%\Scripts\pip.exe" install --upgrade pip -r requirements.txt psutil requests flask
 
 
 REM Verifica se o .env existe antes de popular o banco
@@ -120,11 +120,5 @@ if exist "%SCHOOL_CONFIG_FILE%" set /p school_name=<"%SCHOOL_CONFIG_FILE%"
 REM Executa a aplicacao
 echo.
 echo Iniciando o %school_name%...
-
-
-REM Executa a aplicacao
-echo.
-echo Iniciando o SysAva CETI Raldir...
-
 call "%VENV_DIR%\Scripts\streamlit.exe" run app.py
 pause
