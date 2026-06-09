@@ -323,10 +323,10 @@ if __name__ == '__main__':
     print("\n" + "="*50)
     print("🚀 SysAva Receiver v2 (RAM + Diagnostics) Online")
     print(f"📍 Endereco MAC: {get_my_mac()}")
-    print(f"🔗 Rota IPv4: http://192.168.11.249:8080/diagnostics")
-    print(f"🔗 Rota IPv6: http://[{get_local_ipv6()}]:8080/diagnostics")
+    print(f"🔗 Rota IPv4: http://192.168.11.249:5000/diagnostics")
+    print(f"🔗 Rota IPv6: http://[{get_local_ipv6()}]:5000/diagnostics")
     print("� Use este MAC no 'lab_agent.py' para busca automatica.")
     print("="*50 + "\n")
     
     # Rodar em '::' permite conexões IPv4 e IPv6 simultâneas
-    app.run(host='::', port=8080, threaded=True, debug=False)
+    app.run(host='::', port=5000, threaded=True, debug=False)

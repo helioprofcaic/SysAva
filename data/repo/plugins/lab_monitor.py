@@ -19,6 +19,11 @@ from datetime import datetime
 PLUGIN_DIR = os.path.dirname(__file__)
 MONITOR_DATA_FILE = os.path.join(PLUGIN_DIR, "lab_status.json")
 
+# Se você está usando um Receiver público, configure aqui:
+PUBLIC_RECEIVER_URL = "https://sysava.streamlit.app"
+AUTH_TOKEN = None  # Se o receiver exigir Bearer token, defina aqui
+LOCAL_RECEIVER_URL = "http://127.0.0.1:8080"
+
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
@@ -34,6 +39,10 @@ def is_port_in_use(port):
 
 @st.cache_resource
 def start_receiver():
+    # Se o receiver remoto estiver configurado, não inicia o local.
+    if PUBLIC_RECEIVER_URL:
+        return None
+
     # Evita abrir múltiplos processos se a porta já estiver ocupada
     if is_port_in_use(8080):
         return None
@@ -52,11 +61,24 @@ start_receiver()
 def load_monitor_data():
     """
     Carrega o status priorizando a RAM (via API do Receiver).
-    Caminho: RAM (Live) > JSON (Registros/Vigilância)
+    Caminho: Publico > Local > JSON (Registros/Vigilância)
     """
+    headers = {}
+    if AUTH_TOKEN:
+        headers['Authorization'] = f"Bearer {AUTH_TOKEN}"
+
+    data = {}
+    if PUBLIC_RECEIVER_URL:
+        try:
+            response = requests.get(f"{PUBLIC_RECEIVER_URL.rstrip('/')}/api/status", timeout=1, headers=headers)
+            if response.status_code == 200:
+                return response.json()
+        except:
+            pass
+
     try:
-        # Tenta buscar o estado ultra-latente na RAM do Receiver
-        response = requests.get("http://127.0.0.1:8080/api/status", timeout=0.5)
+        # Tenta buscar o estado ultra-latente na RAM do Receiver local
+        response = requests.get(f"{LOCAL_RECEIVER_URL}/api/status", timeout=0.5, headers=headers)
         if response.status_code == 200:
             return response.json()
     except:
@@ -117,9 +139,10 @@ def show_lab_monitor():
         
         st.divider()
         st.markdown("### 🛠️ Depuração")
+        diagnostic_url = f"{PUBLIC_RECEIVER_URL.rstrip('/') if PUBLIC_RECEIVER_URL else LOCAL_RECEIVER_URL}/diagnostics"
         st.link_button(
             "🌐 Abrir Diagnóstico (Browser)", 
-            "http://127.0.0.1:8080/diagnostics", 
+            diagnostic_url, 
             use_container_width=True,
             help="Abre uma nova aba com os dados brutos da memória RAM do servidor."
         )
