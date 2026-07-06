@@ -73,6 +73,11 @@ Se as máquinas clientes não estiverem conectando ou a conexão estiver inconst
 3. **Firewall do Servidor**: Garanta que a porta `5000` (TCP) esteja aberta para conexões de entrada no Windows Firewall do computador do professor (Servidor). Sem isso, as máquinas podem encontrar o servidor mas não conseguirão enviar os dados.
 4. **Diferença de Sub-rede**: Se o agente logar `Invalid URL 'http:///ping'`, significa que ele encontrou o MAC mas não resolveu o IP. Verifique se todas as máquinas estão na mesma máscara de sub-rede e se não há isolamento de AP (em redes Wi-Fi).
 
+## 💡 Dica para Operação Offline (Sem Roteador)
+Para usar o monitoramento sem uma rede Wi-Fi, você pode criar uma rede Ad-Hoc (Hotspot) diretamente do seu notebook.
+1. No Windows, vá em "Configurações" > "Rede e Internet" > "Hotspot móvel".
+2. Ative o Hotspot. Os computadores dos alunos devem se conectar a esta nova rede.
+3. O agente (`lab_agent.py`) encontrará seu notebook automaticamente, pois estarão na mesma "mini-rede".
 ## ⚠️ Considerações Importantes
 
 -   **Necessidade de Agente Local**: Este plugin depende de um pequeno script Python (agente) rodando em segundo plano em cada máquina do laboratório que envie os dados para o arquivo `lab_status.json`.

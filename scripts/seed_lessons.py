@@ -185,6 +185,7 @@ def run_lesson_seeder():
     st.secrets = MockSecrets()
 
     from services import database as db
+    from views.aulas import clean_svg_content
 
     if not db.is_db_connected():
         print("ERRO: Conexão com o banco falhou. Verifique o arquivo .env")
@@ -252,8 +253,11 @@ def run_lesson_seeder():
                 lesson_content = full_content[:quiz_match.start(1)].strip() if quiz_match else full_content
                 quiz_content = full_content[quiz_match.start(1):].strip() if quiz_match else ""
 
+                # Limpa o conteúdo do SVG antes de inserir no banco
+                clean_lesson_content = clean_svg_content(lesson_content)
+
                 # Insere a aula no banco, associada ao ID do treinamento
-                lesson_id = db.upsert_lesson(lesson_title, subject_id, lesson_content, "")
+                lesson_id = db.upsert_lesson(lesson_title, subject_id, clean_lesson_content, "")
                 if lesson_id:
                     print(f"    ✅ Aula '{lesson_title}' importada para o treinamento '{training_name}'.")
                     total_lessons += 1
@@ -376,7 +380,10 @@ def run_lesson_seeder():
                     if not description:
                         description = "Sem descrição"
                     
-                    lesson_id = db.upsert_lesson(lesson_title, subject_id, description, video_url)
+                    # Limpa o conteúdo do SVG antes de inserir no banco
+                    clean_description = clean_svg_content(description)
+                    
+                    lesson_id = db.upsert_lesson(lesson_title, subject_id, clean_description, video_url)
                     if lesson_id:
                         print(f"    ✅ Aula '{lesson_title}' importada/atualizada.")
                         total_lessons += 1

@@ -132,7 +132,7 @@ def print_monitor_table(data):
     distracao = total - prod
     
     print("-" * 75)
-    print(f"Resumo: {Colors.OKGREEN}{prod} Produtivos{Colors.ENDC} | {Colors.FAIL}{distracao} Distraídos{Colors.ENDC} | Total: {total}")
+    print(f"Resumo: {Colors.OKGREEN}{prod} Produtivos{Colors.ENDC} | {Colors.FAIL}{stats.get('Roblox', 0)} Roblox{Colors.ENDC} | {Colors.WARNING}{distracao - stats.get('Roblox',0)} Outros{Colors.ENDC} | Total: {total}")
 
 def run_diagnostics(watch=False):
     if watch:

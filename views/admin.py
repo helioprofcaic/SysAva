@@ -3,6 +3,7 @@ import streamlit.components.v1 as components
 from services import database as db
 from services import auth
 from services import ai_generation as ai
+from views.aulas import clean_svg_content
 from services import quiz_parser
 import re
 import json
@@ -362,7 +363,9 @@ def show_page():
                             submitted = st.form_submit_button("Salvar Aula")
 
                             if submitted and title:
-                                _, error = db.create_lesson(title, subject_id, description, video_url)
+                                # Limpa o conteúdo (SVGs/Markdown) antes de enviar para o Supabase
+                                clean_description = clean_svg_content(description)
+                                _, error = db.create_lesson(title, subject_id, clean_description, video_url)
                                 if error: st.error(f"Erro ao criar aula: {error}")
                                 else: st.success(f"Aula criada com sucesso na disciplina {selected_subject_name}!"); st.rerun()
 
@@ -775,7 +778,8 @@ def show_page():
                                 else: # Manual
                                     col_start, col_end = st.columns(2)
                                     start_lesson = col_start.number_input("Da Aula (Nº):", min_value=1, value=1, step=1)
-                                    end_lesson = col_end.number_input("Até a Aula (Nº):", min_value=start_lesson, value=5, step=1)
+                                    # Garante que o valor padrão seja no mínimo igual ao start_lesson para evitar erro do Streamlit
+                                    end_lesson = col_end.number_input("Até a Aula (Nº):", min_value=start_lesson, value=max(start_lesson, 5), step=1)
 
                                 quiz_questions = db.get_all_quiz_questions_for_subject(subject_id_av, assessment['type'], workload_val, scope_mode, start_lesson, end_lesson)                            
 

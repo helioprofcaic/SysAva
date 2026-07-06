@@ -1,4 +1,4 @@
-2026-06-09 09:17:36.448 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-07-06 19:45:41.694 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
 Iniciando importação de aulas em lote a partir de: D:\Florestan\Apps\SysAva\data\Turmas
 
  Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'INTELIGÊNCIA ARTIFICIAL' -> Semana 'S01'
@@ -28,14 +28,38 @@ Iniciando importação de aulas em lote a partir de: D:\Florestan\Apps\SysAva\da
     ⏭️  Aula 'Aula 9 fundamentos da programação orientada a objetos (poo)' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Desafio aula9' já consta no logs.txt. Pulando.
 
+ Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO ORIENTADA À OBJETOS - POO' -> Semana 'S03'
+    ⏭️  Aula 'Aula25 tutorial uml poo' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO ORIENTADA À OBJETOS - POO' -> Semana 'S04'
+    ⏭️  Aula 'Aula 39 encapsulamento e modificadores de acesso' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026A' -> Semana 'S01'
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026A' -> Semana 'S02'
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026A' -> Semana 'S03'
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026A' -> Semana 'S04'
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026A' -> Semana 'S05'
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026A' -> Semana 'S06'
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
  Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'INTELIGÊNCIA ARTIFICIAL' -> Semana 'S01'
     ⏭️  Aula 'Aula 10 como os robôs buscam algo no mundo real — aprendendo com algoritmos de busca' já consta no logs.txt. Pulando.
-    ⏭️  Aula 'Aula 11 entendendo como os sistemas especialistas decidem — sem pensar como nós' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 9 robótica e inteligência artificial' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 3 classificação e regressão' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Notebook ia- classificaçãovs.regressão' já consta no logs.txt. Pulando.
 
  Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'INTELIGÊNCIA ARTIFICIAL' -> Semana 'S02'
+    ⏭️  Aula 'Aula 11 entendendo como os sistemas especialistas decidem — sem pensar como nós' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 12 desvendando a lógica fuzzy do um pouco quente ao sistema inteligente' já consta no logs.txt. Pulando.
 
  Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'MENTORIAS TEC II' -> Semana 'setup'
@@ -56,5 +80,33 @@ Iniciando importação de aulas em lote a partir de: D:\Florestan\Apps\SysAva\da
     ⏭️  Aula 'Scripts poo java.ps1' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Scripts py.ps1' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Scripts setup folders 2ads' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026B' -> Semana 'S01'
+    ⏭️  Aula 'Aula 3 a evolução da world wide web (www) e o futuro do desenvolvimento web' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 4 evolução, compatibilidade e ferramentas de desenvolvimento web' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 5 a importância dos padrões web e a padronização pelo w3c' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 6 desvendando o protocolo http e a arquitetura da web' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 7 métodos http – a linguagem de comunicação entre cliente e servidor' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 8 entendendo os códigos de status http' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Front-end 2ano' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026B' -> Semana 'S02'
+    ⏭️  Aula 'Aula 10 planejamento e estrutura html - o alicerce do seu site' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 11 estruturando o conteúdo web com tags html' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 9 a base da web html - estruturando o mundo digital!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026B' -> Semana 'S03'
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026B' -> Semana 'S04'
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026B' -> Semana 'S05'
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026B' -> Semana 'S06'
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
 
 Processo concluído. Total de aulas importadas: 0

@@ -38,6 +38,22 @@ def sync_local_to_supabase():
     """Puxa dados da API local e envia para o Supabase (Cloud)."""
     print("\n--- SINCRONIZANDO AUTOMAÇÃO: LOCAL -> SUPABASE ---")
     
+    # Carrega mapeamentos de IDs para garantir a integridade referencial na nuvem
+    try:
+        all_classes = {} # Mapeia nomes/códigos para o 'code' (iSeduc ID)
+        for c in db.get_classes():
+            class_code = c.get('code')
+            if class_code:
+                for field in ['official_name', 'portal_name', 'name', 'code']:
+                    val = c.get(field)
+                    if val:
+                        all_classes[str(val).strip().upper()] = class_code
+
+        all_subjects = {s['name'].strip().upper(): s['id'] for s in db.get_subjects()}
+    except Exception as e:
+        print(f"     ⚠️ Falha ao carregar mapeamentos de IDs: {e}")
+        all_classes, all_subjects = {}, {}
+
     # 1. Sincronizar Histórico de Aulas
     try:
         print("  -> Sincronizando 'historico_aulas'...")
@@ -45,9 +61,26 @@ def sync_local_to_supabase():
         if resp.status_code == 200:
             data = resp.json()
             for item in data:
-                # O Supabase usa Snake Case e o Pydantic da API retorna o mesmo
-                item.pop('id', None) # Deixa o Supabase gerar o ID dele
-                db.supabase.table("historico_aulas").upsert(item).execute()
+                item.pop('id', None)
+                
+                # Normalização para garantir o batimento com o mapa de IDs da nuvem
+                t_name = item.get('turma', '').strip().upper()
+                d_name = item.get('disciplina', '').strip().upper()
+                
+                # Injeção de IDs caso os campos venham vazios da API local (baseado no nome)
+                resolved_code = all_classes.get(t_name)
+                if resolved_code and not item.get('turma_id'):
+                    item['turma_id'] = resolved_code
+                
+                if not item.get('disciplina_id') and d_name:
+                    item['disciplina_id'] = all_subjects.get(d_name)
+
+                # Ajustado para usar turma_id e disciplina_id no conflito, 
+                # pois agora existe a UNIQUE CONSTRAINT no Supabase.
+                db.supabase.table("historico_aulas").upsert(
+                    item, 
+                    on_conflict="data_aula,horario,turma_id,disciplina_id"
+                ).execute()
             print(f"     ✅ {len(data)} registros de histórico sincronizados.")
     except Exception as e:
         print(f"     ⚠️ Falha ao sincronizar histórico: {e}")
@@ -60,7 +93,22 @@ def sync_local_to_supabase():
             data = resp.json()
             for item in data:
                 item.pop('id', None)
-                db.supabase.table("planejamento").upsert(item).execute()
+
+                t_name = item.get('turma', '').strip().upper()
+                d_name = item.get('disciplina', '').strip().upper()
+                
+                resolved_code = all_classes.get(t_name)
+                if resolved_code and not item.get('turma_id'):
+                    item['turma_id'] = resolved_code
+                
+                if not item.get('disciplina_id') and d_name:
+                    item['disciplina_id'] = all_subjects.get(d_name)
+
+                # Atualizado para bater com a restrição UNIQUE da sua API:
+                # data_planejada, horario, turma_id, disciplina_id
+                db.supabase.table("planejamento").upsert(
+                    item, on_conflict="data_planejada,horario,turma_id,disciplina_id"
+                ).execute()
             print(f"     ✅ {len(data)} registros de planejamento sincronizados.")
     except Exception as e:
         print(f"     ⚠️ Falha ao sincronizar planejamento: {e}")
@@ -82,6 +130,46 @@ def sync_local_to_supabase():
             print(f"     ✅ {len(data)} chaves de configuração sincronizadas.")
     except Exception as e:
         print(f"     ⚠️ Falha ao sincronizar configurações: {e}")
+
+def repair_cloud_ids():
+    """Busca registros no Supabase com FKs nulas e tenta corrigi-los usando os nomes."""
+    print("\n--- REPARANDO INTEGRIDADE DAS CHAVES NO SUPABASE ---")
+    try:
+        all_classes = {}
+        for c in db.get_classes():
+            class_code = c.get('code')
+            if class_code:
+                for field in ['official_name', 'portal_name', 'name', 'code']:
+                    val = c.get(field)
+                    if val:
+                        all_classes[str(val).strip().upper()] = class_code
+                    
+        all_subjects = {s['name'].strip().upper(): s['id'] for s in db.get_subjects()}
+        
+        for table in ["historico_aulas", "planejamento"]:
+            print(f"  -> Verificando inconsistências em '{table}'...")
+            # Busca registros onde pelo menos um ID está faltando
+            res = db.supabase.table(table).select("*").or_("turma_id.is.null,disciplina_id.is.null").execute()
+            
+            repaired = 0
+            for row in res.data:
+                updates = {}
+                t_name = row.get('turma', '').strip().upper()
+                d_name = row.get('disciplina', '').strip().upper()
+
+                resolved_code = all_classes.get(t_name)
+                if resolved_code and not row.get('turma_id'):
+                    updates['turma_id'] = resolved_code
+                
+                if not row.get('disciplina_id') and d_name:
+                    updates['disciplina_id'] = all_subjects.get(d_name)
+
+                if updates:
+                    db.supabase.table(table).update(updates).eq("id", row['id']).execute()
+                    repaired += 1
+            if repaired > 0: print(f"     ✅ {repaired} registros órfãos reparados em '{table}'.")
+    except Exception as e:
+        print(f"     ⚠️ Falha no reparo de integridade: {e}")
 
 def run_audit():
     """Realiza uma contagem de registros nas tabelas principais."""
@@ -156,9 +244,23 @@ def run_backup():
             try:
                 print(f"  -> Processando tabela: '{table_name}'...")
                 
-                # 1. Busca dados da tabela no Supabase
-                response = db.supabase.table(table_name).select("*").execute()
-                data = response.data
+                # 1. Busca dados com paginação (O Supabase limita em 1000 por requisição)
+                data = []
+                start = 0
+                page_size = 1000
+                
+                while True:
+                    response = db.supabase.table(table_name).select("*")\
+                        .range(start, start + page_size - 1).execute()
+                    
+                    page_data = response.data
+                    if not page_data:
+                        break
+                    
+                    data.extend(page_data)
+                    if len(page_data) < page_size:
+                        break
+                    start += page_size
 
                 if not data:
                     print(f"     - Tabela '{table_name}' está vazia. Pulando.")
@@ -166,13 +268,12 @@ def run_backup():
 
                 # 2. Cria a tabela no SQLite
                 columns = data[0].keys()
-                # Para simplificar, todos os campos serão TEXT. Em um backup mais robusto, mapearíamos os tipos.
-                # Usamos `IF NOT EXISTS` para segurança.
+                
+                # Dropamos a tabela antes de criar para garantir que o esquema no SQLite 
+                # acompanhe as mudanças no Supabase (como a nova coluna 'class_id').
+                cursor.execute(f"DROP TABLE IF EXISTS {table_name}")
                 create_table_sql = f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join([f'{col} TEXT' for col in columns])})"
                 cursor.execute(create_table_sql)
-
-                # 3. Limpa a tabela antes de inserir para evitar duplicatas em re-execuções
-                cursor.execute(f"DELETE FROM {table_name}")
 
                 # 4. Insere os dados
                 placeholders = ', '.join(['?'] * len(columns))
@@ -221,6 +322,9 @@ def main():
     
     # Primeiro, envia os dados locais da automação para a nuvem
     sync_local_to_supabase()
+    
+    # Repara registros órfãos que já estão no Supabase mas sem ID vinculado
+    repair_cloud_ids()
     
     # Depois realiza a auditoria e o backup normal
     run_audit()

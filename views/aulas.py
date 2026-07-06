@@ -4,10 +4,34 @@ import streamlit.components.v1 as components
 import re
 
 
-def markdown_to_html(text):
-    """Converte texto markdown simples para HTML para impressão."""
+def clean_svg_content(text):
+    """Limpa e restaura o código SVG que pode ter sido corrompido pela IA ou markdown."""
     if not text: return ""
     text = str(text)
+    # 1. Converte entidades escapadas (inclusive aspas e caracteres que quebram o XML)
+    text = text.replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"').replace('&#x27;', "'").replace('&nbsp;', ' ')
+    
+    # 2. Corrige a linkificação de namespaces (IA transforma URLs em links markdown dentro de atributos)
+    text = re.sub(r'xmlns\s*=\s*["\']?\[(http.*?)\]\(.*?\)\s*["\']?', r'xmlns="\1"', text, flags=re.IGNORECASE)
+    text = re.sub(r'xmlns\s*=\s*"(http.*?)"', r'xmlns="\1"', text, flags=re.IGNORECASE)
+
+    # 3. Remove blocos de código markdown residuais que envolvem o SVG (```xml ... ```)
+    text = re.sub(r'```(?:html|xml|svg)?\s*(<svg.*?</svg>)\s*```', r'\1', text, flags=re.DOTALL | re.IGNORECASE)
+    
+    # 4. Garante linhas em branco ao redor de tags SVG para isolamento no parser do Streamlit
+    text = re.sub(r'(<svg.*?</svg>)', r'\n\n\1\n\n', text, flags=re.DOTALL | re.IGNORECASE)
+    return text
+
+def markdown_to_html(text):
+    """Converte texto markdown simples para HTML para impressão."""
+    text = clean_svg_content(text)
+
+    # 1. Protege blocos SVG: extrai e substitui por um placeholder 
+    # para evitar que os replaces de newline e markdown quebrem o XML do SVG.
+    svg_blocks = re.findall(r'<svg.*?</svg>', text, flags=re.DOTALL | re.IGNORECASE)
+    for i, svg in enumerate(svg_blocks):
+        text = text.replace(svg, f"<!--SVG_BLOCK_{i}-->")
+
     # Headers
     text = re.sub(r'^# (.*$)', r'<h1>\1</h1>', text, flags=re.MULTILINE)
     text = re.sub(r'^## (.*$)', r'<h2>\1</h2>', text, flags=re.MULTILINE)
@@ -25,6 +49,11 @@ def markdown_to_html(text):
     text = text.replace('\n', '<br>')
     text = re.sub(r'<br>\s*(<(?:li|ul|/ul)>)', r'\1', text)
     text = re.sub(r'(<(?:/li|ul|/ul)>)\s*<br>', r'\1', text)
+    
+    # 2. Restaura os blocos SVG originais sem as tags <br> extras
+    for i, svg in enumerate(svg_blocks):
+        text = text.replace(f"<!--SVG_BLOCK_{i}-->", svg)
+        
     return text
 
 def generate_printable_lesson_view(school_name, subject_name, class_name, lesson, quiz, questions):
@@ -200,7 +229,9 @@ def show_lesson_detail():
     if lesson.get('video_url'):
         st.video(lesson['video_url'])
     if lesson.get('description'):
-        st.markdown(lesson['description'], unsafe_allow_html=True)
+        desc = clean_svg_content(lesson['description'])
+        
+        st.markdown(desc, unsafe_allow_html=True)
 
     st.divider()
     col1, col2 = st.columns(2)

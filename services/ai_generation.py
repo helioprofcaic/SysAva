@@ -250,6 +250,19 @@ def generate_lesson_markdown(subject, class_name, topic, lesson_num, school_name
     response = generate_content_with_fallback(prompt)
     
     if response:
-        return response.text
+        content = str(response.text)
+        
+        # Limpeza profunda de SVGs para evitar "envenenamento" do banco de dados
+        content = content.replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"').replace('&#x27;', "'")
+        
+        # Remove linkificação de namespace (xmlns="url")
+        content = re.sub(r'xmlns\s*=\s*["\']?\[(http.*?)\]\(.*?\)\s*["\']?', r'xmlns="\1"', content, flags=re.IGNORECASE)
+        
+        # Remove blocos de código markdown residuais e isola o SVG
+        content = re.sub(r'```(?:html|xml|svg)?\s*(<svg.*?</svg>)\s*```', r'\1', content, flags=re.DOTALL | re.IGNORECASE)
+        content = re.sub(r'(<svg.*?</svg>)', r'\n\n\1\n\n', content, flags=re.DOTALL | re.IGNORECASE)
+
+        content = re.sub(r'\n{3,}', '\n\n', content)
+        return content
     
     return None

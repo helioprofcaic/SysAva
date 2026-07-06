@@ -26,7 +26,7 @@ logging.basicConfig(
 SERVER_URL = None
 # IMPORTANTE: Se o notebook (servidor) trocar de IP/MAC, o agente para de achar.
 # Recomenda-se deixar SERVER_MAC como None se não tiver certeza do MAC do Notebook do professor.
-SERVER_MAC = "B8-F7-75-06-4B-36" #None 
+SERVER_MAC = "B8-F7-75-06-4B-36" #None
 # IP Estático do Servidor (Notebook) conforme sua topologia
 KNOWN_SERVER_IP = "192.168.11.249"
 INTERVALO = 10
@@ -34,14 +34,12 @@ INTERVALO = 10
 def check_ip(ip):
     """Verifica se um IP específico está rodando o servidor SysAva."""
     try:
-        # Formata URL para IPv6 (com colchetes) ou IPv4
-        if ":" in ip and "[" not in ip:
-            base_url = f"http://[{ip}]:8080"
-        else:
-            base_url = f"http://{ip}:8080"
-            
+        # O receiver agora roda na porta 5000
+        base_url = f"http://{ip}:5000"
+
+        # O endpoint de health-check é /health
         url = f"{base_url}/health"
-        r = requests.get(url, timeout=1.2)
+        r = requests.get(url, timeout=1.0)
         if r.status_code == 200 and r.json().get("status") == "online":
             return f"{base_url}/ping"
     except:
@@ -54,33 +52,17 @@ def get_ip_by_mac(target_mac):
         # Padroniza o MAC para comparação (minúsculas e hífen)
         target_mac = target_mac.lower().replace(":", "-")
         output = subprocess.check_output(["arp", "-a"], stderr=subprocess.STDOUT, text=True)
+
         for line in output.splitlines():
             if target_mac in line.lower().replace(":", "-"):
-                parts = line.split()
-                if len(parts) >= 1:
-                    return parts[0] # O primeiro item da linha do ARP costuma ser o IP
+                match = re.search(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b", line)
+                if match: return match.group(0)
     except Exception as e:
         logging.error(f"Erro ao consultar tabela ARP: {e}")
     return None
 
 def find_server(local_ip):
     global SERVER_URL
-
-    # 0. Tentativa Direta no IP conhecido (Alta Prioridade)
-    if KNOWN_SERVER_IP:
-        url = check_ip(KNOWN_SERVER_IP)
-        if url:
-            logging.info(f"Servidor localizado via IP Estático: {KNOWN_SERVER_IP}")
-            SERVER_URL = url
-            return True
-
-    # 0.1 Tentativa via Multicast IPv6 (A "Terceira Rota")
-    # Tenta o endereço de multicast "All Nodes" que alcança vizinhos na mesma rede física
-    logging.info("Tentando descoberta via IPv6 Link-Local Multicast...")
-    url_v6 = check_ip("ff02::1") # Multicast para todos os nós no link
-    if url_v6:
-        SERVER_URL = url_v6
-        return True
 
     # 1. Tentativa rápida via MAC Address (Se configurado)
     if SERVER_MAC and SERVER_MAC.lower() != get_my_mac().lower(): # Adiciona verificação para não ser o próprio MAC
@@ -91,6 +73,14 @@ def find_server(local_ip):
                 logging.info(f"Servidor localizado via MAC {SERVER_MAC} no IP {mac_ip}")
                 SERVER_URL = url
                 return True
+
+    # 2. Tentativa Direta no IP conhecido (Prioridade Média)
+    if KNOWN_SERVER_IP:
+        url = check_ip(KNOWN_SERVER_IP)
+        if url:
+            logging.info(f"Servidor localizado via IP Estático: {KNOWN_SERVER_IP}")
+            SERVER_URL = url
+            return True
 
     # 2. Varredura de Rede (Subnet Scan)
     # Tenta na rede local e na provável rede do servidor (192.168.11 e 192.168.10)
