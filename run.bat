@@ -1,5 +1,6 @@
 @echo off
 chcp 65001 > nul
+setlocal enabledelayedexpansion
 setlocal
 set PYTHONUTF8=1
 
@@ -40,6 +41,39 @@ if not exist ".env" (
     echo.
     goto start_app
 )
+
+:check_network
+echo.
+echo Verificando status da rede...
+set "NETWORK_STATUS=Offline"
+for /f "tokens=3,*" %%a in ('netsh wlan show interfaces ^| find "Estado"') do (
+    if "%%a"=="conectado" set "NETWORK_STATUS=Online"
+)
+
+if "!NETWORK_STATUS!"=="Offline" (
+    echo.
+    echo AVISO: Nenhuma conexao Wi-Fi ativa detectada.
+    CHOICE /C sn /T 10 /D n /M "Deseja tentar criar um Hotspot Movel local (Rede: SysAva-Offline)? Ignorando em 10s..."
+    if %errorlevel% == 1 (
+        echo Configurando e iniciando Hotspot Movel...
+        netsh wlan set hostednetwork mode=allow ssid=SysAva-Offline key=12345678
+        netsh wlan start hostednetwork
+        echo.
+        echo Hotspot 'SysAva-Offline' iniciado.
+        echo Senha: 12345678
+        echo.
+        echo Os alunos devem se conectar a esta rede Wi-Fi.
+        echo O endereco de acesso sera exibido ao iniciar o sistema.
+        echo.
+        pause
+    )
+)
+
+REM Força o Streamlit a escutar em todas as interfaces de rede
+set STREAMLIT_SERVER_ADDRESS=0.0.0.0
+
+REM Força o modo local ignorando o secrets.toml
+set FORCE_LOCAL_MODE=1
 
 :ask_seed_data
 echo.
@@ -109,9 +143,6 @@ echo.
 
 goto start_app
 :start_app
-REM Forca o modo local ignorando o secrets.toml
-set FORCE_LOCAL_MODE=1
-
 REM Lê o nome da escola do arquivo de configuração para exibir na mensagem
 set "SCHOOL_CONFIG_FILE=data\Turmas\Escola.txt"
 set school_name=SysAva

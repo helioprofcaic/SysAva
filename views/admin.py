@@ -75,15 +75,27 @@ def show_page():
 
     main_section = st.radio("Seção", ["⚙️ Configurações Gerais", "📚 Configurações de Conteúdos"], horizontal=True)
 
-    tab_config = tab1 = tab5 = tab6 = tab2 = tab_turmas = tab_training = tab3 = tab4 = tab_audit = tab_reviewer = tab7 = None
-    
     if main_section == "⚙️ Configurações Gerais":
-        tab_config, tab1, tab5, tab6 = st.tabs(["⚙️ Setup", "👥 Usuários", "🤖 Simulador", "📊 Relatórios"])
+        # Usar st.radio para navegação para garantir isolamento de estado
+        selected_tab = st.radio(
+            "Menu de Configurações",
+            ["Setup", "Usuários", "Simulador", "Relatórios"],
+            format_func=lambda x: {"Setup": "⚙️ Setup", "Usuários": "👥 Usuários", "Simulador": "🤖 Simulador", "Relatórios": "📊 Relatórios"}.get(x, x),
+            horizontal=True,
+            label_visibility="collapsed"
+        )
     else:
-        tab2, tab_turmas, tab_training, tab3, tab4, tab_audit, tab_reviewer = st.tabs(["📖 Aulas", "🏫 Turmas", "🚀 Treinamentos", "📝 Quizzes", "🎓 Avaliações", "🔍 Auditoria", "🔑 Gabaritos"])
+        selected_tab = st.radio(
+            "Menu de Conteúdos",
+            ["Aulas", "Turmas", "Treinamentos", "Quizzes", "Avaliações", "Auditoria", "Gabaritos", "IA"],
+            format_func=lambda x: {"Aulas": "📖 Aulas", "Turmas": "🏫 Turmas", "Treinamentos": "🚀 Treinamentos", "Quizzes": "📝 Quizzes", "Avaliações": "🎓 Avaliações", "Auditoria": "🔍 Auditoria", "Gabaritos": "🔑 Gabaritos", "IA": "✨ IA"}.get(x, x),
+            horizontal=True,
+            label_visibility="collapsed"
+        )
 
-    if tab_config:
-        with tab_config:
+    st.divider()
+
+    if selected_tab == "Setup":
             st.subheader("🛠️ Setup Inicial do Sistema")
 
             with st.expander("1️⃣ Conexão com Banco de Dados (Supabase)", expanded=not db.is_db_connected()):
@@ -95,10 +107,10 @@ def show_page():
                 """)
 
                 c1, c2 = st.columns(2)
-                url_input = c1.text_input("Project URL", value=os.environ.get("SUPABASE_URL", ""))
-                key_input = c2.text_input("Anon Public Key", type="password", value=os.environ.get("SUPABASE_KEY", ""))
+                url_input = c1.text_input("Project URL", value=os.environ.get("SUPABASE_URL", ""), key="setup_url")
+                key_input = c2.text_input("Anon Public Key", type="password", value=os.environ.get("SUPABASE_KEY", ""), key="setup_key")
 
-                if st.button("💾 Salvar Credenciais (Sessão Atual)"):
+                if st.button("💾 Salvar Credenciais (Sessão Atual)", key="setup_save_creds"):
                     if url_input and key_input:
                         os.environ["SUPABASE_URL"] = url_input
                         os.environ["SUPABASE_KEY"] = key_input
@@ -127,7 +139,7 @@ def show_page():
                     sql_match = re.search(r"```sql\n(.*?)```", content, re.DOTALL)
                     if sql_match:
                         sql_code = sql_match.group(1).strip()
-                        st.text_area("Código SQL para criar tabelas", sql_code, height=300, key="sql_code_area")
+                        st.text_area("Código SQL para criar tabelas", sql_code, height=300, key="setup_sql_area")
                         if st.button("Já executei o SQL, verificar novamente"):
                             st.rerun()
                     else:
@@ -137,10 +149,10 @@ def show_page():
 
             with st.expander("3️⃣ Dados da Escola", expanded=db.is_db_connected() and db_structure_exists):
                 current_school = db.get_school()
-                s_name = st.text_input("Nome da Escola", value=current_school['name'] if current_school else "Escola Modelo", disabled=not db_structure_exists)
-                s_gre = st.text_input("Regional (GRE)", value=current_school['gre'] if current_school else "GRE-01", disabled=not db_structure_exists)
+                s_name = st.text_input("Nome da Escola", value=current_school['name'] if current_school else "Escola Modelo", disabled=not db_structure_exists, key="setup_school_name")
+                s_gre = st.text_input("Regional (GRE)", value=current_school['gre'] if current_school else "GRE-01", disabled=not db_structure_exists, key="setup_school_gre")
 
-                if st.button("Salvar Dados da Escola", disabled=not db_structure_exists):
+                if st.button("Salvar Dados da Escola", disabled=not db_structure_exists, key="setup_save_school"):
                     if db.upsert_school(s_name, s_gre):
                         st.success("Dados da escola atualizados!")
                         st.rerun()
@@ -149,9 +161,9 @@ def show_page():
 
             with st.expander("4️⃣ Importar Estrutura (Turmas e Disciplinas)", expanded=db.is_db_connected() and db_structure_exists):
                 st.info("Cole aqui o conteúdo do seu arquivo `Escola.txt` para criar turmas e disciplinas em lote.")
-                import_text = st.text_area("Conteúdo do Arquivo", height=200, placeholder="Nome da Escola\nGRE: 21\nNome da Turma\nCódigo da Turma: 123\nDisciplina 1\nDisciplina 2...", disabled=not db_structure_exists)
+                import_text = st.text_area("Conteúdo do Arquivo", height=200, placeholder="Nome da Escola\nGRE: 21\nNome da Turma\nCódigo da Turma: 123\nDisciplina 1\nDisciplina 2...", disabled=not db_structure_exists, key="setup_import_text")
 
-                if st.button("🚀 Processar Importação", disabled=not db_structure_exists):
+                if st.button("🚀 Processar Importação", disabled=not db_structure_exists, key="setup_do_import"):
                     if import_text:
                         with st.spinner("Processando..."):
                             success, msg = db.import_school_structure(import_text)
@@ -184,20 +196,19 @@ def show_page():
                 4. Configure suas próprias credenciais do Supabase na aba de Configuração do seu novo link.
                 """)
 
-    if tab1:
-        with tab1:
+    elif selected_tab == "Usuários":
             with st.expander("➕ Cadastrar Novo Usuário", expanded=False):
                 with st.form("register_user_form", clear_on_submit=True):
                     col_a, col_b = st.columns(2)
                     with col_a:
-                        new_name = st.text_input("Nome Completo")
-                        new_user = st.text_input("Usuário (Login)")
-                        new_ra = st.text_input("RA (Registro Acadêmico)")
+                        new_name = st.text_input("Nome Completo", key="users_new_name")
+                        new_user = st.text_input("Usuário (Login)", key="users_new_user")
+                        new_ra = st.text_input("RA (Registro Acadêmico)", key="users_new_ra")
                     with col_b:
-                        new_pass = st.text_input("Senha", type="password")
-                        new_role = st.selectbox("Função", ["student", "teacher", "admin"], format_func=lambda x: {"student": "Aluno", "teacher": "Professor", "admin": "Administrador"}.get(x, x))
+                        new_pass = st.text_input("Senha", type="password", key="users_new_pass")
+                        new_role = st.selectbox("Função", ["student", "teacher", "admin"], format_func=lambda x: {"student": "Aluno", "teacher": "Professor", "admin": "Administrador"}.get(x, x), key="users_new_role")
 
-                    if st.form_submit_button("Cadastrar"):
+                    if st.form_submit_button("Cadastrar", key="users_new_submit"):
                         if new_name and new_user and new_pass and new_ra:
                             hashed = auth.hash_password(new_pass)
                             _, error = db.create_user(new_user, hashed, new_name, new_ra, new_role)
@@ -216,7 +227,7 @@ def show_page():
             col_f1, col_f2 = st.columns(2)
 
             role_map_filter = {"Todos": None, "Alunos": "student", "Professores": "teacher", "Administradores": "admin"}
-            selected_role_key = col_f1.selectbox("Filtrar por Função", list(role_map_filter.keys()))
+            selected_role_key = col_f1.selectbox("Filtrar por Função", list(role_map_filter.keys()), key="users_filter_role")
 
             selected_class_id = None
             if selected_role_key == "Alunos":
@@ -224,7 +235,7 @@ def show_page():
                 class_options = {"Todas as Turmas": None}
                 class_options.update({c['name']: c['id'] for c in classes})
 
-                selected_class_name = col_f2.selectbox("Filtrar por Turma", list(class_options.keys()))
+                selected_class_name = col_f2.selectbox("Filtrar por Turma", list(class_options.keys()), key="users_filter_class")
                 selected_class_id = class_options[selected_class_name]
 
             # --- LÓGICA DE BUSCA E EXIBIÇÃO ---
@@ -273,15 +284,14 @@ def show_page():
             else:
                 st.info("Nenhum usuário encontrado com os filtros selecionados.")
 
-    if tab2:
-        with tab2:
+    elif selected_tab == "Aulas":
             st.subheader("Aulas")
 
             with st.expander("➕ Criar Nova Turma"):
                 with st.form("new_class_form", clear_on_submit=True):
-                    class_name = st.text_input("Nome da Turma (ex: 3º Ano A - 2024)")
-                    class_code = st.text_input("Código Único da Turma (ex: 3A2024)")
-                    submitted_class = st.form_submit_button("Criar Turma")
+                    class_name = st.text_input("Nome da Turma (ex: 3º Ano A - 2024)", key="aulas_new_class_name")
+                    class_code = st.text_input("Código Único da Turma (ex: 3A2024)", key="aulas_new_class_code")
+                    submitted_class = st.form_submit_button("Criar Turma", key="aulas_new_class_submit")
                     if submitted_class and class_name and class_code:
                         # Use a default school for simplicity, as school management is not a primary UI feature
                         school_id = db.upsert_school("Escola Padrão", "N/A")
@@ -297,16 +307,16 @@ def show_page():
 
             # Seletor de Turma
             classes = db.get_classes()
-            class_options = {c['name']: c['id'] for c in classes}
-            selected_class_name = st.selectbox("Selecione a Turma para gerenciar", options=["-- Selecione --"] + list(class_options.keys()))
+            class_options = {c['name']: c['id'] for c in classes} if classes else {}
+            selected_class_name = st.selectbox("Selecione a Turma para gerenciar", options=["-- Selecione --"] + list(class_options.keys()), key="sel_class_aulas")
 
             if selected_class_name != "-- Selecione --":
                 class_id = int(class_options[selected_class_name])
 
-                with st.expander("➕ Criar Nova Disciplina e Vincular a esta Turma"):
-                    with st.form("new_subject_form", clear_on_submit=True):
-                        subject_name = st.text_input("Nome da Disciplina (ex: Programação com Python)")
-                        submitted_subject = st.form_submit_button("Criar e Vincular Disciplina")
+                with st.expander("➕ Criar Nova Disciplina e Vincular a esta Turma", key="exp_new_subj_aulas"):
+                    with st.form("new_subject_form_tab2", clear_on_submit=True):
+                        subject_name = st.text_input("Nome da Disciplina (ex: Programação com Python)", key="aulas_new_subj_name")
+                        submitted_subject = st.form_submit_button("Criar e Vincular Disciplina", key="aulas_new_subj_submit")
                         if submitted_subject and subject_name:
                             subject_id = db.upsert_subject(subject_name)
                             if subject_id:
@@ -324,15 +334,15 @@ def show_page():
                 if not subjects:
                     st.warning("Esta turma não possui disciplinas vinculadas. Crie e vincule uma no formulário acima.")
                 else:
-                    selected_subject_name = st.selectbox("Selecione a Disciplina", options=list(subject_options.keys()))
+                    selected_subject_name = st.selectbox("Selecione a Disciplina", options=list(subject_options.keys()), key="sel_subj_aulas")
                     subject_id = subject_options[selected_subject_name]
 
                     st.divider()
 
                     # Formulário de Criação (Agora vinculado à disciplina selecionada)
-                    with st.expander(f"Adicionar Nova Aula em {selected_subject_name}", expanded=False):
+                    with st.expander(f"Adicionar Nova Aula em {selected_subject_name}", expanded=False, key="exp_aula_aulas"):
                         with st.form("new_lesson_form", clear_on_submit=True):
-                            st.markdown("##### Preencher manualmente ou importar de arquivo .md")
+                            st.markdown("##### Preencher manualmente ou importar de arquivo .md", key="aulas_md_label")
                             uploaded_file = st.file_uploader("Importar Aula de arquivo Markdown", type=['md'])
 
                             title_val, desc_val, video_val = "", "", ""
@@ -357,10 +367,10 @@ def show_page():
 
                                 desc_val = content
 
-                            title = st.text_input("Título da Aula", value=title_val)
-                            description = st.text_area("Descrição", value=desc_val, height=250)
-                            video_url = st.text_input("URL do Vídeo (YouTube)", value=video_val)
-                            submitted = st.form_submit_button("Salvar Aula")
+                            title = st.text_input("Título da Aula", value=title_val, key="aulas_new_title")
+                            description = st.text_area("Descrição", value=desc_val, height=250, key="aulas_new_desc")
+                            video_url = st.text_input("URL do Vídeo (YouTube)", value=video_val, key="aulas_new_video")
+                            submitted = st.form_submit_button("Salvar Aula", key="aulas_new_submit")
 
                             if submitted and title:
                                 # Limpa o conteúdo (SVGs/Markdown) antes de enviar para o Supabase
@@ -378,10 +388,10 @@ def show_page():
                             st.warning("Atenção: A exclusão é permanente e removerá também os quizzes e posts do fórum associados.")
 
                             lesson_options = {f"{l['id']} - {l['title']}": l['id'] for l in lessons}
-                            selected_to_delete = st.multiselect("Selecione as aulas para excluir:", options=list(lesson_options.keys()))
+                            selected_to_delete = st.multiselect("Selecione as aulas para excluir:", options=list(lesson_options.keys()), key="msel_del_aulas")
 
                             if selected_to_delete:
-                                if st.button(f"Confirmar Exclusão de {len(selected_to_delete)} aula(s)"):
+                                if st.button(f"Confirmar Exclusão de {len(selected_to_delete)} aula(s)", key="btn_del_aulas"):
                                     errors = []
                                     for lesson_key in selected_to_delete:
                                         lid = lesson_options[lesson_key]
@@ -399,8 +409,7 @@ def show_page():
                                         time.sleep(0.5)
                                         st.rerun()
 
-    if tab_turmas:
-        with tab_turmas:
+    elif selected_tab == "Turmas":
             st.subheader("🏫 Gestão e Isolamento de Turmas")
             
             # 1. Seleção de Turma
@@ -409,7 +418,7 @@ def show_page():
                 st.warning("Nenhuma turma cadastrada.")
             else:
                 class_options = {c['name']: c['id'] for c in classes}
-                selected_class_name = st.selectbox("Selecione a Turma para configurar:", ["-- Selecione --"] + list(class_options.keys()), key="class_mgmt_sel")
+                selected_class_name = st.selectbox("Selecione a Turma para configurar:", ["-- Selecione --"] + list(class_options.keys()), key="sel_class_turmas")
                 
                 if selected_class_name != "-- Selecione --":
                     class_id = class_options[selected_class_name]
@@ -454,7 +463,7 @@ def show_page():
                             key=f"editor_links_{class_id}"
                         )
                         
-                        if st.button("💾 Salvar Status das Disciplinas", width="stretch"):
+                        if st.button("💾 Salvar Status das Disciplinas", width="stretch", key="btn_save_status_turmas"):
                             for idx, row in edited_links.iterrows():
                                 orig = df_links_pd.iloc[idx]
                                 if row['Ativo'] != orig['Ativo']:
@@ -472,15 +481,15 @@ def show_page():
                     # Filtra apenas disciplinas que não são 'training'
                     matrix_options = {s['name']: s['id'] for s in all_subjects if s.get('type') != 'training'}
                     
-                    selected_matrix = st.selectbox("Escolha a Disciplina Matriz (Origem):", ["-- Selecione --"] + list(matrix_options.keys()))
+                    selected_matrix = st.selectbox("Escolha a Disciplina Matriz (Origem):", ["-- Selecione --"] + list(matrix_options.keys()), key="sel_matrix_turmas")
                     
                     if selected_matrix != "-- Selecione --":
                         matrix_id = matrix_options[selected_matrix]
-                        new_subject_name = st.text_input("Nome da Nova Disciplina Isolada:", value=f"{selected_matrix} ({selected_class_name})")
+                        new_subject_name = st.text_input("Nome da Nova Disciplina Isolada:", value=f"{selected_matrix} ({selected_class_name})", key="txt_new_subj_turmas")
                         
                         st.warning("⚠️ **Atenção:** Ao instanciar uma disciplina, os alunos desta turma começarão com **0% de progresso** na nova cópia. O histórico de aulas e quizzes da Matriz **não** será transferido, garantindo o isolamento total.")
                         
-                        if st.button("🚀 Criar Instância Isolada para esta Turma", type="primary", width="stretch"):
+                        if st.button("🚀 Criar Instância Isolada para esta Turma", type="primary", width="stretch", key="btn_clone_turmas"):
                             with st.spinner("Clonando estrutura de aulas e quizzes..."):
                                 # 1. Criar a nova disciplina
                                 new_sub_id = db.upsert_subject(new_subject_name)
@@ -508,15 +517,14 @@ def show_page():
                                     time.sleep(1)
                                     st.rerun()
 
-    if tab_training:
-        with tab_training:
+    elif selected_tab == "Treinamentos":
             st.subheader("🚀 Gerenciar Treinamentos e Olimpíadas")
             st.markdown("Crie disciplinas flutuantes e vincule-as a múltiplas turmas. Ideal para preparatórios, olimpíadas e revisões.")
 
             with st.expander("➕ Criar Novo Treinamento/Olimpíada"):
                 with st.form("new_training_form", clear_on_submit=True):
-                    training_name = st.text_input("Nome do Treinamento (ex: Olimpíada de Informática 2024)")
-                    if st.form_submit_button("Criar Treinamento"):
+                    training_name = st.text_input("Nome do Treinamento (ex: Olimpíada de Informática 2024)", key="training_new_name")
+                    if st.form_submit_button("Criar Treinamento", key="training_new_submit"):
                         if training_name:
                             # Cria a disciplina com o tipo 'training'
                             training_id = db.upsert_subject(training_name, type='training')
@@ -536,7 +544,7 @@ def show_page():
             if not training_subjects:
                 st.info("Nenhum treinamento criado ainda. Crie um no formulário acima.")
             else:
-                selected_training_name = st.selectbox("Selecione o Treinamento para gerenciar:", options=list(training_subjects.keys()))
+                selected_training_name = st.selectbox("Selecione o Treinamento para gerenciar:", options=list(training_subjects.keys()), key="sel_training")
                 training_id = int(training_subjects[selected_training_name])
 
                 # 2. Vincular turmas
@@ -551,10 +559,11 @@ def show_page():
                     "Selecione todas as turmas que participarão deste treinamento:",
                     options=list(class_map.keys()),
                     format_func=lambda class_id: class_map[class_id],
-                    default=list(linked_class_ids) if linked_class_ids else []
+                    default=list(linked_class_ids) if linked_class_ids else [],
+                    key="msel_link_training"
                 )
 
-                if st.button("💾 Salvar Vínculos de Turmas"):
+                if st.button("💾 Salvar Vínculos de Turmas", key="btn_save_links_training"):
                     db.update_training_links(training_id, selected_class_ids)
                     st.success("Vínculos de turmas atualizados com sucesso!")
                     st.rerun()
@@ -565,10 +574,10 @@ def show_page():
                 st.markdown(f"#### Aulas de **{selected_training_name}**")
                 with st.expander(f"Adicionar Nova Aula em {selected_training_name}", expanded=False):
                     with st.form(f"new_lesson_training_form_{training_id}", clear_on_submit=True):
-                        title = st.text_input("Título da Aula")
-                        description = st.text_area("Descrição")
-                        video_url = st.text_input("URL do Vídeo (YouTube)")
-                        submitted = st.form_submit_button("Salvar Aula")
+                        title = st.text_input("Título da Aula", key=f"training_lesson_title_{training_id}")
+                        description = st.text_area("Descrição", key=f"training_lesson_desc_{training_id}")
+                        video_url = st.text_input("URL do Vídeo (YouTube)", key=f"training_lesson_video_{training_id}")
+                        submitted = st.form_submit_button("Salvar Aula", key=f"training_lesson_submit_{training_id}")
 
                         if submitted and title:
                             _, error = db.create_lesson(title, training_id, description, video_url)
@@ -582,8 +591,7 @@ def show_page():
                 st.dataframe(lessons, width="stretch", column_config={"id": "ID", "title": "Título", "video_url": "Link", "created_at": "Criado em"})
 
 
-    if tab3:
-        with tab3:
+    elif selected_tab == "Quizzes":
             st.subheader("Gerenciar Quizzes")
 
             # --- Seletor de Contexto em Cascata ---
@@ -592,7 +600,7 @@ def show_page():
                 st.warning("Cadastre turmas primeiro no sistema.")
             else:
                 class_options = {c['name']: c['id'] for c in classes}
-                selected_class_name_qz = st.selectbox("Selecione a Turma", options=["-- Selecione --"] + list(class_options.keys()), key="sel_class_qz_t3")
+                selected_class_name_qz = st.selectbox("Selecione a Turma", options=["-- Selecione --"] + list(class_options.keys()), key="sel_class_quizzes")
 
                 if selected_class_name_qz != "-- Selecione --":
                     class_id_qz = int(class_options[selected_class_name_qz])
@@ -602,8 +610,8 @@ def show_page():
                     if not subjects:
                         st.warning("Esta turma ainda não possui disciplinas cadastradas.")
                     else:
-                        subject_options = {s['name']: s['id'] for s in subjects}
-                        selected_subject_name_qz = st.selectbox("Selecione a Disciplina", options=["-- Selecione --"] + list(subject_options.keys()), key="sel_subj_qz_t3")
+                        subject_options = {s['name']: s['id'] for s in subjects} if subjects else {}
+                        selected_subject_name_qz = st.selectbox("Selecione a Disciplina", options=["-- Selecione --"] + list(subject_options.keys()), key="sel_subj_quizzes")
 
                         if selected_subject_name_qz != "-- Selecione --":
                             subject_id_qz = int(subject_options[selected_subject_name_qz])
@@ -612,8 +620,8 @@ def show_page():
                             if not lessons:
                                 st.warning("Nenhuma aula cadastrada nesta disciplina para receber um quiz.")
                             else:
-                                lesson_map = {lesson['title']: lesson['id'] for lesson in lessons}
-                                selected_lesson_title = st.selectbox("Selecione a Aula", options=["-- Selecione --"] + list(lesson_map.keys()), key="sel_lesson_qz_t3")
+                                lesson_map = {lesson['title']: lesson['id'] for lesson in lessons} if lessons else {}
+                                selected_lesson_title = st.selectbox("Selecione a Aula", options=["-- Selecione --"] + list(lesson_map.keys()), key="sel_lesson_quizzes")
 
                                 if selected_lesson_title != "-- Selecione --":
                                     lesson_id = int(lesson_map[selected_lesson_title])
@@ -625,8 +633,8 @@ def show_page():
                                     if not quiz:
                                         st.info("Nenhum quiz encontrado para esta aula.")
                                         with st.form("create_quiz_form"):
-                                            st.write("Criar Novo Quiz")
-                                            quiz_title = st.text_input("Título do Quiz")
+                                            st.write("Criar Novo Quiz", key="quiz_create_label")
+                                            quiz_title = st.text_input("Título do Quiz", key="quiz_create_title")
                                             submitted = st.form_submit_button("Criar Quiz")
                                             if submitted and quiz_title:
                                                 _, error = db.create_quiz(lesson_id, quiz_title)
@@ -655,9 +663,9 @@ def show_page():
 
                                         st.markdown("#### Adicionar Nova Questão")
                                         with st.form("add_question_form", clear_on_submit=True):
-                                            question_text = st.text_input("Enunciado da Questão")
-                                            options_str = st.text_area("Opções (separadas por vírgula)", help="Ex: Azul, Vermelho, Verde")
-                                            correct_option_index = st.number_input("Índice da Opção Correta (0 = 1ª opção)", min_value=0, step=1)
+                                            question_text = st.text_input("Enunciado da Questão", key=f"quiz_new_q_text_{quiz['id']}")
+                                            options_str = st.text_area("Opções (separadas por vírgula)", help="Ex: Azul, Vermelho, Verde", key=f"quiz_new_q_opts_{quiz['id']}")
+                                            correct_option_index = st.number_input("Índice da Opção Correta (0 = 1ª opção)", min_value=0, step=1, key=f"quiz_new_q_idx_{quiz['id']}")
 
                                             submitted = st.form_submit_button("Adicionar Questão")
 
@@ -675,25 +683,30 @@ def show_page():
                                                         st.success("Questão adicionada com sucesso!")
                                                         st.rerun()
 
-    if tab4:
-        with tab4:
+    elif selected_tab == "Avaliações":
             st.subheader("Gerenciar Avaliações (Provas)")
 
             # --- Seletor de Contexto (Igual ao de Aulas) ---
             classes = db.get_classes()
-            class_options = {c['name']: c['id'] for c in classes}
+            class_options = {c['name']: c['id'] for c in classes} if classes else {}
             selected_class_name_av = st.selectbox("Selecione a Turma", options=["-- Selecione --"] + list(class_options.keys()), key="sel_class_av")
 
             if selected_class_name_av != "-- Selecione --":
                 class_id_av = int(class_options[selected_class_name_av])
                 subjects = db.get_subjects_for_class(class_id_av)
                 subjects = [s for s in subjects if s.get('is_active', True)]
-                subject_options = {s['name']: s['id'] for s in subjects}
+                subject_options = {s['name']: s['id'] for s in subjects} if subjects else {}
 
                 if not subjects:
                     st.warning("Turma sem disciplinas.")
                 else:
-                    selected_subject_name_av = st.selectbox("Selecione a Disciplina", options=["-- Selecione --"] + list(subject_options.keys()), key="sel_subj_av")
+                    # Garante que o selectbox tenha um valor padrão válido para evitar estado vazio
+                    options_list_av = ["-- Selecione --"] + list(subject_options.keys())
+                    selected_subject_name_av = st.selectbox(
+                        "Selecione a Disciplina", 
+                        options=options_list_av, 
+                        key="sel_subj_av"
+                    )
 
                     if selected_subject_name_av != "-- Selecione --":
                         subject_id_av = int(subject_options[selected_subject_name_av])
@@ -708,8 +721,14 @@ def show_page():
                         with col_create:
                             st.markdown("#### Nova Avaliação")
                             with st.form("create_assessment_form"):
-                                av_type = st.selectbox("Tipo", ["MN1", "MN2", "MN3", "RM", "Outros"])
-                                av_title = st.text_input("Título (ex: Prova de Python Básico)")
+                                assessment_types = [
+                                    "T1_N1", "T1_N2", "T1_N3",  # Trimestre 1
+                                    "T2_N1", "T2_N2", "T2_N3",  # Trimestre 2
+                                    "T3_N1", "T3_N2", "T3_N3",  # Trimestre 3
+                                    "RM", "Outros"
+                                ]
+                                av_type = st.selectbox("Tipo", assessment_types)
+                                av_title = st.text_input("Título (ex: Prova de Python Básico)", key="av_new_title")
                                 if st.form_submit_button("Criar Avaliação"):
                                     # Verifica se já existe esse tipo para a disciplina (opcional, mas recomendado)
                                     existing = [a for a in assessments if a['type'] == av_type]
@@ -727,7 +746,7 @@ def show_page():
 
                             # Seletor para editar uma avaliação específica
                             assessment_map = {f"{a['type']} - {a['title']}": a for a in assessments}
-                            selected_assessment_key = st.selectbox("Selecione para editar questões:", options=["-- Selecione --"] + list(assessment_map.keys()))
+                            selected_assessment_key = st.selectbox("Selecione para editar questões:", options=["-- Selecione --"] + list(assessment_map.keys()), key="sel_edit_av")
 
                         # --- Gerenciamento de Questões da Avaliação Selecionada ---
                         if selected_assessment_key != "-- Selecione --":
@@ -765,7 +784,7 @@ def show_page():
                                     ["Automático (Cursos Técnicos)", "Manual (por intervalo de aulas)"],
                                     index=default_scope_index,
                                     horizontal=True,
-                                    key=f"scope_{assessment['id']}"
+                                    key=f"av_scope_radio_{assessment['id']}"
                                 )
                                 scope_mode = "auto" if "Automático" in scope_mode_option else "manual"
 
@@ -773,13 +792,13 @@ def show_page():
                                 start_lesson, end_lesson = None, None
 
                                 if scope_mode == 'auto':
-                                    workload_opt = st.radio("Carga Horária da Disciplina:", ["40h (8 aulas/sem)", "80h (10 aulas/sem)"], horizontal=True, key=f"wl_{assessment['id']}", index=1 if is_ds_class else 0)
+                                    workload_opt = st.radio("Carga Horária da Disciplina:", ["40h (8 aulas/sem)", "80h (10 aulas/sem)"], horizontal=True, key=f"av_workload_radio_{assessment['id']}", index=1 if is_ds_class else 0)
                                     workload_val = 80 if "80h" in workload_opt else 40
                                 else: # Manual
                                     col_start, col_end = st.columns(2)
-                                    start_lesson = col_start.number_input("Da Aula (Nº):", min_value=1, value=1, step=1)
+                                    start_lesson = col_start.number_input("Da Aula (Nº):", min_value=1, value=1, step=1, key=f"av_start_lesson_{assessment['id']}")
                                     # Garante que o valor padrão seja no mínimo igual ao start_lesson para evitar erro do Streamlit
-                                    end_lesson = col_end.number_input("Até a Aula (Nº):", min_value=start_lesson, value=max(start_lesson, 5), step=1)
+                                    end_lesson = col_end.number_input("Até a Aula (Nº):", min_value=start_lesson, value=max(start_lesson, 5), step=1, key=f"av_end_lesson_{assessment['id']}")
 
                                 quiz_questions = db.get_all_quiz_questions_for_subject(subject_id_av, assessment['type'], workload_val, scope_mode, start_lesson, end_lesson)                            
 
@@ -789,13 +808,13 @@ def show_page():
                                     # Mapeia questões para seleção
                                     q_options = {f"{q['id']} - {q['question_text']}": q for q in quiz_questions}
 
-                                    # Sorteio prévio de 10 questões
+                                    # Sorteio prévio de 10 questões (com chave única)
                                     session_key_rand = f"rand_q_{assessment['id']}_{workload_val}_{start_lesson}_{end_lesson}"
                                     if session_key_rand not in st.session_state:
                                         all_keys = list(q_options.keys())
                                         st.session_state[session_key_rand] = random.sample(all_keys, min(10, len(all_keys)))
 
-                                    if st.button("🎲 Sortear Novamente (10 questões)", key=f"reroll_{assessment['id']}"):
+                                    if st.button("🎲 Sortear Novamente (10 questões)", key=f"reroll_av_{assessment['id']}"):
                                         all_keys = list(q_options.keys())
                                         st.session_state[session_key_rand] = random.sample(all_keys, min(10, len(all_keys)))
                                         st.rerun()
@@ -803,10 +822,11 @@ def show_page():
                                     selected_keys = st.multiselect(
                                         "Selecione as questões para importar:",
                                         options=list(q_options.keys()),
-                                        default=list(st.session_state.get(session_key_rand, []))
+                                        default=list(st.session_state.get(session_key_rand, [])),
+                                        key=f"msel_import_av_{assessment['id']}"
                                     )
 
-                                    if st.button(f"📥 Importar {len(selected_keys)} Questões Selecionadas", key=f"imp_sel_{assessment['id']}"):
+                                    if st.button(f"📥 Importar {len(selected_keys)} Questões Selecionadas", key=f"btn_import_av_{assessment['id']}"):
                                         count = 0
                                         for key in selected_keys:
                                             q = q_options[key]
@@ -817,20 +837,20 @@ def show_page():
 
                             st.markdown("#### Adicionar Questão")
                             with st.form("add_assessment_question"):
-                                q_type = st.radio("Tipo da Questão", ["Objetiva", "Subjetiva"], horizontal=True)
-                                q_text = st.text_area("Enunciado da Questão")
+                                q_type = st.radio("Tipo da Questão", ["Objetiva", "Subjetiva"], horizontal=True, key=f"av_new_q_type_{assessment['id']}")
+                                q_text = st.text_area("Enunciado da Questão", key=f"av_new_q_text_{assessment['id']}")
 
                                 options = []
                                 correct_idx = 0
 
                                 if q_type == "Objetiva":
-                                    opts_str = st.text_input("Opções (separadas por vírgula)", help="Ex: A, B, C, D")
-                                    correct_idx = st.number_input("Índice da Correta (0 = 1ª opção)", min_value=0, step=1)
+                                    opts_str = st.text_input("Opções (separadas por vírgula)", help="Ex: A, B, C, D", key=f"av_new_q_opts_{assessment['id']}")
+                                    correct_idx = st.number_input("Índice da Correta (0 = 1ª opção)", min_value=0, step=1, key=f"av_new_q_idx_{assessment['id']}")
                                     if opts_str:
                                         options = [o.strip() for o in opts_str.split(',') if o.strip()]
                                 else:
                                     st.info("ℹ️ O aluno terá um campo de texto para a resposta.")
-                                    require_link = st.checkbox("Adicionar campo para envio de Link (GitHub/Drive)?", value=True)
+                                    require_link = st.checkbox("Adicionar campo para envio de Link (GitHub/Drive)?", value=True, key=f"av_new_q_link_{assessment['id']}")
                                     options = ["LINK_REQUIRED"] if require_link else []
                                     correct_idx = 0 # Padrão 0 conforme solicitado
 
@@ -842,13 +862,12 @@ def show_page():
                                         st.success("Questão adicionada!")
                                         st.rerun()
 
-    if tab_audit:
-        with tab_audit:
+    elif selected_tab == "Auditoria":
             st.subheader("🔍 Auditoria de Questões de Quizzes")
             st.markdown("Esta ferramenta analisa todas as questões de quizzes em busca de problemas comuns, como opções duplicadas ou caracteres inválidos, e permite a correção.")
 
             # Filtros de Contexto
-            audit_type_label = st.radio("Alvo da Auditoria", ["Banco Mestre (Quizzes)", "Provas Geradas (Avaliações)"], horizontal=True)
+            audit_type_label = st.radio("Alvo da Auditoria", ["Banco Mestre (Quizzes)", "Provas Geradas (Avaliações)"], horizontal=True, key="audit_type_radio")
             audit_type = 'quiz' if 'Quizzes' in audit_type_label else 'assessment'
 
             classes = db.get_classes()
@@ -867,7 +886,7 @@ def show_page():
             if 'audit_results' not in st.session_state:
                 st.session_state.audit_results = None
 
-            if st.button("🚀 Iniciar Análise de Questões"):
+            if st.button("🚀 Iniciar Análise de Questões", key="audit_start_btn"):
                 with st.spinner("Analisando o banco de questões... Isso pode levar um momento."):
                     if audit_type == 'quiz':
                         if subject_id_aud:
@@ -984,10 +1003,10 @@ def show_page():
                                 st.info("A sugestão abaixo remove caracteres como '[x]' e opções duplicadas. Verifique se a opção correta permanece válida.")
 
                                 new_options_str = st.text_area("Opções Corrigidas (separadas por vírgula)", 
-                                                               value=", ".join(unique_cleaned_options), 
-                                                               key=f"new_opts_{saved_audit_type}_{q['id']}")
+                                                               value=", ".join(unique_cleaned_options),
+                                                               key=f"audit_new_opts_{saved_audit_type}_{q['id']}")
 
-                                if st.button("💾 Salvar Correção", key=f"save_aud_{saved_audit_type}_{q['id']}"):
+                                if st.button("💾 Salvar Correção", key=f"audit_save_btn_{saved_audit_type}_{q['id']}"):
                                     final_options = [opt.strip() for opt in new_options_str.split(',') if opt.strip()]
                                     
                                     if saved_audit_type == 'quiz':
@@ -998,8 +1017,7 @@ def show_page():
                                     if err: st.error(f"Erro ao salvar: {err}")
                                     else: st.success("Opções da questão atualizadas! Re-analise para confirmar.")
 
-    if tab_reviewer:
-        with tab_reviewer:
+    elif selected_tab == "Gabaritos":
             st.subheader("🔑 Revisor de Gabaritos")
             st.info("Utilize esta aba para deslizar rapidamente pelas questões e revisar/corrigir se o Gabarito (bolinha preenchida) está correto.")
 
@@ -1010,21 +1028,21 @@ def show_page():
             else:
                 class_options = {c['name']: c['id'] for c in classes}
                 if 'rev_sel_class' not in st.session_state: st.session_state.rev_sel_class = list(class_options.keys())[0]
-                sel_class = st.selectbox("Selecione a Turma:", list(class_options.keys()), key="rev_class_sel", index=list(class_options.keys()).index(st.session_state.rev_sel_class) if st.session_state.rev_sel_class in class_options else 0)
+                sel_class = st.selectbox("Selecione a Turma:", list(class_options.keys()), key="reviewer_class_sel", index=list(class_options.keys()).index(st.session_state.rev_sel_class) if st.session_state.rev_sel_class in class_options else 0)
                 st.session_state.rev_sel_class = sel_class
 
                 subjects = db.get_subjects_for_class(int(class_options[sel_class]))
                 if not subjects:
                     st.warning("Nenhuma disciplina vinculada.")
                 else:
-                    subject_options = {s['name']: s['id'] for s in subjects}
+                    subject_options = {s['name']: s['id'] for s in subjects if s.get('is_active', True)}
                     if 'rev_sel_subject' not in st.session_state: st.session_state.rev_sel_subject = list(subject_options.keys())[0]
-                    sel_subject = st.selectbox("Selecione a Disciplina:", list(subject_options.keys()), key="rev_subj_sel", index=list(subject_options.keys()).index(st.session_state.rev_sel_subject) if st.session_state.rev_sel_subject in subject_options else 0)
+                    sel_subject = st.selectbox("Selecione a Disciplina:", list(subject_options.keys()), key="reviewer_subj_sel", index=list(subject_options.keys()).index(st.session_state.rev_sel_subject) if st.session_state.rev_sel_subject in subject_options else 0)
                     st.session_state.rev_sel_subject = sel_subject
 
                     subject_id = int(subject_options[sel_subject])
 
-                    review_type = st.radio("Qual banco revisar?", ["Banco Mestre (Quizzes)", "Provas Geradas (Avaliações)"], horizontal=True, key="rev_type_radio")
+                    review_type = st.radio("Qual banco revisar?", ["Banco Mestre (Quizzes)", "Provas Geradas (Avaliações)"], horizontal=True, key="reviewer_type_radio")
                     
                     if st.button("🚀 Carregar Questões para Revisão", width="stretch"):
                         if review_type == "Banco Mestre (Quizzes)":
@@ -1074,7 +1092,7 @@ def show_page():
                         width="stretch"
                     )
                 with col_exp2:
-                    if st.button("🖨️ PDF para Impressão", width="stretch"):
+                    if st.button("🖨️ PDF para Impressão", width="stretch", key="reviewer_print_btn"):
                         school_info = db.get_school()
                         school_name = school_info['name'] if school_info else "Escola Técnica"
                         html_print = generate_printable_answer_key_html(school_name, sel_subject, st.session_state.rev_type.upper(), export_data)
@@ -1103,7 +1121,7 @@ def show_page():
                         new_idx = st.radio(
                             f"Opções da Questão {q_id}:", 
                             opts, 
-                            index=current_idx, 
+                            index=current_idx,
                             key=f"rev_rad_{st.session_state.rev_type}_{q_id}",
                             label_visibility="collapsed"
                         )
@@ -1113,7 +1131,7 @@ def show_page():
                         if real_new_idx != current_idx:
                             st.warning("⚠️ Alterado (Não salvo)")
                             
-                        if st.button("💾 Atualizar Gabarito", key=f"rev_btn_{st.session_state.rev_type}_{q_id}"):
+                        if st.button("💾 Atualizar Gabarito", key=f"reviewer_save_btn_{st.session_state.rev_type}_{q_id}"):
                             if st.session_state.rev_type == "quiz":
                                 _, err = db.update_quiz_question_correct_index(q_id, real_new_idx)
                             else:
@@ -1128,8 +1146,7 @@ def show_page():
 
                     st.markdown("---")
 
-    if tab5:
-        with tab5:
+    elif selected_tab == "Simulador":
             st.subheader("🤖 Simulador de Atividades de Aluno")
             st.info("Esta ferramenta preenche o histórico de um aluno com todas as aulas e quizzes para fins de teste. A ação de 'Zerar' apaga permanentemente o histórico e as provas realizadas pelo aluno.")
 
@@ -1142,7 +1159,8 @@ def show_page():
                 selected_student_username = st.selectbox(
                     "Selecione o Aluno (por login/RA) para gerenciar:", 
                     options=list(students.keys()),
-                    format_func=lambda username: f"{students[username]} ({username})"
+                    format_func=lambda username: f"{students[username]} ({username})",
+                    key="sim_student_select"
                 )
 
                 if selected_student_username:
@@ -1161,7 +1179,7 @@ def show_page():
 
                     with col_sim:
                         st.markdown("#### ✅ Simular Conclusão Total")
-                        if st.button("🚀 Simular Todas as Atividades", width="stretch"):
+                        if st.button("🚀 Simular Todas as Atividades", width="stretch", key="sim_run_btn"):
                             with st.spinner("Simulando..."):
                                 _, err = db.simulate_student_activities(selected_student_username)
                                 if err: st.error(f"Erro na simulação: {err}")
@@ -1171,23 +1189,22 @@ def show_page():
                         st.markdown("#### ⚠️ Zerar Dados do Aluno")
                         st.warning("Apaga histórico e provas. Use para liberar o RA para um aluno real.")
 
-                        confirm_reset = st.checkbox(f"Confirmo que desejo zerar todos os dados de {students[selected_student_username]}")
+                        confirm_reset = st.checkbox(f"Confirmo que desejo zerar todos os dados de {students[selected_student_username]}", key="sim_confirm_reset")
 
-                        if st.button("🗑️ Zerar Dados Agora", disabled=not confirm_reset):
+                        if st.button("🗑️ Zerar Dados Agora", disabled=not confirm_reset, key="sim_reset_btn"):
                             with st.spinner("Apagando dados..."):
                                 _, err = db.reset_student_data(selected_student_username)
                                 if err: st.error(f"Erro ao zerar dados: {err}")
                                 else: st.rerun()
 
-    if tab6:
-        with tab6:
+    elif selected_tab == "Relatórios":
             st.subheader("📊 Relatórios de Atividades")
             st.markdown("Visualize as ações recentes dos usuários na plataforma.")
 
             # Filtros
             users = db.get_all_users()
             user_options = ["Todos"] + [u['username'] for u in users]
-            selected_user_filter = st.selectbox("Filtrar por Usuário", user_options)
+            selected_user_filter = st.selectbox("Filtrar por Usuário", user_options, key="reports_user_filter")
 
             # Busca dados
             if selected_user_filter != "Todos":
@@ -1206,6 +1223,10 @@ def show_page():
                 # Botão de Exportação
                 df = pd.DataFrame(history_data)
                 csv = df.to_csv(index=False).encode('utf-8')
-                st.download_button("📥 Baixar Relatório Completo (CSV)", data=csv, file_name="relatorio_atividades.csv", mime="text/csv")
+                st.download_button("📥 Baixar Relatório Completo (CSV)", data=csv, file_name="relatorio_atividades.csv", mime="text/csv", key="reports_download_btn")
             else:
                 st.info("Nenhuma atividade registrada com os filtros atuais.")
+
+    elif selected_tab == "IA":
+            st.subheader("✨ Geração de Conteúdo com IA")
+            st.info("Funcionalidade movida para a página 'Gerador' no menu principal.")

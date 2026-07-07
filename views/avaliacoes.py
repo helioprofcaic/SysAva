@@ -205,9 +205,29 @@ def show_admin_view():
         
         if selected_subject != "-- Selecione --":
             subject_id = subject_options[selected_subject]
-            assessments = db.get_assessments_by_subject(subject_id)
-            assessment_map = {f"{a['type']} - {a['title']}": a for a in assessments}
-            
+
+            # 3. Seletor de Trimestre/Tipo
+            trimester_options = {
+                "Todos": "Todos",
+                "1º Trimestre": "T1",
+                "2º Trimestre": "T2",
+                "3º Trimestre": "T3",
+                "Recuperação": "RM",
+                "Outros": "Outros"
+            }
+            selected_trimester_label = st.selectbox("Trimestre", list(trimester_options.keys()))
+            selected_type_prefix = trimester_options[selected_trimester_label]
+
+            # 4. Seletor de Avaliação (filtrado)
+            all_assessments = db.get_assessments_by_subject(subject_id)
+            if selected_type_prefix == "Todos":
+                filtered_assessments = all_assessments
+            elif selected_type_prefix in ["RM", "Outros"]:
+                filtered_assessments = [a for a in all_assessments if a['type'] == selected_type_prefix]
+            else: # T1, T2, T3
+                filtered_assessments = [a for a in all_assessments if a['type'] and a['type'].startswith(selected_type_prefix)]
+
+            assessment_map = {f"{a['type']} - {a['title']}": a for a in filtered_assessments}
             selected_assessment_key = st.selectbox("Avaliação", ["-- Selecione --"] + list(assessment_map.keys()))
             
             if selected_assessment_key != "-- Selecione --":
@@ -233,6 +253,45 @@ def show_admin_view():
                 # 2. Lista de Submissões
                 submissions = db.get_assessment_submissions_with_users(assessment['id'])
                 original_data_key = f"original_data_{assessment['id']}"
+
+                # --- LÓGICA PARA COPIAR NOTAS DO 1º TRIMESTRE (Disciplinas Técnicas) ---
+                # Aparece se for uma avaliação do 2º ou 3º trimestre e houver submissões
+                current_type = assessment['type']
+                # Condição para não exibir em disciplinas da base comum como IA
+                is_common_base_subject = "INTELIGÊNCIA ARTIFICIAL" in selected_subject.upper()
+
+                if current_type and (current_type.startswith('T2_') or current_type.startswith('T3_')) and submissions and not is_common_base_subject:
+
+                    # Determina o tipo de avaliação correspondente no 1º trimestre
+                    source_type = current_type.replace('T2_', 'T1_').replace('T3_', 'T1_')
+                    
+                    st.info(f"💡 **Dica:** Para disciplinas técnicas, você pode replicar as notas da avaliação do 1º Trimestre.")
+                    if st.button(f"➡️ Copiar Notas de '{source_type}' para esta avaliação ({current_type})"):
+                        with st.spinner(f"Buscando notas de '{source_type}'..."):
+                            # 1. Encontrar a avaliação correspondente do 1º trimestre
+                            source_assessment = next((a for a in all_assessments if a['type'] == source_type), None)
+                            
+                            if not source_assessment:
+                                st.error(f"Nenhuma avaliação do tipo '{source_type}' encontrada para esta disciplina.")
+                            else:
+                                # 2. Obter as notas da avaliação de origem
+                                source_submissions = db.get_assessment_submissions_with_users(source_assessment['id'])
+                                source_scores = {
+                                    sub.get('app_users', {}).get('username'): sub.get('score')
+                                    for sub in source_submissions if sub.get('score') is not None
+                                }
+
+                                # 3. Atualizar o cache (st.session_state) com as notas da MN1
+                                if original_data_key in st.session_state:
+                                    cached_data = st.session_state[original_data_key]
+                                    for student_row in cached_data:
+                                        username = student_row['_user_info'].get('username')
+                                        if username in source_scores:
+                                            student_row['Nota'] = source_scores[username]
+                                    st.success(f"Notas de '{source_type}' copiadas para a tabela abaixo. Clique em 'Salvar' para confirmar.")
+                                    st.rerun()
+                                else:
+                                    st.warning("A tabela de dados ainda não foi carregada. Tente novamente.")
                 
                 if not submissions:
                     st.info("Nenhum aluno realizou esta prova ainda.")
