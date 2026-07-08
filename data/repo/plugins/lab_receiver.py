@@ -187,13 +187,24 @@ def check_host(ip):
             except (socket.timeout, ConnectionRefusedError):
                 pass
             
+            # Tenta obter o MAC Address de forma mais robusta
             try:
                 arp_output = subprocess.check_output(['arp', '-a', ip], text=True)
                 mac_match = re.search(r"([0-9a-f]{2}[:-]){5}[0-9a-f]{2}", arp_output, re.I)
                 if mac_match:
                     details["mac"] = mac_match.group(0).upper()
-            except:
-                pass
+                else:
+                    # Fallback: Se o arp para um IP específico falhar, busca na tabela geral
+                    arp_output_general = subprocess.check_output(['arp', '-a'], text=True)
+                    # Procura uma linha que contenha o IP exato
+                    for line in arp_output_general.splitlines():
+                        if ip in line:
+                            mac_match_general = re.search(r"([0-9a-f]{2}[:-]){5}[0-9a-f]{2}", line, re.I)
+                            if mac_match_general:
+                                details["mac"] = mac_match_general.group(0).upper()
+                                break
+            except Exception:
+                pass # Se o comando arp falhar, mantém "N/A"
             return details
     except:
         pass

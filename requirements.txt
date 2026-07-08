@@ -19,3 +19,4 @@ openai
 pypdf
 matplotlib
 google-genai
+filelock 

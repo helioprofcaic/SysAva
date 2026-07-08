@@ -26,6 +26,15 @@ PUBLIC_RECEIVER_URL = None
 AUTH_TOKEN = None  # Se o receiver exigir Bearer token, defina aqui
 LOCAL_RECEIVER_URL = "http://127.0.0.1:5000"
 
+# --- Detecção de Ambiente (Local vs. Nuvem) ---
+IS_CLOUD_ENVIRONMENT = "STREAMLIT_SERVER_RUN_ON_SAVE" in os.environ or "PROJECT_GIT_HASH" in os.environ
+
+def get_receiver_base_url():
+    """Retorna a URL base do receiver, priorizando a pública se configurada e não em ambiente de nuvem."""
+    if PUBLIC_RECEIVER_URL and not IS_CLOUD_ENVIRONMENT:
+        return PUBLIC_RECEIVER_URL.rstrip('/')
+    return LOCAL_RECEIVER_URL
+
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
@@ -80,7 +89,7 @@ def load_monitor_data():
 
     try:
         # Tenta buscar o estado ultra-latente na RAM do Receiver local
-        response = requests.get(f"{LOCAL_RECEIVER_URL}/api/status", timeout=0.5, headers=headers)
+        response = requests.get(f"{get_receiver_base_url()}/api/status", timeout=0.5, headers=headers)
         if response.status_code == 200:
             return response.json()
     except:
@@ -143,9 +152,12 @@ def show_lab_monitor():
         st.markdown("### 🛠️ Depuração")
         
         with st.expander("🔍 Ver Diagnóstico do Servidor"):
-            if st.button("Carregar Diagnóstico na Página Principal", use_container_width=True):
-                st.session_state['monitor_view'] = 'diagnostics'
-                st.rerun()
+            if IS_CLOUD_ENVIRONMENT:
+                st.info("O diagnóstico de rede só está disponível ao rodar o SysAva localmente.")
+            else:
+                if st.button("Carregar Diagnóstico na Página Principal", use_container_width=True):
+                    st.session_state['monitor_view'] = 'diagnostics'
+                    st.rerun()
 
         if st.button("🗑️ Limpar Todos os Dados", type="secondary", use_container_width=True):
             save_monitor_data({})
@@ -159,7 +171,7 @@ def show_lab_monitor():
         st.subheader("🔍 Diagnóstico do Servidor")
 
         # Aponta para o novo endpoint de dados JSON
-        diagnostic_url = f"{PUBLIC_RECEIVER_URL.rstrip('/') if PUBLIC_RECEIVER_URL else LOCAL_RECEIVER_URL}/api/diagnostics"
+        diagnostic_url = f"{get_receiver_base_url()}/api/diagnostics"
         try:
             with st.spinner("Buscando dados do servidor..."):
                 response = requests.get(diagnostic_url, timeout=2)
@@ -173,7 +185,7 @@ def show_lab_monitor():
                 st.markdown("### 🌐 Scanner de Rede")
 
                 # Botão para iniciar a varredura (agora aciona o endpoint /scan)
-                scan_url = f"{PUBLIC_RECEIVER_URL.rstrip('/') if PUBLIC_RECEIVER_URL else LOCAL_RECEIVER_URL}/scan"
+                scan_url = f"{get_receiver_base_url()}/scan"
                 if st.button("Iniciar Varredura de Rede", disabled=data.get('is_scanning', False)):
                     requests.post(scan_url, timeout=1)
                     st.toast("Comando de varredura enviado!")
@@ -183,16 +195,16 @@ def show_lab_monitor():
                 if data.get('is_scanning'):
                     st.info("Varredura de rede em andamento...")
 
+                # Exibe a tabela de resultados se houver algum, mesmo durante a varredura
                 scan_results = data.get('scan_results', [])
                 if scan_results:
-                    # Garante que as colunas principais sempre existam
                     df_scan = pd.DataFrame(scan_results, columns=['ip', 'status', 'mac'])
-                    # Preenche valores nulos para evitar erros de renderização
                     df_scan['ip'] = df_scan['ip'].fillna('N/A')
                     df_scan['status'] = df_scan['status'].fillna('Desconhecido')
                     df_scan['mac'] = df_scan['mac'].fillna('N/A')
                     st.dataframe(df_scan, use_container_width=True)
-                else:
+                # Só mostra "Nenhum resultado" se a varredura NÃO estiver em andamento
+                elif not data.get('is_scanning'):
                     st.info("Nenhum resultado de varredura disponível.")
 
         except requests.exceptions.RequestException as e:
