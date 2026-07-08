@@ -3,6 +3,7 @@ import concurrent.futures
 import subprocess
 import os
 import platform
+import re
 import time
 
 def get_local_ip():
@@ -16,15 +17,32 @@ def get_local_ip():
         s.close()
     return ip
 
-def ping_host(ip):
-    """Verifica se um host está ativo na rede."""
+def check_host(ip):
+    """
+    Verifica se um host está ativo e tenta identificar se é um servidor SysAva.
+    Retorna uma tupla (ip, status, details).
+    """
+    # 1. Verifica se o host está respondendo ao ping
     param = '-n' if platform.system().lower() == 'windows' else '-c'
     command = ['ping', param, '1', '-w', '500', ip]
     try:
         result = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if result.returncode == 0:
-            # Se o host responder ao ping, tenta verificar se o agente do SysAva está lá (opcional)
-            return (ip, "ATIVO")
+            # 2. Se respondeu, tenta conectar na porta 5000 para ver se é o servidor
+            try:
+                with socket.create_connection((ip, 5000), timeout=0.5) as s:
+                    return (ip, "🚀 SERVIDOR SYSAVA", "")
+            except (socket.timeout, ConnectionRefusedError):
+                # 3. Se não é o servidor, busca na tabela ARP por mais detalhes
+                try:
+                    arp_output = subprocess.check_output(['arp', '-a', ip], text=True)
+                    mac_match = re.search(r"([0-9a-f]{2}[:-]){5}[0-9a-f]{2}", arp_output, re.I)
+                    if mac_match:
+                        return (ip, "ATIVO", f"MAC: {mac_match.group(0).upper()}")
+                except:
+                    pass
+                return (ip, "ATIVO", "")
+
     except:
         pass
     return None
@@ -60,11 +78,14 @@ def scan_network():
             
             with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
                 # O list() força a espera, envolvemos em try/except para sair rápido
-                results = list(executor.map(ping_host, ips))
+                results = list(executor.map(check_host, ips))
                 
                 for res in results:
                     if res:
-                        print(f"   [+] Host encontrado: {res[0]} - Status: {res[1]}")
+                        ip, status, details = res
+                        color_code = "\033[92m" if "ATIVO" in status else "\033[95m" # Verde para ativos, Magenta para servidor
+                        end_color = "\033[0m"
+                        print(f"   {color_code}[+] Host encontrado: {ip:<15} | Status: {status:<18} | {details}{end_color}")
                         found_count += 1
     except KeyboardInterrupt:
         print("\n\n🛑 Varredura interrompida pelo usuário.")

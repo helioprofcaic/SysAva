@@ -761,7 +761,7 @@ def show_page():
                                 col_q, col_del = st.columns([0.9, 0.1])
                                 with col_q:
                                     tipo_icon = "📝" if q.get('question_type') == 'subjective' else "🔘"
-                                    st.text(f"{i+1}. {tipo_icon} {q['question_text']}")
+                                    st.markdown(f"{i+1}. {tipo_icon} {q['question_text']}")
                                     if q.get('question_type') == 'subjective' and q.get('options') and "LINK_REQUIRED" in q['options']:
                                         st.caption("   ↳ 🔗 Solicita link externo (GitHub/Drive)")
                                 with col_del:
@@ -944,6 +944,20 @@ def show_page():
                             is_generic = all(re.match(r'^\s*Opção\s+[A-Z]\s*$', opt, re.IGNORECASE) for opt in opts)
                             if is_generic:
                                 q_issues.append("Opções parecem ser genéricas (ex: 'Opção A', 'Opção B') e podem indicar um erro de importação.")
+                        
+                        # 5. Verifica se a opção contém a resposta (ex: "B - Correta")
+                        answer_pattern = r'^\s*[A-E][\s\W]*\b(correta|certa|resposta|gabarito)\b'
+                        if opts and isinstance(opts, list):
+                            for opt in opts:
+                                if re.search(answer_pattern, opt, re.IGNORECASE):
+                                    q_issues.append(f"Opção parece conter a resposta ou gabarito: '{opt[:50]}...'.")
+                                    break
+                        
+                        # 6. Verifica se a questão tem menos de 4 alternativas (padrão)
+                        # Aplica-se apenas a questões objetivas que possuem opções
+                        if q.get('question_type') != 'subjective' and opts and isinstance(opts, list) and len(opts) < 4:
+                            q_issues.append(f"Número de alternativas inferior ao padrão. Encontradas: {len(opts)}/4.")
+
 
                         if q_issues:
                             issues.append({"question": q, "problems": q_issues})

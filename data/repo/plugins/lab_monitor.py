@@ -12,6 +12,7 @@ import os
 import sys
 import subprocess
 import requests
+import time
 import socket
 from datetime import datetime
 
@@ -20,9 +21,10 @@ PLUGIN_DIR = os.path.dirname(__file__)
 MONITOR_DATA_FILE = os.path.join(PLUGIN_DIR, "lab_status.json")
 
 # Se você está usando um Receiver público, configure aqui:
-PUBLIC_RECEIVER_URL = "https://sysava.streamlit.app"
+# PUBLIC_RECEIVER_URL = "https://sysava.streamlit.app" # Comentado para forçar o uso local
+PUBLIC_RECEIVER_URL = None
 AUTH_TOKEN = None  # Se o receiver exigir Bearer token, defina aqui
-LOCAL_RECEIVER_URL = "http://127.0.0.1:8080"
+LOCAL_RECEIVER_URL = "http://127.0.0.1:5000"
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 if project_root not in sys.path:
@@ -43,8 +45,8 @@ def start_receiver():
     if PUBLIC_RECEIVER_URL:
         return None
 
-    # Evita abrir múltiplos processos se a porta já estiver ocupada
-    if is_port_in_use(8080):
+    # Evita abrir múltiplos processos se a porta 5000 (do receiver) já estiver ocupada
+    if is_port_in_use(5000):
         return None
         
     receiver_path = os.path.join(PLUGIN_DIR, "lab_receiver.py")
@@ -139,13 +141,11 @@ def show_lab_monitor():
         
         st.divider()
         st.markdown("### 🛠️ Depuração")
-        diagnostic_url = f"{PUBLIC_RECEIVER_URL.rstrip('/') if PUBLIC_RECEIVER_URL else LOCAL_RECEIVER_URL}/diagnostics"
-        st.link_button(
-            "🌐 Abrir Diagnóstico (Browser)", 
-            diagnostic_url, 
-            use_container_width=True,
-            help="Abre uma nova aba com os dados brutos da memória RAM do servidor."
-        )
+        
+        with st.expander("🔍 Ver Diagnóstico do Servidor"):
+            if st.button("Carregar Diagnóstico na Página Principal", use_container_width=True):
+                st.session_state['monitor_view'] = 'diagnostics'
+                st.rerun()
 
         if st.button("🗑️ Limpar Todos os Dados", type="secondary", use_container_width=True):
             save_monitor_data({})
@@ -154,11 +154,63 @@ def show_lab_monitor():
 
         st.caption("Dica: O Agente local deve enviar o IP da máquina para rastreamento preciso.")
 
+    # --- ROTEADOR DE VISUALIZAÇÃO (DENTRO DO PLUGIN) ---
+    if st.session_state.get('monitor_view') == 'diagnostics':
+        st.subheader("🔍 Diagnóstico do Servidor")
+
+        # Aponta para o novo endpoint de dados JSON
+        diagnostic_url = f"{PUBLIC_RECEIVER_URL.rstrip('/') if PUBLIC_RECEIVER_URL else LOCAL_RECEIVER_URL}/api/diagnostics"
+        try:
+            with st.spinner("Buscando dados do servidor..."):
+                response = requests.get(diagnostic_url, timeout=2)
+                response.raise_for_status()
+                data = response.json()
+
+                # Renderiza os dados usando componentes do Streamlit
+                st.metric("Uptime do Servidor", f"{data.get('uptime', 0)} segundos")
+
+                st.markdown("---")
+                st.markdown("### 🌐 Scanner de Rede")
+
+                # Botão para iniciar a varredura (agora aciona o endpoint /scan)
+                scan_url = f"{PUBLIC_RECEIVER_URL.rstrip('/') if PUBLIC_RECEIVER_URL else LOCAL_RECEIVER_URL}/scan"
+                if st.button("Iniciar Varredura de Rede", disabled=data.get('is_scanning', False)):
+                    requests.post(scan_url, timeout=1)
+                    st.toast("Comando de varredura enviado!")
+                    time.sleep(1) # Pequena pausa para o servidor processar
+                    st.rerun()
+
+                if data.get('is_scanning'):
+                    st.info("Varredura de rede em andamento...")
+
+                scan_results = data.get('scan_results', [])
+                if scan_results:
+                    # Garante que as colunas principais sempre existam
+                    df_scan = pd.DataFrame(scan_results, columns=['ip', 'status', 'mac'])
+                    # Preenche valores nulos para evitar erros de renderização
+                    df_scan['ip'] = df_scan['ip'].fillna('N/A')
+                    df_scan['status'] = df_scan['status'].fillna('Desconhecido')
+                    df_scan['mac'] = df_scan['mac'].fillna('N/A')
+                    st.dataframe(df_scan, use_container_width=True)
+                else:
+                    st.info("Nenhum resultado de varredura disponível.")
+
+        except requests.exceptions.RequestException as e:
+            st.error(f"Não foi possível conectar ao servidor de diagnóstico: {e}")
+        
+        if st.button("⬅️ Voltar ao Radar"):
+            st.session_state['monitor_view'] = 'radar'
+            st.rerun()
+        return
+
+    # --- VISUALIZAÇÃO PADRÃO (RADAR) ---
     # Carrega dados simulando o que viria dos computadores do laboratório
     lab_data = load_monitor_data()
     
     if not lab_data:
         st.info("📡 Aguardando sinal dos computadores ou registros manuais de alunos...")
+        # Adiciona um botão para permitir o acesso ao diagnóstico mesmo sem dados
+        st.info("Se o servidor estiver online mas sem agentes, você ainda pode acessar o diagnóstico pela barra lateral.")
         return
 
     # --- SEÇÃO 1: ESTATÍSTICAS ---

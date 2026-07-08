@@ -29,7 +29,7 @@ echo Atualizando o Pip...
 
 REM Instala/Atualiza dependencias
 echo Verificando dependencias...
-"%VENV_PATH%\Scripts\pip.exe" install --upgrade pip -r requirements.txt psutil requests flask
+"%VENV_PATH%\Scripts\pip.exe" install --upgrade pip -r requirements.txt psutil requests flask google-generativeai
 
 
 REM Verifica se o .env existe antes de popular o banco

@@ -6,6 +6,10 @@ import shutil
 import subprocess
 import re
 import socket
+import logging
+import threading
+import concurrent.futures
+import platform
 
 app = Flask(__name__)
 start_time = time.time()
@@ -14,9 +18,16 @@ start_time = time.time()
 # Armazena o estado volátil das máquinas para acesso ultra-rápido
 LIVE_CACHE = {}
 
+# --- Memória RAM para o Scanner de Rede ---
+SCAN_RESULTS = []
+IS_SCANNING = False
+SCAN_LOCK = threading.Lock()
+
 # Define o caminho absoluto para evitar que o arquivo seja criado em locais inesperados
 STATUS_FILE = os.path.join(os.path.dirname(__file__), "lab_status.json")
 LOG_FILE = os.path.join(os.path.dirname(__file__), "lab_receiver.log")
+ERROR_LOG_FILE = os.path.join(os.path.dirname(__file__), "receiver_errors.log")
+SCAN_CONFIG_FILE = os.path.join(os.path.dirname(__file__), "scan_config.json")
 
 # Template HTML moderno para o Dashboard
 DASHBOARD_TEMPLATE = """
@@ -159,6 +170,65 @@ def get_local_ipv6():
     except:
         return "Indisponível"
 
+# --- Funções do Scanner de Rede (integradas do lab_sniffer.py) ---
+
+def check_host(ip):
+    """
+    Verifica se um host está ativo e tenta identificar se é um servidor SysAva.
+    Retorna um dicionário com os detalhes do host ou None.
+    """
+    param = '-n' if platform.system().lower() == 'windows' else '-c'
+    command = ['ping', param, '1', '-w', '500', ip]
+    try:
+        result = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if result.returncode == 0:
+            details = {"ip": ip, "status": "ATIVO", "mac": "N/A"}
+            try:
+                with socket.create_connection((ip, 5000), timeout=0.5):
+                    details["status"] = "🚀 SERVIDOR SYSAVA"
+            except (socket.timeout, ConnectionRefusedError):
+                pass
+            
+            try:
+                arp_output = subprocess.check_output(['arp', '-a', ip], text=True)
+                mac_match = re.search(r"([0-9a-f]{2}[:-]){5}[0-9a-f]{2}", arp_output, re.I)
+                if mac_match:
+                    details["mac"] = mac_match.group(0).upper()
+            except:
+                pass
+            return details
+    except:
+        pass
+    return None
+
+def run_network_scan_thread():
+    """Função que executa a varredura em background."""
+    global SCAN_RESULTS, IS_SCANNING
+    
+    # Carrega sub-redes extras de um arquivo de configuração
+    extra_subnets = []
+    if os.path.exists(SCAN_CONFIG_FILE):
+        with open(SCAN_CONFIG_FILE, 'r') as f:
+            config = json.load(f)
+            extra_subnets = config.get("additional_subnets", [])
+    else:
+        # Cria o arquivo com valores padrão se não existir
+        with open(SCAN_CONFIG_FILE, 'w') as f:
+            json.dump({"additional_subnets": ["192.168.10.", "192.168.11."]}, f, indent=4)
+        extra_subnets = ["192.168.10.", "192.168.11."]
+
+    local_ip = get_local_ip()
+    # Combina a sub-rede local com as extras, sem duplicatas
+    subnets_to_scan = list(set([ ".".join(local_ip.split('.')[:-1]) + "." ] + extra_subnets))
+
+    for subnet in subnets_to_scan:
+        ips_to_scan = [f"{subnet}{i}" for i in range(1, 255)]
+        with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
+            for result in executor.map(check_host, ips_to_scan):
+                if result:
+                    SCAN_RESULTS.append(result)
+    IS_SCANNING = False
+
 @app.route('/favicon.ico')
 def favicon():
     """Silencia o erro 404 do navegador procurando por ícone."""
@@ -183,8 +253,11 @@ def diagnostics():
                 body { font-family: monospace; background: #0e1117; color: #00ff41; padding: 20px; }
                 .header { border-bottom: 1px solid #00ff41; margin-bottom: 20px; padding-bottom: 10px; }
                 .cache-item { margin-bottom: 10px; padding: 10px; border: 1px solid #333; }
+                .scan-item { color: #92e8ff; }
+                .scan-item.server { color: #ff79c6; font-weight: bold; }
                 .timestamp { color: #888; }
                 .latency { color: #ffeb3b; }
+                button { background: #00ff41; border: none; padding: 10px 15px; color: #0e1117; font-weight: bold; cursor: pointer; }
             </style>
         </head>
         <body>
@@ -192,6 +265,23 @@ def diagnostics():
                 <h1>📡 SysAva Server Diagnostics</h1>
                 <p>Uptime: {{ uptime }}s | IP Servidor: {{ ip }} | Itens na RAM: {{ count }}</p>
             </div>
+
+            <h2>🌐 Scanner de Rede</h2>
+            <form action="/scan" method="post" onsubmit="document.getElementById('scan-btn').innerText='Escaneando...'; document.getElementById('scan-btn').disabled=true;">
+                <button id="scan-btn" type="submit" {% if is_scanning %}disabled{% endif %}>
+                    {% if is_scanning %}Escaneando...{% else %}Iniciar Varredura de Rede{% endif %}
+                </button>
+            </form>
+            <div id="scan-results">
+                {% for host in scan_results %}
+                    <div class="scan-item {% if 'SERVIDOR' in host.status %}server{% endif %}">
+                        [+] Host: {{ host.ip.ljust(15) }} | Status: {{ host.status.ljust(18) }} | MAC: {{ host.mac }}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <br>
+            <h2>⚙️ Cache de Atividade (Agentes)</h2>
             <div id="logs">
                 {% for name, info in cache.items() %}
                 <div class="cache-item">
@@ -210,12 +300,58 @@ def diagnostics():
             uptime=int(time.time() - start_time), 
             ip=get_local_ip(),
             count=len(LIVE_CACHE),
-            now=now
+            now=now,
+            is_scanning=IS_SCANNING,
+            scan_results=SCAN_RESULTS
         )
     except Exception as e:
         # Registra o erro no log do Flask (geralmente console) e retorna um 500 com detalhes
         app.logger.error(f"Erro ao renderizar página de diagnóstico: {e}", exc_info=True)
         return f"<h1>Erro Interno do Servidor (500)</h1><p>Detalhes: {e}</p>", 500
+
+@app.route('/update_scan_config', methods=['POST'])
+def update_scan_config():
+    """Atualiza o arquivo de configuração de sub-redes."""
+    try:
+        subnets_text = request.form.get('subnets', '')
+        # Converte o texto (separado por vírgula ou nova linha) em uma lista limpa
+        subnets_list = [s.strip() for s in re.split(r'[,\n]', subnets_text) if s.strip()]
+        
+        with open(SCAN_CONFIG_FILE, 'w') as f:
+            json.dump({"additional_subnets": subnets_list}, f, indent=4)
+    except Exception as e:
+        app.logger.error(f"Erro ao atualizar scan_config.json: {e}")
+    return '<script>window.location.href = "/diagnostics";</script><h1>Configuração salva. Redirecionando...</h1>'
+
+@app.route('/scan', methods=['POST'])
+def start_scan():
+    """Endpoint para iniciar a varredura de rede em background."""
+    global IS_SCANNING, SCAN_RESULTS
+    
+    with SCAN_LOCK:
+        if not IS_SCANNING:
+            IS_SCANNING = True
+            SCAN_RESULTS = []
+            scan_thread = threading.Thread(target=run_network_scan_thread, daemon=True)
+            scan_thread.start()
+            app.logger.info("Iniciando varredura de rede em background.")
+        else:
+            app.logger.warning("Tentativa de iniciar varredura enquanto outra já está em andamento.")
+    return '<script>setTimeout(function(){ window.location.href = "/diagnostics"; }, 1000);</script><h1>Varredura iniciada... Redirecionando.</h1>'
+
+@app.route('/api/diagnostics', methods=['GET'])
+def get_diagnostics_data():
+    """Endpoint que retorna os dados de diagnóstico em JSON para integração."""
+    cache_snapshot = dict(LIVE_CACHE)
+    return jsonify({
+        "uptime": int(time.time() - start_time),
+        "server_ip": get_local_ip(),
+        "cache_count": len(LIVE_CACHE),
+        "is_scanning": IS_SCANNING,
+        "scan_results": SCAN_RESULTS,
+        "live_cache": cache_snapshot,
+        "server_timestamp": time.time()
+    })
 
 @app.route('/api/debug', methods=['GET'])
 def get_debug_raw():
@@ -319,14 +455,43 @@ def ping():
     return jsonify(response)
 
 if __name__ == '__main__':
+    # --- Configuração de Logging Inteligente ---
+    # Remove o logger padrão do Flask para evitar duplicação
+    if app.logger.handlers:
+        app.logger.removeHandler(app.logger.handlers[0])
+
+    # Configura o logger de ACESSO para ir para lab_receiver.log
+    access_logger = logging.getLogger('werkzeug')
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+    access_logger.addHandler(access_handler)
+
+    # Configura o logger de ERROS para ir para receiver_errors.log
+    error_handler = logging.FileHandler(ERROR_LOG_FILE, encoding='utf-8')
+    error_handler.setLevel(logging.ERROR) # Captura apenas ERROR e CRITICAL
+    app.logger.addHandler(error_handler)
+
     # threaded=True permite que o Flask lide com múltiplas requisições ao mesmo tempo
+    # --- Verificação de Porta ---
+    # Adicionamos uma verificação de porta mais confiável aqui
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        if s.connect_ex(('localhost', 5000)) == 0:
+            print("[ERRO] A porta 5000 já está em uso. O receptor não pode iniciar.")
+            app.logger.critical("PORTA 5000 JÁ EM USO.")
+            # Saímos com um código de erro para o .bat não tentar reiniciar
+            exit(1)
+
+
     print("\n" + "="*50)
     print("🚀 SysAva Receiver v2 (RAM + Diagnostics) Online")
     print(f"📍 Endereco MAC: {get_my_mac()}")
-    print(f"🔗 Rota IPv4: http://192.168.11.249:5000/diagnostics")
+    print(f"🔗 Rota IPv4: http://{get_local_ip()}:5000/diagnostics")
     print(f"🔗 Rota IPv6: http://[{get_local_ipv6()}]:5000/diagnostics")
     print("� Use este MAC no 'lab_agent.py' para busca automatica.")
     print("="*50 + "\n")
     
     # Rodar em '::' permite conexões IPv4 e IPv6 simultâneas
-    app.run(host='::', port=5000, threaded=True, debug=False)
+    # Usamos Waitress como um servidor de produção mais robusto para Windows
+    from waitress import serve
+    serve(app, host='0.0.0.0', port=5000)
+    
+    # app.run(host='::', port=5000, threaded=True, debug=False)

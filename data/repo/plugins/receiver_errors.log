@@ -119678,3 +119678,685 @@ Press CTRL+C to quit
 127.0.0.1 - - [09/Jun/2026 09:58:09] "GET /diagnostics HTTP/1.1" 200 -
 127.0.0.1 - - [09/Jun/2026 09:58:11] "GET /diagnostics HTTP/1.1" 200 -
 127.0.0.1 - - [09/Jun/2026 09:58:13] "GET /diagnostics HTTP/1.1" 200 -
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 330, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 331, in <module>
+    access_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "C:\Local\apps\miniconda3\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+PermissionError: [Errno 13] Permission denied: 'D:\\Florestan\\Apps\\SysAva\\data\\repo\\plugins\\lab_receiver.log'
+
+--- Início do Log: 2026-07-07 20:44:49.949281 ---
+[ERRO] A porta 5000 já está em uso. O receptor não pode iniciar.
+
+--- Início do Log: 2026-07-07 20:49:57.441168 ---
+PORTA 5000 JÁ EM USO.
+PORTA 5000 JÁ EM USO.
+PORTA 5000 JÁ EM USO.
+PORTA 5000 JÁ EM USO.
+PORTA 5000 JÁ EM USO.
+PORTA 5000 JÁ EM USO.
+PORTA 5000 JÁ EM USO.

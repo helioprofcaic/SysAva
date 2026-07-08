@@ -7,6 +7,7 @@ from datetime import datetime
 import time
 import sys
 
+import subprocess
 # Configuração de cores para o terminal (ANSI)
 class Colors:
     HEADER = '\033[95m'
@@ -154,10 +155,46 @@ def run_diagnostics(watch=False):
         print(f"   [i] Iniciado às: {create_time}")
         print(f"   [i] Consumo: CPU: {cpu}% | RAM: {ram:.2f} MB")
     else:
-        print(f"   [{Colors.FAIL}!!{Colors.ENDC}] {Colors.FAIL}ERRO: lab_receiver.py NÃO está rodando.{Colors.ENDC}")
+        plugin_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "repo", "plugins")
+        receiver_script_path = os.path.join(plugin_dir, "lab_receiver.bat")
+
+        print(f"   [{Colors.FAIL}!!{Colors.ENDC}] {Colors.FAIL}ERRO: O processo 'lab_receiver.py' NÃO está rodando.{Colors.ENDC}")
+        
+        # Apenas oferece para iniciar se não estiver no modo watch
+        if not watch:
+            try:
+                choice = input(f"   {Colors.OKBLUE}[?] Deseja iniciar o receptor agora? (S/n): {Colors.ENDC}").strip().lower()
+                if choice == '' or choice == 's':
+                    print(f"   {Colors.OKBLUE}   [i] Iniciando '{os.path.basename(receiver_script_path)}' em uma nova janela...{Colors.ENDC}")
+                    subprocess.Popen(['start', 'cmd', '/c', receiver_script_path], shell=True, cwd=plugin_dir)
+                    time.sleep(3) # Pausa para o processo iniciar
+                    print(f"   {Colors.OKBLUE}   [i] Re-verificando status...{Colors.ENDC}")
+                    
+                    # Re-verifica o processo após a tentativa de início
+                    proc = get_receiver_process()
+                    if proc:
+                        print(f"   [{Colors.OKGREEN}OK{Colors.ENDC}] Processo iniciado com sucesso (PID: {proc.pid}).")
+                    else:
+                        print(f"   [{Colors.FAIL}!!{Colors.ENDC}] {Colors.FAIL}Falha ao iniciar. Verifique a janela do receptor.{Colors.ENDC}")
+                        # Se falhou, tenta mostrar o último erro real do log de erros
+                        error_log_path = os.path.join(plugin_dir, "receiver_errors.log")
+                        if os.path.exists(error_log_path):
+                            try:
+                                with open(error_log_path, 'r', encoding='utf-8', errors='ignore') as f:
+                                    last_error = f.readlines()[-1].strip()
+                                    print(f"   {Colors.WARNING}   -> Último erro registrado: {last_error}{Colors.ENDC}")
+                            except: pass
+                    # Pula para a próxima seção para evitar re-executar a lógica de início
+                    print("\n🌐 Teste de Interfaces de Rede (Porta 5000):")
+                    goto_next_section = True # Sinaliza para pular a próxima seção
+
+            except (KeyboardInterrupt, EOFError):
+                print("\nOperação cancelada.")
 
     # 2. Teste de Acessibilidade por Interface
-    if not watch: # Só mostra interfaces no diagnóstico completo
+    # A variável 'goto_next_section' é usada para controlar o fluxo
+    # e evitar a duplicação da impressão do cabeçalho da seção.
+    if not watch and 'goto_next_section' not in locals():
         print("\n🌐 Teste de Interfaces de Rede (Porta 5000):")
         ips = get_local_ips()
         for ip in ips:
@@ -188,7 +225,7 @@ def run_diagnostics(watch=False):
         
         log_path = os.path.join(plugin_dir, "receiver_errors.log")
         if os.path.exists(log_path):
-            with open(log_path, 'r') as f:
+            with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
                 lines = f.readlines()
                 if lines:
                     print(f"   {Colors.WARNING}Último log:{Colors.ENDC} {lines[-1].strip()}")
