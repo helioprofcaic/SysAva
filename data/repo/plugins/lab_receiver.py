@@ -9,6 +9,7 @@ import socket
 import logging
 import threading
 import concurrent.futures
+from filelock import FileLock, Timeout
 import platform
 
 app = Flask(__name__)
@@ -25,6 +26,7 @@ SCAN_LOCK = threading.Lock()
 
 # Define o caminho absoluto para evitar que o arquivo seja criado em locais inesperados
 STATUS_FILE = os.path.join(os.path.dirname(__file__), "lab_status.json")
+LOCK_FILE = os.path.join(os.path.dirname(__file__), "lab_status.json.lock")
 LOG_FILE = os.path.join(os.path.dirname(__file__), "lab_receiver.log")
 ERROR_LOG_FILE = os.path.join(os.path.dirname(__file__), "receiver_errors.log")
 SCAN_CONFIG_FILE = os.path.join(os.path.dirname(__file__), "scan_config.json")
@@ -117,33 +119,29 @@ def log_event(message):
 
 def load_data():
     """Lê os dados com proteção contra JSON corrompido."""
-    if os.path.exists(STATUS_FILE):
-        try:
+    lock = FileLock(LOCK_FILE, timeout=1)
+    try:
+        with lock:
+            if not os.path.exists(STATUS_FILE):
+                return {}
             with open(STATUS_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except (json.JSONDecodeError, IOError):
-            # Se o arquivo estiver corrompido, tenta ler a última versão válida ou limpa
-            print(f"⚠️ Arquivo {STATUS_FILE} corrompido. Resetando...")
-            return {}
-    return {}
+                content = f.read()
+                if not content:
+                    return {}
+                return json.loads(content)
+    except (Timeout, json.JSONDecodeError, IOError, OSError):
+        # Se o arquivo estiver bloqueado, corrompido ou houver erro de IO, retorna vazio
+        return {}
 
 def save_data(data):
     """Grava os dados de forma atômica (escreve em temp e depois substitui)."""
-    temp_file = STATUS_FILE + ".tmp"
+    lock = FileLock(LOCK_FILE, timeout=1)
     try:
-        # 1. Escreve em um arquivo temporário primeiro
-        with open(temp_file, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
-            f.flush()
-            os.fsync(f.fileno()) # Garante que os dados foram pro disco
-        
-        # 2. Substitui o arquivo oficial (operação atômica no SO)
-        os.replace(temp_file, STATUS_FILE)
-    except Exception as e:
-        if os.path.exists(temp_file):
-            os.remove(temp_file)
-        print(f"❌ Erro crítico ao salvar status: {e}")
-        log_event(f"❌ Erro crítico ao salvar status: {e}")
+        with lock:
+            with open(STATUS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=4, ensure_ascii=False)
+    except (Timeout, IOError, OSError) as e:
+        log_event(f"Erro de IO ou Timeout ao salvar dados: {e}")
 
 def get_local_ip():
     """Obtém o IP do servidor para identificar a rede do laboratório."""

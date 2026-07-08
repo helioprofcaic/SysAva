@@ -25,8 +25,8 @@ if exist "..\..\..\.sysenv\Scripts\python.exe" (
 )
 
 :: 2. Garante que as dependencias estao instaladas (Flask)
-echo [INFO] Verificando dependencias (flask, waitress, google-generativeai)...
-call "%PYTHON_CMD%" -m pip install flask waitress google-generativeai >nul 2>&1
+echo [INFO] Verificando dependencias (flask, waitress, filelock)...
+call "%PYTHON_CMD%" -m pip install flask waitress google-generativeai filelock >nul 2>&1
 if %errorlevel% neq 0 (
     echo [AVISO] Falha ao verificar/instalar Flask. O receptor pode falhar.
 )

@@ -18,6 +18,8 @@ data/Turmas/**
 data/rascunhos/*
 data/repo/*
 data/repo/plugins/*json
+!data/repo/plugins/lab_status.json
+!data/repo/plugins/scan_config.json
 data/repo/plugins/*log
 data/repo/plugins/*.db
 !data/repo/plugins/
