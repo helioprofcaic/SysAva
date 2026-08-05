@@ -105,19 +105,19 @@ if exist "%VENV_PATH%\Scripts\python.exe" (
 echo Atualizando o Pip...
 "%VENV_PATH%\Scripts\python.exe" -m pip install --upgrade pip
 
-echo.
-echo Garantindo compatibilidade do Streamlit com Starlette...
-"%VENV_PATH%\Scripts\pip.exe" install --upgrade "streamlit" "starlette<0.37"
-
 REM Instala/Atualiza dependencias
 echo Verificando dependencias...
 "%VENV_PATH%\Scripts\pip.exe" install --upgrade -r requirements.txt
 if %errorlevel% neq 0 (
     echo.
-    echo FALHA CRITICA ao instalar dependencias. Verifique se nao ha outro processo do SysAva/Streamlit em execucao.
+    echo FALHA CRITICA ao instalar dependencias do requirements.txt.
     pause
     exit /b 1
 )
+
+echo.
+echo Garantindo compatibilidade do Streamlit com Starlette...
+"%VENV_PATH%\Scripts\pip.exe" install --upgrade "streamlit" "starlette<0.37"
 
 REM Verifica se o .env existe antes de popular o banco
 if not exist ".env" (
