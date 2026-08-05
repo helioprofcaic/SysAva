@@ -115,10 +115,6 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-echo.
-echo Garantindo compatibilidade do Streamlit com Starlette...
-"%VENV_PATH%\Scripts\pip.exe" install --upgrade "streamlit" "starlette<0.37"
-
 REM Verifica se o .env existe antes de popular o banco
 if not exist ".env" (
     echo.
