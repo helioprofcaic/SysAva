@@ -12,11 +12,33 @@ function Show-Header {
     Write-Host "==========================================" -ForegroundColor Magenta
 }
 
+function Check-And-Set-Git-Config {
+    $userName = git config user.name
+    $userEmail = git config user.email
+
+    if ([string]::IsNullOrWhiteSpace($userName)) {
+        Write-Host "`n⚠️ O nome de usuário do Git não está configurado." -ForegroundColor Yellow
+        $newName = Read-Host "   Digite seu nome completo (Ex: João Silva)"
+        git config user.name "$newName"
+        Write-Host "✅ Nome de usuário configurado como: $newName" -ForegroundColor Green
+    }
+
+    if ([string]::IsNullOrWhiteSpace($userEmail)) {
+        Write-Host "`n⚠️ O e-mail do Git não está configurado." -ForegroundColor Yellow
+        $newEmail = Read-Host "   Digite seu e-mail (o mesmo do GitHub)"
+        git config user.email "$newEmail"
+        Write-Host "✅ E-mail configurado como: $newEmail" -ForegroundColor Green
+    }
+}
+
 while ($true) {
     Show-Header
     
     Write-Host "`n[ Status Atual (Resumido) ]" -ForegroundColor Cyan
     git status -s
+
+    # Verifica a configuração do Git antes de mostrar o menu de commit
+    Check-And-Set-Git-Config
     
     Write-Host "`nMenu de Comandos:" -ForegroundColor Yellow
     Write-Host "1. Preparar tudo (git add .)"

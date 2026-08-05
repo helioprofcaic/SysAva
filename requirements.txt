@@ -20,3 +20,6 @@ pypdf
 matplotlib
 google-genai
 filelock 
+psutil 
+requests 
+flask   

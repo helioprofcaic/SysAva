@@ -164,9 +164,18 @@ def show_page():
                 import_text = st.text_area("Conteúdo do Arquivo", height=200, placeholder="Nome da Escola\nGRE: 21\nNome da Turma\nCódigo da Turma: 123\nDisciplina 1\nDisciplina 2...", disabled=not db_structure_exists, key="setup_import_text")
 
                 if st.button("🚀 Processar Importação", disabled=not db_structure_exists, key="setup_do_import"):
-                    if import_text:
+                    if import_text.strip():
                         with st.spinner("Processando..."):
-                            success, msg = db.import_school_structure(import_text)
+                            # Filtra linhas indesejadas antes de enviar para a função de importação
+                            lines = import_text.split('\n')
+                            ignore_list = [
+                                "disciplinas:", 
+                                "componentes curriculares:"
+                            ]
+                            filtered_lines = [line for line in lines if line.strip() and line.strip().lower() not in ignore_list]
+                            filtered_text = "\n".join(filtered_lines)
+
+                            success, msg = db.import_school_structure(filtered_text)
                             if success:
                                 st.success("Importação concluída!")
                                 st.text_area("Log de Importação", value=msg, height=150)
@@ -342,7 +351,7 @@ def show_page():
                     # Formulário de Criação (Agora vinculado à disciplina selecionada)
                     with st.expander(f"Adicionar Nova Aula em {selected_subject_name}", expanded=False, key="exp_aula_aulas"):
                         with st.form("new_lesson_form", clear_on_submit=True):
-                            st.markdown("##### Preencher manualmente ou importar de arquivo .md", key="aulas_md_label")
+                            st.markdown("##### Preencher manualmente ou importar de arquivo .md")
                             uploaded_file = st.file_uploader("Importar Aula de arquivo Markdown", type=['md'])
 
                             title_val, desc_val, video_val = "", "", ""

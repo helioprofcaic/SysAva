@@ -120360,3 +120360,70 @@ PORTA 5000 JÁ EM USO.
 PORTA 5000 JÁ EM USO.
 PORTA 5000 JÁ EM USO.
 PORTA 5000 JÁ EM USO.
+
+--- Início do Log: 2026-07-07 21:39:07.415301 ---
+
+--- Início do Log: 2026-07-08 08:20:27.525017 ---
+
+--- Início do Log: 2026-07-08 15:51:51.536085 ---
+
+
+
+Boa tarde!! Notas dos Alunos (as) do 2 ano A:
+Andressa 10,00
+Antônio Alberto 8,00
+Cleison 10,00
+Danielle 6,00
+Emanuel 10,00
+Evanielly 10,00
+Francisco Joel 10,00
+Gilvan 10,00
+Giselle 10,00
+Julia Gabriela 10,00
+Karlisson 8,00
+Luara 10,00
+Maria Clara 10,00
+Maria Vitória 10,00
+Matheus Costa 10,00
+Pedro Henrique 8,00
+Sara 10,00
+Yara 10,00
+Yasmin Lorrany 0,0 Única aluna que não tem frequência nos dias de preparação e nem da apresentação!!
+
+
+Notas 2° ano "B":
+Ana Karolliny - 10,0
+Ana Larissa - 0
+Carla Eduarda - 10,0
+Erasmo Cassiano - 10,0
+Fernando Gleyson - 10,0
+Isadora Fernanda - 0
+José Isac - 10,0
+Junio Gabriel - 6,0
+Lázaro de Sousa - 6,0
+Manoel Henrique - 10,0
+Maria Alice - 10,0
+Maria Clara - 10,0
+Maria Crysthiely - 10,0
+Maria Fernanda - 10,0
+Matheus Sousa - 6,0
+Paula Cristina - 10,0
+Rômulo Gabriel - 10,0
+Victor Manuel - 10,0
+Vão fazer prova:
+Ana Larissa
+Isadora
+--- Início do Log: 2026-08-03 10:06:30.521723 ---
+
+==================================================
+🚀 SysAva Receiver v2 (RAM + Diagnostics) Online
+📍 Endereco MAC: B8-F7-75-06-4B-36
+🔗 Rota IPv4: http://192.168.11.214:5000/diagnostics
+🔗 Rota IPv6: http://[Indisponível]:5000/diagnostics
+� Use este MAC no 'lab_agent.py' para busca automatica.
+==================================================
+
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 503, in <module>
+    from waitress import serve
+ModuleNotFoundError: No module named 'waitress'

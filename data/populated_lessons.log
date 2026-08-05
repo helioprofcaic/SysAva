@@ -1,5 +1,9 @@
-2026-07-07 21:38:26.614 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-08-05 00:11:15.628 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
 Iniciando importação de aulas em lote a partir de: D:\Florestan\Apps\SysAva\data\Turmas
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'Caderno de Atividades - Florestan' -> Semana 'S01'
+    ⏭️  Aula 'Aula cine-debate e quiz - os escritores da liberdade' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula iii semana presente - acolhimento' já consta no logs.txt. Pulando.
 
  Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'INTELIGÊNCIA ARTIFICIAL' -> Semana 'S01'
     ⏭️  Aula 'Aula 05 redes neurais' já consta no logs.txt. Pulando.
@@ -34,6 +38,40 @@ Iniciando importação de aulas em lote a partir de: D:\Florestan\Apps\SysAva\da
  Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO ORIENTADA À OBJETOS - POO' -> Semana 'S04'
     ⏭️  Aula 'Aula 39 encapsulamento e modificadores de acesso' já consta no logs.txt. Pulando.
 
+ Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END' -> Semana 'S01'
+    ⏭️  Aula 'Aula 01 fundamentos e o papel do desenvolvedor front-end' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 02 a fundação da web evolução, protocolos e o modelo tcpip' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 03 a evolução da world wide web (www) e o futuro do desenvolvimento web' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 04 evolução, compatibilidade e ferramentas de desenvolvimento web' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 05 a importância dos padrões web e a padronização pelo w3c' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 06 desvendando o protocolo http e a arquitetura da web' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 07 métodos http – a linguagem de comunicação entre cliente e servidor' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 08 entendendo os códigos de status http' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END' -> Semana 'S02'
+    ⏭️  Aula 'Aula 09 a base da web html - estruturando o mundo digital!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 10 planejamento e estrutura html - o alicerce do seu site' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 11 estruturando o conteúdo web com tags html' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 12 estruturando conteúdo e refinando a interface com html' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 13 estruturação semântica e organização de conteúdo html' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 14 estruturação de dados com tabelas em html' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 15 multimídia na web inserindo imagens, vídeos e áudios com html' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 16 navegação web e o poder da tag `a`' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END' -> Semana 'S03'
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END' -> Semana 'S04'
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END' -> Semana 'S05'
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END' -> Semana 'S06'
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
  Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026A' -> Semana 'S01'
     ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
 
@@ -51,6 +89,12 @@ Iniciando importação de aulas em lote a partir de: D:\Florestan\Apps\SysAva\da
 
  Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026A' -> Semana 'S06'
     ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'Caderno de Atividades - Florestan' -> Semana 'S01'
+    ⏭️  Aula 'Aula 01 - iii semana presente - acolhimento' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 02 - cine-debate e quiz - os escritores da liberdade' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 03 - metodologias ativas e aprendizagem colaborativa' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 04 - oficina de troca de experiências e gestão de estudos' já consta no logs.txt. Pulando.
 
  Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'INTELIGÊNCIA ARTIFICIAL' -> Semana 'S01'
     ⏭️  Aula 'Aula 10 como os robôs buscam algo no mundo real — aprendendo com algoritmos de busca' já consta no logs.txt. Pulando.
@@ -81,6 +125,40 @@ Iniciando importação de aulas em lote a partir de: D:\Florestan\Apps\SysAva\da
     ⏭️  Aula 'Scripts py.ps1' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Scripts setup folders 2ads' já consta no logs.txt. Pulando.
 
+ Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END' -> Semana 'S01'
+    ⏭️  Aula 'Aula 01 fundamentos e o papel do desenvolvedor front-end' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 02 a fundação da web evolução, protocolos e o modelo tcpip' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 03 a evolução da world wide web (www) e o futuro do desenvolvimento web' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 04 evolução, compatibilidade e ferramentas de desenvolvimento web' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 05 a importância dos padrões web e a padronização pelo w3c' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 06 desvendando o protocolo http e a arquitetura da web' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 07 métodos http – a linguagem de comunicação entre cliente e servidor' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 08 entendendo os códigos de status http' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END' -> Semana 'S02'
+    ⏭️  Aula 'Aula 09 a base da web html - estruturando o mundo digital!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 10 planejamento e estrutura html - o alicerce do seu site' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 11 estruturando o conteúdo web com tags html' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 12 estruturando conteúdo e refinando a interface com html' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 13 estruturação semântica e organização de conteúdo html' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 14 estruturação de dados com tabelas em html' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 15 multimídia na web inserindo imagens, vídeos e áudios com html' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 16 navegação web e o poder da tag `a`' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END' -> Semana 'S03'
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END' -> Semana 'S04'
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END' -> Semana 'S05'
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
+ Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END' -> Semana 'S06'
+    ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
+
  Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026B' -> Semana 'S01'
     ⏭️  Aula 'Aula 3 a evolução da world wide web (www) e o futuro do desenvolvimento web' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 4 evolução, compatibilidade e ferramentas de desenvolvimento web' já consta no logs.txt. Pulando.
@@ -94,6 +172,11 @@ Iniciando importação de aulas em lote a partir de: D:\Florestan\Apps\SysAva\da
  Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026B' -> Semana 'S02'
     ⏭️  Aula 'Aula 10 planejamento e estrutura html - o alicerce do seu site' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 11 estruturando o conteúdo web com tags html' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 12 estruturando conteúdo e refinando a interface com html' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 13 estruturação semântica e organização de conteúdo html' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 14 estruturação de dados com tabelas em html' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 15 multimídia na web inserindo imagens, vídeos e áudios com html' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 16 navegação web e o poder da tag `a`' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 9 a base da web html - estruturando o mundo digital!' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
 

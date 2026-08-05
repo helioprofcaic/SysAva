@@ -387,12 +387,18 @@ def enroll_student(username: str, class_id: int):
 
 def get_subject_by_name(name: str):
     if not is_db_connected(): return None
-    # Tenta busca exata
-    res = supabase.table("subjects").select("id").eq("name", name).execute()
+    # 1. Tenta busca exata (mais rápido)
+    res = supabase.table("subjects").select("id, name").eq("name", name).execute()
     if res.data:
         return res.data[0]
-    # Tenta busca case-insensitive (ignora maiúsculas/minúsculas)
-    res = supabase.table("subjects").select("id").ilike("name", name).execute()
+
+    # 2. Tenta busca case-insensitive (ignora maiúsculas/minúsculas)
+    res = supabase.table("subjects").select("id, name").ilike("name", name).execute()
+    if res.data:
+        return res.data[0]
+
+    # 3. Fallback: Busca "fuzzy" que ignora acentos, espaços e diferenças mínimas
+    res = supabase.table("subjects").select("id, name").rpc('f_fuzzy_match', {'p_name': name}).execute()
     return res.data[0] if res.data else None
 
 def get_user_enrollment(username: str):

@@ -191,6 +191,18 @@ def show_student_scores():
             st.info("Selecione uma turma para carregar o quadro de notas.")
             return
 
+        st.divider()
+        st.session_state['selected_trimester'] = st.radio(
+            "Filtrar por Período",
+            ["Visão Geral", "1º Trimestre", "2º Trimestre", "3º Trimestre"],
+            horizontal=True,
+            key="trim_selector"
+        )
+
+    if selected_class_name == "-- Selecione --":
+            st.info("Selecione uma turma para carregar o quadro de notas.")
+            return
+
     # --- CARREGAMENTO DE ALUNOS ---
     students = db.get_students_by_class(class_id)
     if not students:
@@ -252,6 +264,13 @@ def show_student_scores():
         student_json = all_scores_data["students_data"][username]
         if "subjects" not in student_json: student_json["subjects"] = {}
         if "daily_qualitative_points" not in student_json: student_json["daily_qualitative_points"] = []
+
+        # Garante que as chaves de notas gerais existam para todos os alunos (correção de inconsistência)
+        for key in ["overall_nm1", "overall_nm2", "overall_nm3", "overall_outros1", "overall_outros2"]:
+            if key not in student_json:
+                # Inicializa todas as 9 notas e as gerais
+                student_json.update({f"overall_nm{i}": 0.0 for i in range(1, 10)})
+        
         
         # Inicializa variáveis locais para evitar NameError
         nm1, nm2, nm3, outros1, outros2 = 0.0, 0.0, 0.0, 0.0, 0.0
@@ -276,25 +295,36 @@ def show_student_scores():
             
             if sid_str not in student_json["subjects"]:
                 student_json["subjects"][sid_str] = {
-                    "score": calc['total'], "grade": "", "nm1": 0.0, "nm2": 0.0, "nm3": 0.0, "outros1": 0.0, "outros2": 0.0
+                    "score": calc.get('total', 0.0), "grade": "",
+                    "T1": {"N1": 0.0, "N2": 0.0, "N3": 0.0},
+                    "T2": {"N1": 0.0, "N2": 0.0, "N3": 0.0},
+                    "T3": {"N1": 0.0, "N2": 0.0, "N3": 0.0}
                 }
             
             sub_data = student_json["subjects"].get(sid_str, {})
             manual_score = sub_data.get("score", 0)
             manual_grade = sub_data.get("grade", "")
-            nm1 = sub_data.get("nm1", 0.0)
-            nm2 = sub_data.get("nm2", 0.0)
-            nm3 = sub_data.get("nm3", 0.0)            
-            outros1 = sub_data.get("outros1", 0.0)
-            outros2 = sub_data.get("outros2", 0.0)
 
-        # --- LÓGICA DE FORMAÇÃO DE NOTAS (Engajamento e Qualitativos) ---
+            # Carrega as notas da estrutura aninhada
+            t1_data = sub_data.get("T1", {})
+            t2_data = sub_data.get("T2", {})
+            t3_data = sub_data.get("T3", {})
+
+            # Lógica de retrocompatibilidade: Tenta ler a nova estrutura aninhada.
+            # Se falhar, lê a estrutura antiga (nm1, nm2, etc.) para não perder dados.
+            nm1 = t1_data.get("N1", sub_data.get("nm1", 0.0))
+            nm2 = t1_data.get("N2", sub_data.get("nm2", 0.0))
+            nm3 = t1_data.get("N3", sub_data.get("nm3", 0.0))
+            nm4 = t2_data.get("N1", sub_data.get("nm4", 0.0))
+            nm5 = t2_data.get("N2", sub_data.get("nm5", 0.0))
+            nm6 = t2_data.get("N3", sub_data.get("nm6", 0.0))
+            nm7 = t3_data.get("N1", sub_data.get("nm7", 0.0))
+            nm8 = t3_data.get("N2", sub_data.get("nm8", 0.0))
+            nm9 = t3_data.get("N3", sub_data.get("nm9", 0.0))
+
+        # --- LÓGICA DE FORMAÇÃO DE NOTAS (Simplificada) ---
         system_score = round(float(calc['total']), 2)
-        # Penalidade: se engajamento < 3, o aluno perde a diferença (máximo 3 pontos) em NM1 e NM2
-        engaj_penalty = round(max(0.0, 3.0 - system_score), 2)
-        # Bônus: engajamento adiciona até 3 pontos em NM3
-        engaj_bonus = round(min(3.0, system_score), 2)
-        
+
         # Busca bases de notas (Prioriza Avaliações Específicas > Outros > Manual)
         db_mn1 = asmt_lookup["MN1"].get(username, asmt_lookup["MN1"].get(s['name']))
         db_mn2 = asmt_lookup["MN2"].get(username, asmt_lookup["MN2"].get(s['name']))
@@ -320,56 +350,94 @@ def show_student_scores():
         else:
             qual_manual = round(sum(p.get('points', 0) for p in all_points), 2)
         
-        # Regra NM3: Ou Nota de Avaliação (Base) ou Qualitativo (Engajamento + Extras)
-        f_nm1 = round(min(10.0, max(0.0, base_nm1 - engaj_penalty)), 2)
-        f_nm2 = round(min(10.0, max(0.0, base_nm2 - engaj_penalty)), 2)
+        # Lógica simplificada: As notas são o que foi digitado ou o que veio do banco.
+        f_nm1 = base_nm1
+        f_nm2 = base_nm2
+        f_nm3 = base_nm3
         
-        qual_total = round(min(10.0, engaj_bonus + qual_manual), 2)
-        # Se o aluno tem nota na avaliação NM3, prioriza ela. Senão, usa o qualitativo.
-        f_nm3 = base_nm3 if base_nm3 > 0 else qual_total
-        
-        media = (f_nm1 + f_nm2 + f_nm3) / 3
+        # Lógica de Média por Trimestre
+        t1_notes = [nm1, nm2, nm3]
+        t2_notes = [nm4, nm5, nm6]
+        t3_notes = [nm7, nm8, nm9]
+
+        # Conta apenas notas > 0 para a média, para não penalizar notas não lançadas
+        media_t1 = sum(t1_notes) / len([n for n in t1_notes if n > 0]) if any(n > 0 for n in t1_notes) else 0.0
+        media_t2 = sum(t2_notes) / len([n for n in t2_notes if n > 0]) if any(n > 0 for n in t2_notes) else 0.0
+        media_t3 = sum(t3_notes) / len([n for n in t3_notes if n > 0]) if any(n > 0 for n in t3_notes) else 0.0
+
+        # Média Final Geral
+        all_trim_means = [media_t1, media_t2, media_t3]
+        final_media = sum(all_trim_means) / len([m for m in all_trim_means if m > 0]) if any(m > 0 for m in all_trim_means) else 0.0
 
         table_rows.append({
             "Username": username,
             "Nome": s['name'],
             "🌐 Engaj.": system_score,
-            "NM1": f_nm1,
-            "NM2": f_nm2,
-            "NM3": f_nm3,
-            "Média": round(media, 2),
+            # T1
+            "NM1": t1_notes[0],
+            "NM2": t1_notes[1],
+            "NM3": t1_notes[2],
+            # T2
+            "NM4": t2_notes[0],
+            "NM5": t2_notes[1],
+            "NM6": t2_notes[2],
+            # T3
+            "NM7": t3_notes[0],
+            "NM8": t3_notes[1],
+            "NM9": t3_notes[2],
+            "Média": round(final_media, 2),
             "📝 Final": float(manual_score) if manual_score is not None else 0.0,
             "🎓 Conc.": manual_grade if manual_grade is not None else "",
             "⭐ Qualit.": qual_manual,
-            "➕ Add hoje": 0,
-            "_orig_qual": qual_manual, # Campo oculto para detecção de alteração
-            "_eng_pen": engaj_penalty,  # Auxiliar para o save não duplicar pontos
-            "_eng_bon": engaj_bonus,    # Auxiliar para o save não duplicar pontos
-            "_base_nm3": base_nm3       # Base original para saber se era AV ou Qualitativo
         })
 
     df_scores = pd.DataFrame(table_rows)
 
     # --- EDITOR DE DADOS (PLANILHA) ---
+    selected_trim = st.session_state.get('selected_trimester', "Visão Geral")
+
+    # Define quais colunas de nota devem ser visíveis
+    visible_notes = []
+    if selected_trim == "1º Trimestre":
+        visible_notes = ["NM1", "NM2", "NM3"]
+    elif selected_trim == "2º Trimestre":
+        visible_notes = ["NM4", "NM5", "NM6"]
+    elif selected_trim == "3º Trimestre":
+        visible_notes = ["NM7", "NM8", "NM9"]
+    else: # Visão Geral
+        visible_notes = [f"NM{i}" for i in range(1, 10)]
+
     edited_df = st.data_editor(
         df_scores,
         column_config={
             "Username": None,
-            "_orig_qual": None,
-            "_eng_pen": None,
-            "_eng_bon": None,
-            "_base_nm3": None,
             "Nome": st.column_config.TextColumn("Estudante", width="large", disabled=True),
             "🌐 Engaj.": st.column_config.NumberColumn("Engaj.", help="Score do Sistema (influencia NM1, NM2 e NM3)", disabled=True, format="%.2f"),
-            "NM1": st.column_config.NumberColumn("NM1", help="Base da Avaliação 1", min_value=0.0, max_value=10.0, format="%.2f"),
-            "NM2": st.column_config.NumberColumn("NM2", help="Base da Avaliação 2", min_value=0.0, max_value=10.0, format="%.2f"),
-            "NM3": st.column_config.NumberColumn("NM3", help="Base da Avaliação 3", min_value=0.0, max_value=10.0, format="%.2f"),
+            # T1
+            "NM1": st.column_config.NumberColumn("N1 (T1)", help="Nota 1 do 1º Trimestre", min_value=0.0, max_value=10.0, format="%.2f") if "NM1" in visible_notes else None,
+            "NM2": st.column_config.NumberColumn("N2 (T1)", help="Nota 2 do 1º Trimestre", min_value=0.0, max_value=10.0, format="%.2f") if "NM2" in visible_notes else None,
+            "NM3": st.column_config.NumberColumn("N3 (T1)", help="Nota 3 do 1º Trimestre", min_value=0.0, max_value=10.0, format="%.2f") if "NM3" in visible_notes else None,
+            # T2
+            "NM4": st.column_config.NumberColumn("N1 (T2)", help="Nota 1 do 2º Trimestre", min_value=0.0, max_value=10.0, format="%.2f") if "NM4" in visible_notes else None,
+            "NM5": st.column_config.NumberColumn("N2 (T2)", help="Nota 2 do 2º Trimestre", min_value=0.0, max_value=10.0, format="%.2f") if "NM5" in visible_notes else None,
+            "NM6": st.column_config.NumberColumn("N3 (T2)", help="Nota 3 do 2º Trimestre", min_value=0.0, max_value=10.0, format="%.2f") if "NM6" in visible_notes else None,
+            # T3
+            "NM7": st.column_config.NumberColumn("N1 (T3)", help="Nota 1 do 3º Trimestre", min_value=0.0, max_value=10.0, format="%.2f") if "NM7" in visible_notes else None,
+            "NM8": st.column_config.NumberColumn("N2 (T3)", help="Nota 2 do 3º Trimestre", min_value=0.0, max_value=10.0, format="%.2f") if "NM8" in visible_notes else None,
+            "NM9": st.column_config.NumberColumn("N3 (T3)", help="Nota 3 do 3º Trimestre", min_value=0.0, max_value=10.0, format="%.2f") if "NM9" in visible_notes else None,
+
             "Média": st.column_config.NumberColumn("Média Final", disabled=True, format="%.2f"),
-            "📝 Final": st.column_config.NumberColumn("Nota Final", min_value=0.0, step=0.1, format="%.2f"),
+            "📝 Final": st.column_config.NumberColumn("Nota Final", help="Nota final manual, se necessário", min_value=0.0, step=0.1, format="%.2f"),
             "🎓 Conc.": st.column_config.TextColumn("Conceito", help="Ex: A, B, C..."),
-            "⭐ Qualit.": st.column_config.NumberColumn("Qualitativo", help="Pontos qualitativos acumulados", min_value=0.0, max_value=10.0, format="%.1f"),
-            "➕ Add hoje": st.column_config.NumberColumn("Ponto Extra", min_value=0, max_value=10, step=1)
+            "⭐ Qualit.": st.column_config.NumberColumn("Qualitativo", help="Pontos qualitativos acumulados (não altera a média)", disabled=True, format="%.1f"),
         },
+        column_order=[
+            "Nome", "🌐 Engaj.", 
+            "NM1", "NM2", "NM3", 
+            "NM4", "NM5", "NM6",
+            "NM7", "NM8", "NM9",
+            "Média", "📝 Final", "🎓 Conc.", "⭐ Qualit."
+        ],
         hide_index=True,
         use_container_width=True,
         key=f"ed_scr_{class_id}" # Chave curta para reduzir o tamanho do header/state
@@ -380,61 +448,22 @@ def show_student_scores():
             uname = row['Username']
             s_json = all_scores_data["students_data"][uname]
             
-            # Reverte penalidade de NM1 e NM2
-            res_nm1 = round(row["NM1"] + row["_eng_pen"], 2)
-            res_nm2 = round(row["NM2"] + row["_eng_pen"], 2)
-            
-            # Lógica para NM3: Zerar se houver ponto extra ou se o valor for o calculado automaticamente
-            # Isso evita "resquícios" no JSON e garante que o NM3 reflita sempre Engajamento + Qualitativo
-            current_qual_calc = round(min(10.0, row["⭐ Qualit."] + row["_eng_bon"]), 2)
-            
-            if row["➕ Add hoje"] > 0:
-                res_nm3 = 0.0
-            elif abs(row["NM3"] - current_qual_calc) < 0.01:
-                res_nm3 = 0.0
-            else:
-                res_nm3 = row["NM3"]
-
-            # Salva no JSON
+            # Lógica de salvamento simplificada
             if selected_subject_id is None:
                 s_json["overall_score"] = row["📝 Final"]
                 s_json["overall_grade"] = row["🎓 Conc."]
-                s_json["overall_nm1"] = res_nm1
-                s_json["overall_nm2"] = res_nm2
-                s_json["overall_nm3"] = res_nm3
+                for i in range(1, 10):
+                    s_json[f"overall_nm{i}"] = round(row[f"NM{i}"], 2)
             else:
                 sid_str = str(selected_subject_id)
                 if "subjects" not in s_json: s_json["subjects"] = {}
                 if sid_str not in s_json["subjects"]: s_json["subjects"][sid_str] = {}
                 
-                s_json["subjects"][sid_str]["nm1"] = res_nm1
-                s_json["subjects"][sid_str]["nm2"] = res_nm2
-                s_json["subjects"][sid_str]["nm3"] = res_nm3
                 s_json["subjects"][sid_str]["score"] = row["📝 Final"]
                 s_json["subjects"][sid_str]["grade"] = row["🎓 Conc."]
-
-            # Verifica se o qualitativo foi alterado manualmente no editor
-            diff_qual = row["⭐ Qualit."] - row["_orig_qual"]
-            if abs(diff_qual) > 0.01:
-                entry = {
-                    "date": datetime.now().strftime("%Y-%m-%d"),
-                    "points": round(diff_qual, 1),
-                    "notes": "Ajuste manual via Quadro de Notas"
-                }
-                if selected_subject_id is not None:
-                    entry["subject_id"] = selected_subject_id
-                s_json["daily_qualitative_points"].append(entry)
-
-            # Registra novos pontos qualitativos
-            if row["➕ Add hoje"] > 0:
-                entry = {
-                    "date": datetime.now().strftime("%Y-%m-%d"),
-                    "points": row["➕ Add hoje"],
-                    "notes": f"Lançamento via Quadro de Notas ({selected_subject_name})"
-                }
-                if selected_subject_id is not None:
-                    entry["subject_id"] = selected_subject_id
-                s_json["daily_qualitative_points"].append(entry)
+                s_json["subjects"][sid_str]["T1"] = {"N1": round(row["NM1"], 2), "N2": round(row["NM2"], 2), "N3": round(row["NM3"], 2)}
+                s_json["subjects"][sid_str]["T2"] = {"N1": round(row["NM4"], 2), "N2": round(row["NM5"], 2), "N3": round(row["NM6"], 2)}
+                s_json["subjects"][sid_str]["T3"] = {"N1": round(row["NM7"], 2), "N2": round(row["NM8"], 2), "N3": round(row["NM9"], 2)}
         
         save_json(SCORES_FILE, all_scores_data)
         st.cache_data.clear() # Limpa o cache para mostrar os novos dados após salvar
@@ -443,6 +472,71 @@ def show_student_scores():
 
     st.divider()
 
+    # --- PAINEL INDIVIDUAL DO ALUNO ---
+    st.subheader("👤 Análise Individual e Pontos Qualitativos")
+
+    student_names = edited_df['Nome'].tolist()
+    selected_student_name = st.selectbox(
+        "Selecione um aluno para ver detalhes",
+        ["-- Selecione --"] + student_names,
+        key="student_detail_selector"
+    )
+
+    if selected_student_name != "-- Selecione --":
+        student_row = edited_df[edited_df['Nome'] == selected_student_name].iloc[0]
+        username = student_row['Username']
+        student_json = all_scores_data["students_data"][username]
+
+        st.markdown(f"#### Detalhes de **{selected_student_name}**")
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Média Final (Calculada)", f"{student_row['Média']:.2f}")
+        with col2:
+            st.metric("Score de Engajamento", f"{student_row['🌐 Engaj.']:.2f}")
+        with col3:
+            st.metric("Pontos Qualitativos", f"{student_row['⭐ Qualit.']:.1f}")
+
+        with st.expander("➕ Adicionar Pontos Qualitativos"):
+            with st.form(key=f"form_qual_{username}"):
+                points_to_add = st.number_input("Pontos a adicionar", min_value=0.0, max_value=5.0, step=0.5, value=1.0)
+                reason = st.text_input("Motivo/Atividade", placeholder="Ex: Participação em aula, projeto extra...")
+                submitted = st.form_submit_button("Adicionar Ponto")
+
+                if submitted:
+                    if reason:
+                        entry = {
+                            "date": datetime.now().strftime("%Y-%m-%d"),
+                            "points": points_to_add,
+                            "notes": reason
+                        }
+                        if selected_subject_id is not None:
+                            entry["subject_id"] = selected_subject_id
+                        
+                        student_json.setdefault("daily_qualitative_points", []).append(entry)
+                        save_json(SCORES_FILE, all_scores_data)
+                        st.success(f"{points_to_add} ponto(s) adicionado(s) para {selected_student_name}!")
+                        st.rerun()
+                    else:
+                        st.warning("Por favor, informe o motivo da pontuação.")
+
+        st.markdown("##### 📜 Histórico de Pontos Qualitativos")
+        qual_history = student_json.get("daily_qualitative_points", [])
+        
+        if qual_history:
+            if selected_subject_id:
+                sid_str = str(selected_subject_id)
+                qual_history = [p for p in qual_history if str(p.get('subject_id')) == sid_str]
+
+            if qual_history:
+                df_qual = pd.DataFrame(qual_history).sort_values(by="date", ascending=False)
+                df_qual = df_qual.rename(columns={"date": "Data", "points": "Pontos", "notes": "Motivo"})
+                st.dataframe(df_qual[['Data', 'Pontos', 'Motivo']], hide_index=True, use_container_width=True)
+            else:
+                st.info(f"Nenhum ponto qualitativo registrado para esta disciplina.")
+        else:
+            st.info("Nenhum ponto qualitativo registrado para este aluno.")
+
     # --- EXPORTAÇÃO PARA PNG ---
     with st.expander("📸 Exportar Relatório de Notas"):
         if not MATPLOTLIB_AVAILABLE:
@@ -450,8 +544,7 @@ def show_student_scores():
         else:
             if st.button("🖼️ Gerar Imagem das Notas", use_container_width=True):
                 with st.spinner("Renderizando imagem..."):
-                    # Remove colunas de edição e IDs para a imagem oficial
-                    df_export = edited_df.drop(columns=['Username', '➕ Add hoje'])
+                    df_export = edited_df.drop(columns=['Username'])
                     png_data = create_scores_png(df_export, selected_class_name, selected_subject_name, school_name, prof_name)
                     st.download_button(
                         label="💾 Download Imagem (PNG)",
