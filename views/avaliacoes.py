@@ -600,6 +600,45 @@ def show_student_view():
                             if st.button(label, key=f"start_{assessment['id']}_{attempts}"):
                                 st.session_state.active_assessment = assessment
                                 st.rerun()
+
+                    # Botao para imprimir a prova (disponivel antes de iniciar)
+                    if not is_locked and attempts < 2:
+                        with st.expander("Imprimir Prova (responder no papel)", expanded=False):
+                            school_info = db.get_school()
+                            school_name = school_info['name'] if school_info else "Escola Tecnica"
+                            questions_print = db.get_assessment_questions(assessment['id'])
+
+                            # Busca nome da turma
+                            enrollment = db.get_user_enrollment(username)
+                            class_name = "Turma"
+                            if enrollment:
+                                classes_all = db.get_classes()
+                                for c in classes_all:
+                                    if c['id'] == enrollment['class_id']:
+                                        class_name = c['name']
+                                        break
+
+                            blank_html = generate_blank_printable_view(
+                                school_name,
+                                selected_subject_name,
+                                class_name,
+                                assessment['title'],
+                                questions_print
+                            )
+
+                            col_prev, col_dl = st.columns(2)
+                            with col_prev:
+                                if st.button("Visualizar Prova", key=f"preview_std_{assessment['id']}"):
+                                    components.html(blank_html, height=700, scrolling=True)
+                                    st.stop()
+                            with col_dl:
+                                st.download_button(
+                                    label="Salvar Prova (HTML)",
+                                    data=blank_html.encode('utf-8'),
+                                    file_name=f"prova_{assessment['type']}.html",
+                                    mime="text/html",
+                                    key=f"dl_std_{assessment['id']}"
+                                )
                 else: # attempts >= 2
                     with col2:
                         st.success("✅ Concluído")
