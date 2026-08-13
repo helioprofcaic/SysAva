@@ -1,12 +1,8 @@
 # services/database.py
 from supabase import create_client, Client
 import streamlit as st
-import httpx
 import os
 import re
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 @st.cache_resource
 def init_connection():
@@ -1057,6 +1053,10 @@ def send_email_with_attachment(to_email: str, subject: str, html_content: str, f
     - SMTP_USER: usuario/email remetente
     - SMTP_PASS: senha ou App Password
     """
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
     smtp_host = os.environ.get("SMTP_HOST", "")
     smtp_port = int(os.environ.get("SMTP_PORT", "587"))
     smtp_user = os.environ.get("SMTP_USER", "")
