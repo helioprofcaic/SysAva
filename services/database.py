@@ -4,6 +4,9 @@ import streamlit as st
 import httpx
 import os
 import re
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 @st.cache_resource
 def init_connection():
@@ -1039,5 +1042,50 @@ def import_school_structure(text: str):
                 else: i += 1
             else: i += 1
         return True, "\n".join(logs)
+    except Exception as e:
+        return False, str(e)
+
+
+# --- Funcoes de Email ---
+
+def send_email_with_attachment(to_email: str, subject: str, html_content: str, filename: str = None):
+    """
+    Envia um email com conteudo HTML e opcionalmente um anexo.
+    Requer configuracao SMTP via variaveis de ambiente:
+    - SMTP_HOST: servidor SMTP (ex: smtp.gmail.com)
+    - SMTP_PORT: porta (ex: 587)
+    - SMTP_USER: usuario/email remetente
+    - SMTP_PASS: senha ou App Password
+    """
+    smtp_host = os.environ.get("SMTP_HOST", "")
+    smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+    smtp_user = os.environ.get("SMTP_USER", "")
+    smtp_pass = os.environ.get("SMTP_PASS", "")
+
+    if not all([smtp_host, smtp_user, smtp_pass]):
+        return False, "Configuracao SMTP nao encontrada. Defina SMTP_HOST, SMTP_USER e SMTP_PASS."
+
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = smtp_user
+        msg['To'] = to_email
+        msg['Subject'] = subject
+
+        # Corpo do email em HTML
+        msg.attach(MIMEText(html_content, 'html', 'utf-8'))
+
+        # Anexo (HTML da prova)
+        if filename and html_content:
+            attachment = MIMEText(html_content, 'html', 'utf-8')
+            attachment.add_header('Content-Disposition', f'attachment; filename="{filename}"')
+            msg.attach(attachment)
+
+        # Conexao SMTP
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+
+        return True, None
     except Exception as e:
         return False, str(e)

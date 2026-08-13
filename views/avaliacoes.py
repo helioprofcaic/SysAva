@@ -185,9 +185,77 @@ def generate_blank_printable_view(school_name, subject_name, class_name, assessm
     """
     return html
 
+def generate_assessment_print_html(school_name, subject_name, class_name, assessment_title, questions, assessment_type):
+    """Gera HTML formatado para impressao da prova completa."""
+    date_str = datetime.now().strftime("%d/%m/%Y")
+
+    rows_html = ""
+    for i, q in enumerate(questions):
+        q_text = markdown_to_html(q['question_text'])
+        options_html = ""
+        if q['question_type'] == 'objective':
+            for opt in q.get('options', []):
+                opt_html = markdown_to_html(opt)
+                options_html += f'<p style="margin: 5px 0 5px 20px;">( &nbsp; ) {opt_html}</p>'
+        else:
+            if q.get('options') and "LINK_REQUIRED" in q['options']:
+                options_html += '<p style="margin: 5px 0 5px 20px;">Link para envio: ________________________________________________</p>'
+            options_html += '<div style="border: 1px solid #ddd; height: 100px; margin-top: 10px; padding: 5px;"></div>'
+
+        rows_html += f"""
+        <div style="margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px dotted #ccc;">
+            <p style="margin: 0 0 5px 0;"><strong>{i+1}. {q_text}</strong></p>
+            {options_html}
+        </div>
+        """
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Avaliação - {assessment_title}</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }}
+            .header {{ text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }}
+            .header h1 {{ margin: 0; font-size: 20px; }}
+            .header p {{ margin: 5px 0; color: #666; }}
+            .student-info {{ border: 1px solid #000; padding: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; }}
+            @media print {{
+                .no-print {{ display: none !important; }}
+                body {{ margin: 0; padding: 15mm; }}
+                @page {{ size: A4; margin: 15mm; }}
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="no-print" style="text-align: center; margin-bottom: 15px;">
+            <button onclick="window.print()" style="background-color: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px;">IMPRIMIR / SALVAR PDF</button>
+        </div>
+        <div class="header">
+            <h1>{school_name}</h1>
+            <p><strong>Disciplina:</strong> {subject_name} | <strong>Turma:</strong> {class_name}</p>
+            <p><strong>Avaliação:</strong> {assessment_title} ({assessment_type}) | <strong>Data:</strong> {date_str}</p>
+        </div>
+        <div class="student-info">
+            <span><strong>Aluno(a):</strong> _________________________________________________</span>
+            <span><strong>Nota Final:</strong> _________</span>
+        </div>
+        <p><strong>RA:</strong> ___________________</p>
+        <hr style="margin: 15px 0;">
+        {rows_html}
+        <br>
+        <div style="text-align: center; margin-top: 30px; font-style: italic;">
+            Boa prova!
+        </div>
+    </body>
+    </html>
+    """
+    return html
+
 def show_admin_view():
-    st.subheader("👨‍🏫 Área do Professor - Correção e Notas")
-    
+    st.subheader("Area do Professor - Correcao e Notas")
+
     # 1. Seletores de Contexto
     classes = db.get_classes()
     class_options = {c['name']: c['id'] for c in classes}
@@ -196,59 +264,102 @@ def show_admin_view():
     if selected_class != "-- Selecione --":
         class_id = class_options[selected_class]
         subjects = db.get_subjects_for_class(class_id)
-        # Filtra apenas disciplinas ativas para o seletor do professor
         subjects = [s for s in subjects if s.get('is_active', True)]
-        
+
         subject_options = {s['name']: s['id'] for s in subjects}
-        
+
         selected_subject = st.selectbox("Disciplina", ["-- Selecione --"] + list(subject_options.keys()))
-        
+
         if selected_subject != "-- Selecione --":
             subject_id = subject_options[selected_subject]
 
             # 3. Seletor de Trimestre/Tipo
             trimester_options = {
                 "Todos": "Todos",
-                "1º Trimestre": "T1",
-                "2º Trimestre": "T2",
-                "3º Trimestre": "T3",
-                "Recuperação": "RM",
+                "1 Trimestre": "T1",
+                "2 Trimestre": "T2",
+                "3 Trimestre": "T3",
+                "Recuperacao": "RM",
                 "Outros": "Outros"
             }
             selected_trimester_label = st.selectbox("Trimestre", list(trimester_options.keys()))
             selected_type_prefix = trimester_options[selected_trimester_label]
 
-            # 4. Seletor de Avaliação (filtrado)
+            # 4. Seletor de Avaliacao (filtrado)
             all_assessments = db.get_assessments_by_subject(subject_id)
             if selected_type_prefix == "Todos":
                 filtered_assessments = all_assessments
             elif selected_type_prefix in ["RM", "Outros"]:
                 filtered_assessments = [a for a in all_assessments if a['type'] == selected_type_prefix]
-            else: # T1, T2, T3
+            else:
                 filtered_assessments = [a for a in all_assessments if a['type'] and a['type'].startswith(selected_type_prefix)]
 
             assessment_map = {f"{a['type']} - {a['title']}": a for a in filtered_assessments}
-            selected_assessment_key = st.selectbox("Avaliação", ["-- Selecione --"] + list(assessment_map.keys()))
-            
+            selected_assessment_key = st.selectbox("Avaliacao", ["-- Selecione --"] + list(assessment_map.keys()))
+
             if selected_assessment_key != "-- Selecione --":
                 assessment = assessment_map[selected_assessment_key]
                 st.divider()
 
-                if st.button("🖨️ Imprimir Prova em Branco"):
-                    school_info = db.get_school()
-                    school_name = school_info['name'] if school_info else "Escola Técnica"
-                    questions = db.get_assessment_questions(assessment['id'])
-                    
-                    blank_html = generate_blank_printable_view(
-                        school_name,
-                        selected_subject,
-                        selected_class,
-                        assessment['title'],
-                        questions
+                # ====================================================================
+                # EMISSAO / IMPRESSAO DE PROVAS
+                # ====================================================================
+                st.markdown("#### Emissao / Impressao de Prova")
+
+                col_print, col_save, col_email = st.columns(3)
+
+                # Prepara dados para impressao
+                school_info = db.get_school()
+                school_name = school_info['name'] if school_info else "Escola Tecnica"
+                questions = db.get_assessment_questions(assessment['id'])
+
+                # Gera HTML da prova (com campos para aluno preencher)
+                blank_html = generate_assessment_print_html(
+                    school_name,
+                    selected_subject,
+                    selected_class,
+                    assessment['title'],
+                    questions,
+                    assessment['type']
+                )
+
+                with col_print:
+                    if st.button("Imprimir Prova", width="stretch", key="btn_print_assessment"):
+                        components.html(blank_html, height=600, scrolling=True)
+                        st.stop()
+
+                with col_save:
+                    st.download_button(
+                        label="Salvar PDF",
+                        data=blank_html.encode('utf-8'),
+                        file_name=f"prova_{assessment['type']}_{selected_subject.replace(' ', '_')}.html",
+                        mime="text/html",
+                        width="stretch",
+                        key="btn_save_assessment"
                     )
-                    components.html(blank_html, height=600, scrolling=True)
-                    # Para a execução para não mostrar o resto da página, focando na impressão
+
+                with col_email:
+                    # Campo de email para envio
+                    email_to = st.text_input("Email do destinatario:", placeholder="professor@escola.edu.br", key="email_to_assessment")
+                    if st.button("Enviar por Email", width="stretch", key="btn_email_assessment", disabled=not email_to):
+                        with st.spinner("Enviando email..."):
+                            filename = f"prova_{assessment['type']}_{selected_subject.replace(' ', '_')}.html"
+                            success, err = db.send_email_with_attachment(
+                                to_email=email_to,
+                                subject=f"Prova: {assessment['title']} - {selected_subject}",
+                                html_content=blank_html,
+                                filename=filename
+                            )
+                            if success:
+                                st.success(f"Email enviado com sucesso para {email_to}!")
+                            else:
+                                st.error(f"Erro ao enviar email: {err}")
+
+                if st.button("Visualizar Prova", key="btn_preview_assessment"):
+                    components.html(blank_html, height=700, scrolling=True)
                     st.stop()
+
+                st.divider()
                 
                 # 2. Lista de Submissões
                 submissions = db.get_assessment_submissions_with_users(assessment['id'])
