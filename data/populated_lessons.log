@@ -1,4 +1,4 @@
-2026-08-05 00:11:15.628 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-08-13 06:34:04.024 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
 Iniciando importação de aulas em lote a partir de: D:\Florestan\Apps\SysAva\data\Turmas
 
  Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'Caderno de Atividades - Florestan' -> Semana 'S01'
@@ -79,6 +79,66 @@ Iniciando importação de aulas em lote a partir de: D:\Florestan\Apps\SysAva\da
     ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
 
  Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026A' -> Semana 'S03'
+    ✅ Aula 'Aula 22: Cores, Fontes e Tamanhos no Design Web com CSS' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '📝 Quiz: Teste seu Conhecimento!' criado.
+      -> Processando conteúdo do quiz...
+        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
+        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
+      -> 🔑 Seção de Gabarito encontrada.
+        ✅ Questão 3 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito aplicado: Questão 1 = B (Opção 2)
+          -> Gabarito aplicado: Questão 2 = C (Opção 3)
+          -> Gabarito aplicado: Questão 3 = B (Opção 2)
+      -> Salvando 3 questões no banco...
+        ✅ Questão 1 salva com sucesso.
+        ✅ Questão 2 salva com sucesso.
+        ✅ Questão 3 salva com sucesso.
+    ✅ Aula 'Aula 22: Desenhando Interfaces Incríveis: Cores, Fontes e Tamanhos com CSS' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '📝 Quiz: Teste seu Conhecimento!' criado.
+      -> Processando conteúdo do quiz...
+        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
+        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
+      -> 🔑 Seção de Gabarito encontrada.
+        ✅ Questão 3 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito aplicado: Questão 1 = B (Opção 2)
+          -> Gabarito aplicado: Questão 2 = A (Opção 1)
+          -> Gabarito aplicado: Questão 3 = C (Opção 3)
+      -> Salvando 3 questões no banco...
+        ✅ Questão 1 salva com sucesso.
+        ✅ Questão 2 salva com sucesso.
+        ✅ Questão 3 salva com sucesso.
+    ✅ Aula 'Aula 23: Dominando Seletores CSS e Estilos Fundamentais' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '📝 Quiz: Teste seu Conhecimento!' criado.
+      -> Processando conteúdo do quiz...
+        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
+        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
+      -> 🔑 Seção de Gabarito encontrada.
+        ✅ Questão 3 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito aplicado: Questão 1 = B (Opção 2)
+          -> Gabarito aplicado: Questão 2 = B (Opção 2)
+          -> Gabarito aplicado: Questão 3 = C (Opção 3)
+      -> Salvando 3 questões no banco...
+        ✅ Questão 1 salva com sucesso.
+        ✅ Questão 2 salva com sucesso.
+        ✅ Questão 3 salva com sucesso.
+    ✅ Aula 'Aula 24: Boas Práticas de Nomenclatura: O Código Limpo no Front-End' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '📝 Quiz: Teste seu Conhecimento!' criado.
+      -> Processando conteúdo do quiz...
+        ✅ Questão 1 identificada (aguardando gabarito/salvamento)...
+        ✅ Questão 2 identificada (aguardando gabarito/salvamento)...
+      -> 🔑 Seção de Gabarito encontrada.
+        ✅ Questão 3 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito aplicado: Questão 1 = C (Opção 3)
+          -> Gabarito aplicado: Questão 2 = B (Opção 2)
+          -> Gabarito aplicado: Questão 3 = C (Opção 3)
+      -> Salvando 3 questões no banco...
+        ✅ Questão 1 salva com sucesso.
+        ✅ Questão 2 salva com sucesso.
+        ✅ Questão 3 salva com sucesso.
     ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
 
  Encontrado: Turma '2ª SÉRIE - Turma I-A (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026A' -> Semana 'S04'
@@ -178,12 +238,52 @@ Iniciando importação de aulas em lote a partir de: D:\Florestan\Apps\SysAva\da
     ⏭️  Aula 'Aula 15 multimídia na web inserindo imagens, vídeos e áudios com html' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 16 navegação web e o poder da tag `a`' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Aula 9 a base da web html - estruturando o mundo digital!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 17 navegação interna e otimização de urls no front-end' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 18 construindo a interface do formulário aos dados' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 19 a arte de criar formulários incríveis na web!' já consta no logs.txt. Pulando.
+    ⏭️  Aula 'Aula 20 a arte de desvendar o código usando comentários em html' já consta no logs.txt. Pulando.
     ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
 
  Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026B' -> Semana 'S03'
+    ✅ Aula 'Aula 24 Boas Práticas de Nomenclatura O Código Limpo no Front-End' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '📝 Quiz: 📝 Quiz: Teste seu Conhecimento!' criado.
+      -> Processando conteúdo do quiz...
+        ⏳ Questão 1 identificada (aguardando gabarito/salvamento)...
+        ⏳ Questão 2 identificada (aguardando gabarito/salvamento)...
+      -> 🔑 Seção de Gabarito encontrada.
+        ⏳ Questão 3 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito aplicado: Questão 1 = C (Opção 3)
+          -> Gabarito aplicado: Questão 2 = B (Opção 2)
+          -> Gabarito aplicado: Questão 3 = C (Opção 3)
+      -> Salvando 3 questões no banco...
+        ✅ Questão 1 salva com sucesso.
+        ✅ Questão 2 salva com sucesso.
+        ✅ Questão 3 salva com sucesso.
     ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
 
  Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026B' -> Semana 'S04'
+    ✅ Aula 'Aula 25: a ser inferido' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '📝 Quiz' criado.
+      -> Processando conteúdo do quiz...
+        ⏳ Questão 1 identificada (aguardando gabarito/salvamento)...
+        ⏳ Questão 2 identificada (aguardando gabarito/salvamento)...
+      -> 🔑 Seção de Gabarito encontrada.
+        ⏳ Questão 3 identificada (aguardando gabarito/salvamento)...
+          -> Gabarito aplicado: Questão 1 = C (Opção 3)
+          -> Gabarito aplicado: Questão 2 = B (Opção 2)
+          -> Gabarito aplicado: Questão 3 = B (Opção 2)
+      -> Salvando 3 questões no banco...
+        ✅ Questão 1 salva com sucesso.
+        ✅ Questão 2 salva com sucesso.
+        ✅ Questão 3 salva com sucesso.
+    ✅ Aula 'Aula 26: Introdução ao Box Model no CSS' importada/atualizada.
+      -> 💬 Post de fórum criado.
+      -> 📝 Quiz '📝 Quiz' criado.
+      -> Processando conteúdo do quiz...
+      -> 🔑 Seção de Gabarito encontrada.
+      -> Salvando 0 questões no banco...
     ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
 
  Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026B' -> Semana 'S05'
@@ -192,4 +292,4 @@ Iniciando importação de aulas em lote a partir de: D:\Florestan\Apps\SysAva\da
  Encontrado: Turma '2ª SÉRIE - Turma I-B (Técnico DS)' -> Disciplina 'PROGRAMAÇÃO WEB FRONT-END 2026B' -> Semana 'S06'
     ⏭️  Aula 'Links aulas' já consta no logs.txt. Pulando.
 
-Processo concluído. Total de aulas importadas: 0
+Processo concluído. Total de aulas importadas: 7

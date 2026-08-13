@@ -1,6 +1,129 @@
 # Documentação de Funcionalidades Avançadas
 
-Este documento detalha o funcionamento de recursos avançados do SysAva, como a página de Plugins e a gestão de Treinamentos (disciplinas flutuantes).
+Este documento detalha o funcionamento de recursos avançados do SysAva, como dashboards, gerenciamento de usuários e a página de Plugins.
+
+## 👨‍🎓 Dashboard do Aluno
+
+A home page do aluno exibe suas notas, progresso e atividades recentes.
+
+### Seletor de Disciplina
+- Filtro para visualizar progresso e notas de uma disciplina específica ou "Visão Geral (Todas)".
+
+### Score do Aluno
+- **Pontuação Total:** Soma de pontos de aulas, quizzes e fórum.
+- **Aulas Vistas:** 1 ponto por aula visualizada.
+- **Pontos em Quizzes:** Nota dos quizzes realizados.
+- **Fórum por Aula:** 1 ponto por participação no fórum.
+
+### Notas das Avaliações
+- **Visualização por Disciplina:** Cada disciplina aparece como um expander com título: `"Nome Disciplina — 3/5 avaliadas"`.
+- **Tabela de Notas:**
+  - Tipo da avaliação (T1_N1, T1_N2, etc.)
+  - Título da avaliação
+  - Nota (ou "-" se pendente)
+  - Status (Realizada / Pendente)
+  - Data de submissão
+- **Estatísticas:**
+  - Média das notas
+  - Melhor nota
+  - Pior nota
+- **Alertas:** Aviso quando há avaliações pendentes.
+
+### Histórico de Atividades
+- Lista cronológica de todas as ações realizadas na plataforma.
+
+---
+
+## 📊 Dashboard do Professor/Admin
+
+O dashboard é a primeira tela exibida após o login para professores e administradores. Ele fornece uma visão completa da plataforma.
+
+### Status da Plataforma
+- **Métricas gerais:** Total de usuários, alunos, professores, turmas e disciplinas.
+- **Atualização em tempo real:** Os dados são carregados a cada acesso.
+
+### Conteúdo da Plataforma
+- **Aulas e Quizzes:** Total de aulas, aulas com quiz, aulas sem quiz.
+- **Barra de progresso:** Indicador visual da cobertura de quizzes.
+- **Avaliações:** Total de provas, questões cadastradas, provas sem questões.
+
+### Atividade Recente
+- Últimas 10 ações realizadas por todos os usuários na plataforma.
+
+### Ações Rápidas
+- Atalhos para Gerenciar Avaliações, Conteúdo e Plugins.
+
+### Consulta de Score Individual
+- Busca de notas por turma, disciplina e aluno específico.
+
+### Participação da Turma
+- Gráfico de engajamento por aluno (aulas, quizzes, fórum).
+
+---
+
+## 👥 Gerenciamento de Usuários
+
+A aba "Usuários" no painel administrativo oferece controle completo sobre as contas.
+
+### Funcionalidades
+
+1. **Cadastro de Usuários:**
+   - Formulário para criar novos usuários com nome, login, RA, senha e função.
+
+2. **Filtros:**
+   - Filtrar por função: Todos, Alunos, Professores, Administradores.
+   - Filtrar por turma (quando "Alunos" está selecionado).
+
+3. **Visualização Agrupada (Alunos):**
+   - Quando "Todas as Turmas" está selecionado, os alunos são exibidos **agrupados por turma** em expanders.
+   - Cada turma mostra a quantidade de alunos entre parênteses.
+
+4. **Controle de Contas:**
+   - **Ativar/Desativar:** Botão para desativar contas sem excluí-las. Contas desativadas podem ser reativadas posteriormente.
+   - **Excluir:** Remoção permanente da conta (com confirmação implícita).
+   - **Proteção:** O usuário atual não pode excluir ou desativar a própria conta.
+
+5. **Coluna de Status:**
+   - Indica se a conta está "Ativa" ou "Inativa".
+
+### Migracao do Banco
+
+Para usar a funcionalidade de ativar/desativar, execute no SQL Editor do Supabase:
+
+```sql
+ALTER TABLE public.app_users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+NOTIFY pgrst, 'reload schema';
+```
+
+---
+
+## ⚙️ Configuração de Disciplinas (Carga Horária)
+
+Na aba "Turmas" do painel administrativo, é possível configurar a carga horária de cada disciplina.
+
+### Opções Disponíveis
+
+| Carga Horária | `duration_type` | Aulas/Semana | Uso Recomendado |
+|---------------|-----------------|--------------|-----------------|
+| **40h** | `mensal` | 8 aulas | Disciplinas modulares, optativas |
+| **80h** | `anual` | 10 aulas | Disciplinas obrigatórias, anuais |
+
+### Como Configurar
+
+1. Acesse **Admin > Configurações de Conteúdos > Turmas**.
+2. Selecione a turma desejada.
+3. Na seção "Configuração das Disciplinas":
+   - Use o seletor "Carga Horária" para escolher entre 40h ou 80h.
+   - Ative/desative disciplinas conforme necessário.
+4. Clique em "Salvar Configurações".
+
+### Impacto
+
+- A carga horária afeta o escopo de importação de questões para avaliações.
+- Disciplinas 40h são tratadas como modulares (mensais).
+- Disciplinas 80h são tratadas como anuais.
+
+---
 
 ## 🧩 Página de Plugins
 

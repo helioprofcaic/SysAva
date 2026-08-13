@@ -3,7 +3,7 @@ import os
 import re
 import time
 from services.generate_lessons_gemini import GeradorAulaGemini, DATA_DIR
-from services.ai_generation import generate_content_with_fallback, generate_content_local_lm_studio, configure_api
+from services.ai_generation import generate_content_with_fallback, generate_content_local_openai_compatible, configure_api, generate_content_with_mimo
 from services import database as db
 from services import quiz_parser
 
@@ -54,15 +54,33 @@ def show_page():
         
         ia_source_option = st.radio(
             "Escolha o modelo de IA:",
-            ("Google Gemini (Nuvem)", "Modelo Local (LM Studio)"),
-            help="Use o Gemini para maior qualidade ou um modelo local para privacidade e uso offline (requer LM Studio rodando em localhost:1234)."
+            ("Google Gemini (Nuvem)", "MiMo (Assistente)", "Modelo Local (LM Studio)", "Modelo Local (Llama Serve)", "Modelo Local (Jan)"),
+            help="Use o Gemini para qualidade, MiMo para geração via terminal, ou um modelo local para privacidade."
         )
-        
-        ia_source = "local" if "Modelo Local" in ia_source_option else "gemini"
-        
+
+        ia_source = "gemini" # Default
+        if "MiMo" in ia_source_option:
+            ia_source = "mimo"
+        elif "LM Studio" in ia_source_option:
+            ia_source = "lm-studio"
+        elif "Llama Serve" in ia_source_option:
+            ia_source = "llama-serve"
+        elif "Jan" in ia_source_option:
+            ia_source = "jan"
+
         api_key_gemini = None
+        local_model_port = 1234  # Default
         if ia_source == "gemini":
             api_key_gemini = st.text_input("Chave de API do Google Gemini", type="password", help="Necessária para usar o Gemini.")
+        elif ia_source == "mimo":
+            st.info("💡 O MiMo será chamado via terminal. Executável: `~/.mimocode/bin/mimo.exe`")
+        else:
+            # Adiciona seletor de porta para modelos locais
+            default_port = 8009 if ia_source == "llama-serve" else (1337 if ia_source == "jan" else 1234)
+            local_model_port = st.number_input(
+                "Porta do Servidor Local",
+                min_value=1024, max_value=65535, value=default_port, step=1,
+                help=f"A porta onde seu servidor local ({ia_source_option}) está escutando.")
 
         st.divider()
         st.header("🎨 Estilo e Metodologia")
@@ -183,19 +201,25 @@ def show_page():
             if ia_source == "gemini" and not api_key_gemini:
                 st.error("Por favor, insira sua Chave de API do Google Gemini na barra lateral.")
             else:
-                spinner_text = "Conectando ao modelo local e gerando aula..." if ia_source == "local" else "Analisando contexto e gerando aula com Gemini..."
+                spinner_text = "Analisando contexto e gerando aula com Gemini..."
+                if ia_source == "mimo":
+                    spinner_text = "Gerando aula com MiMo..."
+                elif ia_source == "lm-studio":
+                    spinner_text = "Conectando ao LM Studio e gerando aula..."
+                elif ia_source == "llama-serve":
+                    spinner_text = "Conectando ao Llama Serve e gerando aula..."
+
                 with st.spinner(spinner_text):
                     try:
                         gerador = GeradorAulaGemini()
                         school_name_ui = gerador.obter_nome_escola()
 
                         # Pega o nome do professor logado na sessão (ou usa padrão se offline/não logado)
-                        professor_name_ui = st.session_state.get('usuario', "Professor(a) Assistente")
                         
                         contexto_para_ia = st.session_state.gerador_contexto
 
-                        # Adiciona lógica de truncamento para modelos locais
-                        if ia_source == "local":
+                        # Adiciona lógica de truncamento para modelos locais (não se aplica a Gemini nem MiMo)
+                        if ia_source not in ("gemini", "mimo"):
                             # Modelos locais geralmente têm janelas de contexto menores (ex: 4096 tokens).
                             # O prompt em si consome tokens, então limitamos o contexto para evitar erros.
                             # 1 token ~ 3-4 caracteres. 2500 tokens de contexto ~ 9000 caracteres.
@@ -210,20 +234,24 @@ def show_page():
                             semana=semana,
                             contexto_str=contexto_para_ia,
                             school_name=school_name_ui,
-                            professor_name=professor_name_ui,
+                            professor_name=st.session_state.get('usuario', "Professor(a) Assistente"),
                             numero_aula=numero_aula,
                             persona=ai_persona,
                             metodologia=metodologia,
-                            estrutura=estrutura_aula
+                            estrutura=estrutura_aula,
+                            is_local_model=(ia_source != "gemini")
                         )
                         
                         st.session_state['last_prompt'] = prompt
                         
-                        if ia_source == "local":
-                            response = generate_content_local_lm_studio(prompt)
-                        else: # Gemini
+                        if ia_source == "gemini":
                             configure_api(api_key_gemini)
                             response = generate_content_with_fallback(prompt)
+                        elif ia_source == "mimo":
+                            response = generate_content_with_mimo(prompt)
+                        else: # Modelos locais
+                            server_name = {"lm-studio": "LM Studio", "llama-serve": "Llama Serve", "jan": "Jan"}.get(ia_source)
+                            response = generate_content_local_openai_compatible(prompt, port=local_model_port, server_name=server_name)
                         
                         if response and hasattr(response, 'text'):
                             st.session_state['aula_gerada'] = response.text
@@ -284,8 +312,8 @@ def show_page():
                                 lesson_content, quiz_content = quiz_parser.split_lesson_and_quiz(conteudo_aula)
                                 
                                 # Tenta extrair o Desafio Prático para postar no fórum
-                                # O padrão agora permite emojis, números e outros caracteres entre as # e a palavra 'Desafio'
-                                challenge_pattern = r'(?si)(#+.*?(?:Desafio|Atividade)\s+Prático.*?)(?=\n#+|$)'
+                                # Padrão flexível: captura seções de atividade/desafio/prática
+                                challenge_pattern = r'(?si)(#+.*?(?:Desafio|Atividade|Exemplo)\s+(?:Prático|Prática|de Código).*?)(?=\n#+\s*(?:Quiz|Gabarito|Conclusão|Recursos|Referências)|$)'
                                 challenge_match = re.search(challenge_pattern, lesson_content)
                                 challenge_text = challenge_match.group(1).strip() if challenge_match else ""
                                 
@@ -299,14 +327,23 @@ def show_page():
                                 if lesson_id and challenge_text:
                                     # Prepara a mensagem do fórum enviada pelo EduBot
                                     forum_msg = (
-                                        f"🚀 **NOVO DESAFIO PRÁTICO DETECTADO!**\n\n"
+                                        f"🚀 **DESAFIO PRÁTICO — {lesson_title_clean}**\n\n"
                                         f"{challenge_text}\n\n"
-                                        "--- \n"
-                                        "💡 **Dica do EduBot:** Copie este código e teste em um compilador online como [Replit](https://replit.com) ou [OnlineGDB](https://www.onlinegdb.com), ou use seu **VS Code** local. Poste sua solução ou dúvida abaixo!"
+                                        "---\n\n"
+                                        "### 💡 Como resolver:\n"
+                                        "1. **Copie o código** acima\n"
+                                        "2. **Cole em um IDE** e execute:\n"
+                                        "   - 🖥️ **VS Code** (local)\n"
+                                        "   - 🌐 [Replit](https://replit.com) (online)\n"
+                                        "   - 🌐 [OnlineGDB](https://www.onlinegdb.com) (online)\n"
+                                        "   - 🌐 [Programiz](https://www.programiz.com/python-programming/online-compiler/) (online)\n"
+                                        "3. **Teste e explore** — mude variáveis, adicione funcionalidades\n"
+                                        "4. **Poste sua solução** ou dúvida aqui no fórum!\n\n"
+                                        "🎯 **Bônus:** Quem resolver o desafio e postar a solução ganha pontos extras!"
                                     )
                                     db.add_forum_post("EduBot 🤖", forum_msg, lesson_id=lesson_id)
                                     db.add_user_history("EduBot 🤖", f"Publicou desafio prático na aula: {lesson_title_clean}")
-                                    st.info("🤖 **EduBot:** Desafio prático identificado e postado no Fórum!")
+                                    st.info("🤖 **EduBot:** Desafio prático publicado no Fórum da aula!")
                                 
                                 st.success(f"Aula '{lesson_title_clean}' salva com sucesso no banco de dados!")
                         else:

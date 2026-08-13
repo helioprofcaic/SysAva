@@ -40,17 +40,32 @@ def check_db_structure():
 # --- Funções de Usuário ---
 def get_user(username: str):
     if not is_db_connected(): return None
-    response = supabase.table("app_users").select("username, password, name, role").eq("username", username).execute()
-    return response.data[0] if response.data else None
+    try:
+        response = supabase.table("app_users").select("username, password, name, role, is_active").eq("username", username).execute()
+        return response.data[0] if response.data else None
+    except Exception:
+        # Fallback para bancos sem a coluna is_active
+        response = supabase.table("app_users").select("username, password, name, role").eq("username", username).execute()
+        data = response.data[0] if response.data else None
+        if data:
+            data['is_active'] = True
+        return data
 
 def get_all_users():
     if not is_db_connected(): return []
     try:
         response = supabase.table("app_users").select("*").execute()
         return response.data
-    except Exception as e:
-        print(f"❌ DEBUG: Erro em get_all_users: {e}")
-        return []
+    except Exception:
+        try:
+            # Fallback para bancos sem a coluna is_active
+            response = supabase.table("app_users").select("username, password, name, ra, role").execute()
+            for u in response.data:
+                u['is_active'] = True
+            return response.data
+        except Exception as e:
+            print(f"DEBUG: Erro em get_all_users: {e}")
+            return []
 
 def create_user(username: str, hashed_password: str, name: str, ra: str, role: str = 'student'):
     if not is_db_connected(): return None, "Banco de dados não conectado"
@@ -67,6 +82,15 @@ def delete_user(username: str):
     if not is_db_connected(): return None, "Banco de dados não conectado"
     try:
         response = supabase.table("app_users").delete().eq("username", username).execute()
+        return response.data, None
+    except Exception as e:
+        return None, str(e)
+
+def toggle_user_active(username: str, is_active: bool):
+    """Ativa ou desativa uma conta de usuario."""
+    if not is_db_connected(): return None, "Banco de dados nao conectado"
+    try:
+        response = supabase.table("app_users").update({"is_active": is_active}).eq("username", username).execute()
         return response.data, None
     except Exception as e:
         return None, str(e)
@@ -814,7 +838,37 @@ def get_student_submissions(username: str, assessment_id: int):
         res = supabase.table("student_assessments").select("*").eq("user_username", username).eq("assessment_id", assessment_id).order("submitted_at", desc=True).execute()
         return res.data
     except Exception as e:
-        print(f"Erro ao buscar submissões do aluno: {e}")
+        print(f"Erro ao buscar submissoes do aluno: {e}")
+        return []
+
+def get_student_assessment_results(username: str, subject_ids: list):
+    """Busca todas as avaliacoes e submissoes do aluno para um conjunto de disciplinas."""
+    if not is_db_connected(): return []
+    try:
+        # Busca todas as avaliacoes das disciplinas
+        assessments_res = supabase.table("assessments").select("*").in_("subject_id", subject_ids).order("type").execute()
+        if not assessments_res.data: return []
+
+        # Busca todas as submissoes do aluno
+        submissions_res = supabase.table("student_assessments").select("*").eq("user_username", username).execute()
+        submissions = {s['assessment_id']: s for s in (submissions_res.data or [])}
+
+        # Monta o resultado
+        results = []
+        for a in assessments_res.data:
+            sub = submissions.get(a['id'])
+            results.append({
+                'assessment_id': a['id'],
+                'subject_id': a['subject_id'],
+                'type': a['type'],
+                'title': a.get('title', a['type']),
+                'score': sub.get('score') if sub else None,
+                'status': sub.get('status') if sub else 'pending',
+                'submitted_at': sub.get('submitted_at') if sub else None
+            })
+        return results
+    except Exception as e:
+        print(f"Erro ao buscar resultados: {e}")
         return []
 
 def submit_assessment(username: str, assessment_id: int, answers: list, final_score: float = None):

@@ -259,3 +259,9 @@ ALTER TABLE public.attendance DROP CONSTRAINT IF EXISTS attendance_student_name_
 ALTER TABLE public.attendance ADD CONSTRAINT attendance_unique_v2 UNIQUE (student_name, class_name, subject_id, date);
 
 -- ==
+
+-- 1. Adiciona coluna is_active para controle de contas de usuarios
+ALTER TABLE public.app_users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+
+-- 2. Notifica o PostgREST para recarregar o esquema
+NOTIFY pgrst, 'reload schema';

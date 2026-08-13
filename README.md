@@ -5,22 +5,43 @@ Este é um protótipo de uma Plataforma de Ensino (LMS - Learning Management Sys
 ## ✨ Funcionalidades
 
 -   **Autenticação de Usuários:** Sistema de login e registro com senhas criptografadas e persistência de sessão.
--   **Perfis de Usuário:** Distinção entre `aluno` e `admin` com permissões diferentes.
+-   **Perfis de Usuário:** Distinção entre `aluno`, `professor` e `admin` com permissões diferentes.
 -   **Estrutura Acadêmica:**
     -   **Aulas:** Organizadas por turmas e disciplinas, com conteúdo em vídeo e resumos.
     -   **Fórum:** Espaço para discussões gerais ou por aula específica.
     -   **Quizzes:** Testes rápidos de conhecimento ao final de cada aula.
     -   **Avaliações:** Provas formais (MN1, MN2, MN3, RM) com questões objetivas e subjetivas (com envio de links).
 -   **Sistema de Progressão:** Liberação automática de avaliações (MN1, MN2, MN3) baseada no histórico de atividades do aluno (aulas assistidas, quizzes realizados, etc.).
+-   **Dashboard do Aluno:**
+    -   **Notas das Avaliações:** Visualização completa das notas por disciplina, com status (realizada/pendente) e estatísticas (média, melhor/pior nota).
+    -   **Score Geral:** Pontuação total baseada em aulas, quizzes e participação no fórum.
+    -   **Histórico de Atividades:** Lista cronológica de todas as ações realizadas na plataforma.
+-   **Dashboard do Professor/Admin:**
+    -   **Central de Comando:** Métricas da plataforma em tempo real (usuários, turmas, disciplinas, conteúdo).
+    -   **Conteúdo da Plataforma:** Visão geral de aulas, quizzes e avaliações com indicadores de cobertura.
+    -   **Atividade Recente:** Últimas ações dos usuários na plataforma.
+    -   **Consulta de Score Individual:** Busca detalhada de notas por aluno, turma e disciplina.
+    -   **Participação da Turma:** Gráfico de engajamento por aluno.
 -   **Painel Administrativo Completo:**
     -   **Setup Guiado:** Interface para configuração inicial do banco de dados, criação de tabelas e importação de estrutura escolar sem necessidade de código.
-    -   **Gerenciamento de Usuários:** Cadastro e exclusão de alunos e administradores.
+    -   **Gerenciamento de Usuários:**
+        -   Cadastro, exclusão e ativação/desativação de contas.
+        -   Visualização agrupada por turma para alunos.
+        -   Filtros por função (aluno, professor, administrador) e turma.
+    -   **Gerenciamento de Disciplinas:**
+        -   Configuração de carga horária (40h/80h) por disciplina.
+        -   Ativação/desativação de disciplinas por turma.
+        -   Isolamento de disciplinas (clonagem de matriz).
     -   **Gerenciamento de Aulas:** Criação de aulas vinculadas a turmas e disciplinas.
     -   **Gerador de Aulas com IA:** Integração com Google Gemini para ler cronogramas e gerar conteúdo de aulas, quizzes e planos de ensino automaticamente.
+    -   **Extração Otimizada de PDFs:** Sistema avançado de extração de texto de PDFs com formatação otimizada para modelos de IA.
     -   **Gerenciamento de Quizzes:** Criação de quizzes e questões para cada aula.
     -   **Gerenciamento de Avaliações:** Criação de provas (MN1, etc.), com banco de questões e importação de perguntas dos quizzes.
     -   **Correção de Provas:** Interface para o professor corrigir questões subjetivas, atribuir notas e exportar resultados em CSV.
     -   **Simulador de Aluno:** Ferramenta para popular o histórico de um aluno para testes e zerar seus dados antes do uso real.
+    -   **Auditoria de Questões:** Verificação automática de problemas em questões de quizzes e avaliações.
+    -   **Revisor de Gabaritos:** Interface para revisar e corrigir gabaritos rapidamente.
+-   **Treinamentos:** Disciplinas flutuantes que podem ser vinculadas a múltiplas turmas (ideal para olimpíadas e preparatórios).
 -   **Banco de Dados Persistente:** Utiliza o Supabase para armazenar todas as informações.
 
 ## 🧅 Arquitetura
@@ -48,15 +69,65 @@ SysAva/
 │   ├── quiz.py
 │   └── register.py
 ├── scripts/              # Scripts utilitários
-│   └── seed_data.py      # Script para popular o banco de dados
+│   ├── seed_data.py      # Script para popular o banco de dados
+│   ├── test_pdf_extraction.py  # Testes de extração de PDF
+│   └── demo_pdf_improvements.py # Demonistração das melhorias
 ├── services/             # Camada de Negócios e Dados
 │   ├── __init__.py
 │   ├── auth.py           # Lógica de autenticação (criptografia)
-│   └── database.py       # Acesso centralizado ao banco de dados
+│   ├── database.py       # Acesso centralizado ao banco de dados
+│   ├── pdf_extractor.py  # Extrator otimizado de PDFs para IA
+│   └── contexto_aulas.py # Gerenciamento de contexto para aulas
 ├── .env                  # Credenciais para o script de seeding
 ├── commits.ps1           # Utilitário interativo para Git
 ├── app.py                # Ponto de entrada e roteador principal
 └── requirements.txt      # Dependências do projeto
+```
+
+## 📄 Extração Otimizada de PDFs
+
+O sistema possui um módulo avançado de extração de texto de PDFs, otimizado para uso com modelos de IA:
+
+### Melhorias Implementadas
+
+1. **Extração Precisa**: Utiliza `pdfplumber` para extração precisa de texto, superando as limitações do `pypdf` padrão.
+
+2. **Preservação de Estrutura**: Mantém a hierarquia do documento com cabeçalhos, seções e listas formatados em Markdown.
+
+3. **Detecção de Tabelas**: Identifica e formata tabelas automaticamente, preservando sua estrutura para melhor compreensão pela IA.
+
+4. **Limpeza de Texto**: Remove artefatos de formatação, corrige problemas de encoding e normaliza espaços em branco.
+
+5. **Metadados**: Extrai informações importantes como título, autor, número de páginas e produtor do PDF.
+
+6. **Resumo Estruturado**: Gera um resumo automático do conteúdo, facilitando a navegação para o modelo de IA.
+
+### Uso
+
+```python
+# Extração básica
+from services.pdf_extractor import extract_pdf_text
+
+text = extract_pdf_text("documento.pdf")
+
+# Extração com metadados
+from services.pdf_extractor import PDFExtractor
+
+extractor = PDFExtractor()
+content = extractor.extract_from_file("documento.pdf")
+formatted = extractor.format_for_ai(content)
+```
+
+### Resultados
+
+- **+35% mais conteúdo extraído** em comparação com o método anterior
+- **Tabelas detectadas** e formatadas em Markdown
+- **Texto mais legível** para modelos de IA
+- **Metadados preservados** para melhor contexto
+
+Para testar as melhorias, execute:
+```bash
+python scripts/demo_pdf_improvements.py
 ```
 
 ## 🚀 Como Executar

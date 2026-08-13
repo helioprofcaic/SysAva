@@ -291,8 +291,20 @@ def show_student_view(class_id):
             st.session_state.view_mode = 'list'
             if 'selected_lesson' in st.session_state:
                 del st.session_state.selected_lesson
-        
+
         st.session_state.selected_subject_id = subject_id
+
+        # --- SCORE DO ALUNO NESTA DISCIPLINA ---
+        username = st.session_state.get('username')
+        score = db.get_student_score(username, filter_subject_id=subject_id)
+        with st.container():
+            sc1, sc2, sc3, sc4 = st.columns(4)
+            sc1.metric("🏆 Score", score['total'])
+            sc2.metric("📺 Aulas", score['lesson'])
+            sc3.metric("📝 Quizzes", score['quiz'])
+            sc4.metric("💬 Fórum", score['forum'])
+
+        st.divider()
 
         # --- VISTA DA LISTA DE AULAS ---
         if st.session_state.get('view_mode') == 'list':

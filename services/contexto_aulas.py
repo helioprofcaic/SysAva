@@ -1,7 +1,15 @@
 import os
 import glob
 import re
-from pypdf import PdfReader
+from typing import Optional, List
+
+# Tenta usar o novo extrador otimizado, senão usa pypdf como fallback
+try:
+    from services.pdf_extractor import PDFExtractor, extract_pdf_text
+    HAS_PDF_EXTRACTOR = True
+except ImportError:
+    HAS_PDF_EXTRACTOR = False
+    from pypdf import PdfReader
 
 class GerenciadorContextoAula:
     def __init__(self, base_data_path):
@@ -129,14 +137,22 @@ class GerenciadorContextoAula:
 
         for pdf_file in pdfs_selecionados:
             try:
-                reader = PdfReader(pdf_file)
-                texto_pdf = ""
-                for page in reader.pages:
-                    extracted = page.extract_text()
-                    if extracted:
-                        texto_pdf += extracted + "\n"
+                nome_pdf = os.path.basename(pdf_file)
                 
-                texto_acumulado.append(f"--- Conteúdo do PDF ({os.path.basename(pdf_file)}) ---\n{texto_pdf}\n")
+                if HAS_PDF_EXTRACTOR:
+                    # Usa o novo extrador otimizado para IA
+                    texto_pdf = extract_pdf_text(pdf_file, format_for_ai=True)
+                    texto_acumulado.append(f"--- Conteúdo do PDF ({nome_pdf}) ---\n{texto_pdf}\n")
+                else:
+                    # Fallback para pypdf (extração básica)
+                    reader = PdfReader(pdf_file)
+                    texto_pdf = ""
+                    for page in reader.pages:
+                        extracted = page.extract_text()
+                        if extracted:
+                            texto_pdf += extracted + "\n"
+                    texto_acumulado.append(f"--- Conteúdo do PDF ({nome_pdf}) ---\n{texto_pdf}\n")
+                    
             except Exception as e:
                 texto_acumulado.append(f"Erro ao ler PDF {os.path.basename(pdf_file)}: {e}\n")
 
@@ -169,13 +185,19 @@ class GerenciadorContextoAula:
 
             try:
                 if ext == '.pdf':
-                    reader = PdfReader(arquivo)
-                    texto_pdf = ""
-                    for page in reader.pages:
-                        extracted = page.extract_text()
-                        if extracted:
-                            texto_pdf += extracted + "\n"
-                    texto_acumulado.append(f"--- Conteúdo PDF ({nome_base}) ---\n{texto_pdf}\n")
+                    if HAS_PDF_EXTRACTOR:
+                        # Usa o novo extrador otimizado para IA
+                        texto_pdf = extract_pdf_text(arquivo, format_for_ai=True)
+                        texto_acumulado.append(f"--- Conteúdo PDF ({nome_base}) ---\n{texto_pdf}\n")
+                    else:
+                        # Fallback para pypdf (extração básica)
+                        reader = PdfReader(arquivo)
+                        texto_pdf = ""
+                        for page in reader.pages:
+                            extracted = page.extract_text()
+                            if extracted:
+                                texto_pdf += extracted + "\n"
+                        texto_acumulado.append(f"--- Conteúdo PDF ({nome_base}) ---\n{texto_pdf}\n")
                 
                 elif ext in ['.md', '.txt']:
                     with open(arquivo, 'r', encoding='utf-8') as f:

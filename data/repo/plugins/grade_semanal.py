@@ -195,6 +195,10 @@ def show_grade_semanal():
     st.title("🗓️ Mapa de Grade Semanal")
     grade = load_grade()
 
+    # Inicializa session state para edição
+    if 'editing_grade' not in st.session_state:
+        st.session_state['editing_grade'] = False
+
     # Busca informações para os labels (Escola e Professor)
     school_info = db.get_school()
     school_name = school_info.get('name', 'SysAva') if school_info else "SysAva"
@@ -314,6 +318,52 @@ def show_grade_semanal():
 
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button("📥 Baixar Planilha (CSV)", data=csv, file_name=f"grade_{datetime.now().strftime('%Y%m%d')}.csv", mime="text/csv", use_container_width=True)
+
+        # --- Edição do JSON ---
+        with st.expander("⚙️ Editar Grade (JSON)"):
+            st.caption("Edite a grade diretamente ou faça download do arquivo JSON.")
+
+            col_edit, col_download = st.columns(2)
+
+            with col_download:
+                json_str = json.dumps(grade, indent=4, ensure_ascii=False)
+                st.download_button(
+                    label="📥 Baixar JSON",
+                    data=json_str,
+                    file_name="grade_horaria.json",
+                    mime="application/json",
+                    use_container_width=True
+                )
+
+            with col_edit:
+                if st.button("✏️ Editar JSON", use_container_width=True):
+                    st.session_state['editing_grade'] = True
+
+            if st.session_state.get('editing_grade'):
+                st.info("Edite o JSON abaixo e clique em 'Salvar Alterações'.")
+                json_edit = st.text_area(
+                    "Editar Grade",
+                    value=json.dumps(grade, indent=4, ensure_ascii=False),
+                    height=400,
+                    key="grade_json_editor"
+                )
+
+                col_save, col_cancel = st.columns(2)
+                with col_save:
+                    if st.button("💾 Salvar Alterações", type="primary", use_container_width=True):
+                        try:
+                            new_grade = json.loads(json_edit)
+                            save_grade(new_grade)
+                            st.success("Grade atualizada com sucesso!")
+                            st.session_state['editing_grade'] = False
+                            st.rerun()
+                        except json.JSONDecodeError as e:
+                            st.error(f"Erro no JSON: {e}")
+
+                with col_cancel:
+                    if st.button("❌ Cancelar", use_container_width=True):
+                        st.session_state['editing_grade'] = False
+                        st.rerun()
 
         st.info("💡 Grade unificada. Use o seletor lateral para comparar as turmas.")
 

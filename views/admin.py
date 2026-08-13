@@ -230,13 +230,13 @@ def show_page():
                             st.warning("Preencha todos os campos.")
 
             st.divider()
-            st.subheader("Filtros de Usuários")
+            st.subheader("Filtros de Usuarios")
 
             # --- FILTROS ---
             col_f1, col_f2 = st.columns(2)
 
             role_map_filter = {"Todos": None, "Alunos": "student", "Professores": "teacher", "Administradores": "admin"}
-            selected_role_key = col_f1.selectbox("Filtrar por Função", list(role_map_filter.keys()), key="users_filter_role")
+            selected_role_key = col_f1.selectbox("Filtrar por Funcao", list(role_map_filter.keys()), key="users_filter_role")
 
             selected_class_id = None
             if selected_role_key == "Alunos":
@@ -247,14 +247,12 @@ def show_page():
                 selected_class_name = col_f2.selectbox("Filtrar por Turma", list(class_options.keys()), key="users_filter_class")
                 selected_class_id = class_options[selected_class_name]
 
-            # --- LÓGICA DE BUSCA E EXIBIÇÃO ---
-            st.subheader("Usuários Cadastrados")
+            # --- LOGICA DE BUSCA E EXIBICAO ---
+            st.subheader("Usuarios Cadastrados")
             users = []
             if selected_role_key == "Alunos" and selected_class_id is not None:
-                # Caso específico: Alunos de uma turma
                 users = db.get_students_by_class(selected_class_id)
             else:
-                # Outros casos: buscar todos e filtrar em memória
                 all_users = db.get_all_users()
                 target_role = role_map_filter[selected_role_key]
                 if target_role:
@@ -263,35 +261,178 @@ def show_page():
                     users = all_users
 
             if users:
-                # Cabeçalho da tabela customizada
-                col_h1, col_h2, col_h3, col_h4 = st.columns([0.3, 0.3, 0.2, 0.2])
-                col_h1.markdown("**Nome**")
-                col_h2.markdown("**Usuário**")
-                col_h3.markdown("**Função**")
-                col_h4.markdown("**Ação**")
-                st.divider()
+                role_map = {"student": "Aluno", "teacher": "Professor", "admin": "Administrador"}
 
-                for u in users:
-                    c1, c2, c3, c4 = st.columns([0.3, 0.3, 0.2, 0.2])
-                    c1.write(u['name'])
-                    c2.write(u['username'])
-                    role_map = {"student": "Aluno", "teacher": "Professor", "admin": "Administrador"}
-                    c3.write(role_map.get(u['role'], u['role']))
+                # Verifica se tem is_active (compatibilidade com banco antigo)
+                has_active_field = users[0].get('is_active') is not None if users else False
 
-                    # Impede que o usuário exclua a si mesmo
-                    if u['username'] != st.session_state.get('username'):
-                        if c4.button("🗑️ Excluir", key=f"del_user_{u['username']}"):
-                            _, err = db.delete_user(u['username'])
-                            if err:
-                                st.error(f"Erro: {err}")
-                            else:
-                                st.success(f"Usuário {u['username']} removido.")
-                                st.rerun()
-                    else:
-                        c4.caption("Atual")
+                if selected_role_key == "Alunos" and selected_class_id is None:
+                    # --- VISAO AGRUPADA POR TURMA ---
+                    classes = db.get_classes()
+                    class_map = {c['id']: c['name'] for c in classes}
+
+                    # Agrupa alunos por turma
+                    students_by_class = {}
+                    unassigned = []
+                    for u in users:
+                        enrollment = db.get_user_enrollment(u['username'])
+                        if enrollment and enrollment.get('class_id') in class_map:
+                            cid = enrollment['class_id']
+                            if cid not in students_by_class:
+                                students_by_class[cid] = []
+                            students_by_class[cid].append(u)
+                        else:
+                            unassigned.append(u)
+
+                    # Exibe cada turma como uma secao
+                    for cid, cname in sorted(class_map.items(), key=lambda x: x[1]):
+                        students = students_by_class.get(cid, [])
+                        if not students:
+                            continue
+
+                        with st.expander(f"{cname} ({len(students)} alunos)", expanded=False):
+                            col_h1, col_h2, col_h3, col_h4, col_h5 = st.columns([0.25, 0.2, 0.15, 0.2, 0.2])
+                            col_h1.markdown("**Nome**")
+                            col_h2.markdown("**Usuario**")
+                            col_h3.markdown("**Status**")
+                            col_h4.markdown("**Acao**")
+                            col_h5.markdown("**Excluir**")
+                            st.divider()
+
+                            for u in students:
+                                c1, c2, c3, c4, c5 = st.columns([0.25, 0.2, 0.15, 0.2, 0.2])
+                                c1.write(u['name'])
+                                c2.write(u['username'])
+
+                                # Status (ativo/inativo)
+                                is_active = u.get('is_active', True) if has_active_field else True
+                                if has_active_field:
+                                    c3.caption("Ativo" if is_active else "Inativo")
+                                else:
+                                    c3.caption("-")
+
+                                # Botao Ativar/Desativar
+                                if u['username'] != st.session_state.get('username'):
+                                    if has_active_field:
+                                        if is_active:
+                                            if c4.button("Desativar", key=f"deact_{u['username']}"):
+                                                _, err = db.toggle_user_active(u['username'], False)
+                                                if err:
+                                                    st.error(f"Erro: {err}")
+                                                else:
+                                                    st.success(f"Conta de {u['username']} desativada.")
+                                                    st.rerun()
+                                        else:
+                                            if c4.button("Ativar", key=f"act_{u['username']}", type="primary"):
+                                                _, err = db.toggle_user_active(u['username'], True)
+                                                if err:
+                                                    st.error(f"Erro: {err}")
+                                                else:
+                                                    st.success(f"Conta de {u['username']} ativada.")
+                                                    st.rerun()
+                                    else:
+                                        c4.caption("-")
+
+                                    # Botao Excluir
+                                    if c5.button("Excluir", key=f"del_user_{u['username']}"):
+                                        _, err = db.delete_user(u['username'])
+                                        if err:
+                                            st.error(f"Erro: {err}")
+                                        else:
+                                            st.success(f"Usuario {u['username']} removido.")
+                                            st.rerun()
+                                else:
+                                    c4.caption("Voce")
+                                    c5.caption("-")
+                                st.divider()
+
+                    # Alunos sem turma
+                    if unassigned:
+                        with st.expander(f"Sem Turma ({len(unassigned)})", expanded=False):
+                            col_h1, col_h2, col_h3, col_h4, col_h5 = st.columns([0.25, 0.2, 0.15, 0.2, 0.2])
+                            col_h1.markdown("**Nome**")
+                            col_h2.markdown("**Usuario**")
+                            col_h3.markdown("**Status**")
+                            col_h4.markdown("**Acao**")
+                            col_h5.markdown("**Excluir**")
+                            st.divider()
+
+                            for u in unassigned:
+                                c1, c2, c3, c4, c5 = st.columns([0.25, 0.2, 0.15, 0.2, 0.2])
+                                c1.write(u['name'])
+                                c2.write(u['username'])
+                                is_active = u.get('is_active', True) if has_active_field else True
+                                if has_active_field:
+                                    c3.caption("Ativo" if is_active else "Inativo")
+                                else:
+                                    c3.caption("-")
+
+                                if u['username'] != st.session_state.get('username'):
+                                    if has_active_field:
+                                        if is_active:
+                                            if c4.button("Desativar", key=f"deact_un_{u['username']}"):
+                                                _, err = db.toggle_user_active(u['username'], False)
+                                                if err: st.error(f"Erro: {err}")
+                                                else: st.rerun()
+                                        else:
+                                            if c4.button("Ativar", key=f"act_un_{u['username']}", type="primary"):
+                                                _, err = db.toggle_user_active(u['username'], True)
+                                                if err: st.error(f"Erro: {err}")
+                                                else: st.rerun()
+                                    else:
+                                        c4.caption("-")
+                                    if c5.button("Excluir", key=f"del_un_{u['username']}"):
+                                        _, err = db.delete_user(u['username'])
+                                        if err: st.error(f"Erro: {err}")
+                                        else: st.rerun()
+                                else:
+                                    c4.caption("Voce")
+                                    c5.caption("-")
+                                st.divider()
+
+                else:
+                    # --- VISAO FLAT (Professores, Admins, ou Turma especifica) ---
+                    col_h1, col_h2, col_h3, col_h4, col_h5 = st.columns([0.25, 0.2, 0.15, 0.2, 0.2])
+                    col_h1.markdown("**Nome**")
+                    col_h2.markdown("**Usuario**")
+                    col_h3.markdown("**Funcao**")
+                    col_h4.markdown("**Acao**")
+                    col_h5.markdown("**Excluir**")
                     st.divider()
+
+                    for u in users:
+                        c1, c2, c3, c4, c5 = st.columns([0.25, 0.2, 0.15, 0.2, 0.2])
+                        c1.write(u['name'])
+                        c2.write(u['username'])
+                        c3.write(role_map.get(u['role'], u['role']))
+
+                        is_active = u.get('is_active', True) if has_active_field else True
+
+                        if u['username'] != st.session_state.get('username'):
+                            if has_active_field:
+                                if is_active:
+                                    if c4.button("Desativar", key=f"deact_{u['username']}"):
+                                        _, err = db.toggle_user_active(u['username'], False)
+                                        if err: st.error(f"Erro: {err}")
+                                        else: st.rerun()
+                                else:
+                                    if c4.button("Ativar", key=f"act_{u['username']}", type="primary"):
+                                        _, err = db.toggle_user_active(u['username'], True)
+                                        if err: st.error(f"Erro: {err}")
+                                        else: st.rerun()
+                            else:
+                                c4.caption("-")
+
+                            if c5.button("Excluir", key=f"del_user_{u['username']}"):
+                                _, err = db.delete_user(u['username'])
+                                if err: st.error(f"Erro: {err}")
+                                else: st.rerun()
+                        else:
+                            c4.caption("Voce")
+                            c5.caption("-")
+                        st.divider()
             else:
-                st.info("Nenhum usuário encontrado com os filtros selecionados.")
+                st.info("Nenhum usuario encontrado com os filtros selecionados.")
 
     elif selected_tab == "Aulas":
             st.subheader("Aulas")
@@ -432,52 +573,65 @@ def show_page():
                 if selected_class_name != "-- Selecione --":
                     class_id = class_options[selected_class_name]
                     
-                    # --- PROBLEMA 1: Ativação/Desativação de Disciplinas ---
-                    st.markdown("#### 🔌 Ativar/Desativar Disciplinas (Filtro Visual)")
-                    st.caption("Desative disciplinas que não estão em vigor no momento para diminuir a carga visual nos seletores.")
-                    
+                    # --- Configuracao de Disciplinas (Visibilidade + Carga Horaria) ---
+                    st.markdown("#### Configuracao das Disciplinas")
+                    st.caption("Ative/desative disciplinas e configure a carga horaria (40h ou 80h) para cada uma.")
+
                     subjects_links = []
                     if db.is_db_connected():
-                        # Busca os links diretamente para pegar o status 'is_active'
                         try:
-                            res = db.supabase.table("class_subjects").select("*, subjects(name, duration_type)").eq("class_id", class_id).execute()
+                            res = db.supabase.table("class_subjects").select("*, subjects(name, duration_type, id)").eq("class_id", class_id).execute()
                             subjects_links = res.data if res.data else []
                         except Exception as e:
                             st.error(f"Erro ao buscar disciplinas vinculadas: {e}")
-                    
+
                     if not subjects_links:
                         st.info("Nenhuma disciplina vinculada a esta turma.")
                     else:
-                        # Monta dataframe para edição
                         df_links = []
                         for link in subjects_links:
+                            subj = link.get('subjects') or {}
+                            is_mensal = subj.get('duration_type') == 'mensal'
                             df_links.append({
                                 "id": link['id'],
-                                "Disciplina": link['subjects']['name'] if link.get('subjects') else "N/A",
-                                "Tipo": "Modular" if link.get('subjects') and link['subjects'].get('duration_type') == 'mensal' else "Anual",
+                                "subject_id": subj.get('id'),
+                                "Disciplina": subj.get('name', 'N/A'),
+                                "Carga Horaria": "40h" if is_mensal else "80h",
                                 "Ativo": link.get('is_active', True)
                             })
-                        
+
                         df_links_pd = pd.DataFrame(df_links)
                         edited_links = st.data_editor(
                             df_links_pd,
                             column_config={
                                 "id": None,
+                                "subject_id": None,
                                 "Disciplina": st.column_config.TextColumn(disabled=True),
-                                "Tipo": st.column_config.TextColumn(disabled=True),
-                                "Ativo": st.column_config.CheckboxColumn("Ativo", help="Se desmarcado, a disciplina será ocultada nos seletores desta turma.")
+                                "Carga Horaria": st.column_config.SelectboxColumn(
+                                    "Carga Horaria",
+                                    options=["40h", "80h"],
+                                    help="40h = Modular (8 aulas/semana) | 80h = Anual (10 aulas/semana)"
+                                ),
+                                "Ativo": st.column_config.CheckboxColumn("Ativo", help="Se desmarcado, a disciplina sera ocultada nos seletores desta turma.")
                             },
                             hide_index=True,
                             width="stretch",
                             key=f"editor_links_{class_id}"
                         )
-                        
-                        if st.button("💾 Salvar Status das Disciplinas", width="stretch", key="btn_save_status_turmas"):
+
+                        if st.button("Salvar Configuracoes", width="stretch", key="btn_save_status_turmas"):
                             for idx, row in edited_links.iterrows():
                                 orig = df_links_pd.iloc[idx]
+                                # Atualiza visibilidade
                                 if row['Ativo'] != orig['Ativo']:
                                     db.supabase.table("class_subjects").update({"is_active": row['Ativo']}).eq("id", row['id']).execute()
-                            st.success("Configurações de visibilidade atualizadas!")
+                                # Atualiza carga horaria
+                                if row['Carga Horaria'] != orig['Carga Horaria']:
+                                    new_duration = 'mensal' if row['Carga Horaria'] == '40h' else 'anual'
+                                    subject_id_to_update = int(row['subject_id']) if pd.notna(row['subject_id']) else None
+                                    if subject_id_to_update:
+                                        db.supabase.table("subjects").update({"duration_type": new_duration}).eq("id", subject_id_to_update).execute()
+                            st.success("Configuracoes atualizadas!")
                             st.rerun()
 
                     st.divider()

@@ -16,14 +16,20 @@ O `app.py` funciona como o "bootloader" e roteador principal do sistema.
 - **Responsabilidade:** Controlar toda a interface do usuário (UI).
 - **Descrição:** Cada arquivo `.py` nesta pasta representa uma página da aplicação (ex: `aulas.py`, `admin.py`). Eles são responsáveis por desenhar os componentes visuais (botões, tabelas, formulários) e chamar a camada de serviços para executar ações. **Esta camada não deve conter lógica de acesso direto ao banco de dados.**
 - **Páginas Notáveis:**
-  - `admin.py`: Contém a lógica para as abas de gerenciamento de usuários, aulas, avaliações, e o poderoso **Gerador de Aulas com IA**.
+  - `home.py`: Dashboard do aluno (notas, score, histórico) e do professor/admin (métricas da plataforma, participação).
+  - `admin.py`: Contém a lógica para as abas de gerenciamento de usuários, aulas, avaliações, turmas (com configuração de carga horária), e o poderoso **Gerador de Aulas com IA**.
+  - `aulas.py`: Exibição de aulas para alunos com filtros por disciplina e score.
   - `plugins.py`: Página especial que serve como um hub para funcionalidades extras, divididas em plugins nativos e externos.
 
 ## 3. Camada de Serviços (Lógica de Negócios) - `services/`
 
 - **Responsabilidade:** Orquestrar a lógica de negócios e atuar como intermediária entre a UI e os dados.
 - **Descrição:**
-  - `database.py`: **Camada de Acesso a Dados (DAL)**. Este é o único arquivo que pode se comunicar com o Supabase. Ele abstrai todas as queries SQL em funções Python claras (ex: `get_user()`, `create_lesson()`). Se o banco de dados fosse trocado, apenas este arquivo precisaria ser modificado.
+  - `database.py`: **Camada de Acesso a Dados (DAL)**. Este é o único arquivo que pode se comunicar com o Supabase. Ele abstrai todas as queries SQL em funções Python claras. Se o banco de dados fosse trocado, apenas este arquivo precisaria ser modificado. Funções notáveis incluem:
+    - `get_user()`, `get_all_users()`: Busca de usuários com suporte a `is_active`.
+    - `toggle_user_active()`: Ativação/desativação de contas.
+    - `get_student_assessment_results()`: Busca de notas de avaliações por disciplina.
+    - `get_student_score()`: Cálculo de score do aluno.
   - `auth.py`: Contém a lógica de autenticação, como criptografar e verificar senhas.
   - `ai_generation.py`: Gerencia a interação com a API do Google Gemini, construindo os prompts para geração de aulas e análise de cronogramas.
   - `quiz_parser.py`: Contém a lógica para analisar o conteúdo Markdown de um quiz e extrair perguntas, opções e gabarito.

@@ -138,7 +138,7 @@ class GeradorAulaGemini:
             )
         return contexto_str
 
-    def gerar_prompt_aula(self, turma, disciplina, semana, contexto_str: str, school_name: str = "Escola Técnica Estadual", professor_name: str = "Professor(a) Assistente", numero_aula: int = None, titulo_personalizado: str = None, persona: str = None, metodologia: str = None, estrutura: str = None):
+    def gerar_prompt_aula(self, turma, disciplina, semana, contexto_str: str, school_name: str = "Escola Técnica Estadual", professor_name: str = "Professor(a) Assistente", numero_aula: int = None, titulo_personalizado: str = None, persona: str = None, metodologia: str = None, estrutura: str = None, is_local_model: bool = False):
         """
         Gera o prompt final para o LLM a partir de um contexto já fornecido,
         usando o template estruturado que gera um plano de aula completo com quiz.
@@ -175,82 +175,111 @@ class GeradorAulaGemini:
                 "Use uma didática muito simples, focada em conceitos básicos e analogias lúdicas."
             )
 
+        # 4.1 Geração de Prompt Simplificado para Modelos Locais (OTIMIZADO)
+        if is_local_model:
+            titulo = titulo_personalizado if titulo_personalizado else 'a ser inferido'
+
+            # Trunca contexto — modelos locais têm janela limitada
+            max_context_chars = 3000
+            if len(contexto_str) > max_context_chars:
+                contexto_str = contexto_str[:max_context_chars] + "\n[CONTEÚDO TRUNCADO]"
+
+            # Prompt compacto — quebras de linha mínimas para não desperdiçar tokens
+            prompt = (
+                f'Crie um plano de aula Markdown sobre "{titulo}".\n\n'
+                f'CABEÇALHO (use EXATAMENTE este formato, sem alterar):\n'
+                f'**📚 Disciplina:** {disciplina}\n'
+                f'**🎓 Turma:** {turma}\n'
+                f'**🏫 Escola:** {school_name}\n'
+                f'**👨‍🏫 Professor:** {professor_name}\n\n'
+                f'CONTEÚDO BASE:\n{contexto_str}\n\n'
+                f'Estrutura obrigatória:\n'
+                f'# Aula {numero_aula}: {titulo}\n'
+                f'## 🎯 Objetivos (3 itens)\n'
+                f'## 💡 Conteúdo Teórico (explicação didática)\n'
+                f'## 🛠️ Atividade Prática\n'
+                f'(Crie um EXERCÍCIO DE CÓDIGO para o aluno copiar e testar no VS Code ou IDE online. '
+                f'Inclua: 1) Objetivo do exercício, 2) Código completo e funcional, 3) Instruções de como rodar. '
+                f'Use blocos de código ```python ``` ou ```html ``` conforme a disciplina.)\n'
+                f'## 📝 Quiz (3 perguntas múltipla escolha com [x])\n'
+                f'### ✅ Gabarito'
+            )
+            return prompt
+
+
         # 4. Montagem do Prompt
-        prompt = f"""
+        prompt = f"""# MISSÃO
+Sua missão é criar um plano de aula completo em formato Markdown.
+
+# PERSONA
 {persona if persona else f"Atue como um Professor Assistente de {disciplina}, especialista em criação de materiais didáticos para o {nivel_pedagogico}."}
-Público-Alvo: {nivel_pedagogico} de escola pública ({turma}).
-{instrucao_nivel}
-Metodologia: {metodologia if metodologia else "Aula Expositiva Dialogada"}.
-Use uma linguagem acessível, motivadora, com muitas analogias do cotidiano e cultura pop.
 
-Crie o conteúdo de uma aula em formato Markdown seguindo ESTRITAMENTE o modelo abaixo.
-Estrutura obrigatória a ser seguida: {estrutura if estrutura else "Conforme modelo abaixo"}
+# DIRETRIZES GERAIS
+- **Público-Alvo:** {nivel_pedagogico} de escola pública ({turma}).
+- **Adaptação Pedagógica:** {instrucao_nivel}
+- **Metodologia:** {metodologia if metodologia else "Aula Expositiva Dialogada"}.
+- **Linguagem:** Use uma linguagem acessível, motivadora, com analogias do cotidiano e cultura pop.
+- **Estilo Visual:** Use Emojis para estruturar e ilustrações via `!descrição` para conceitos complexos.
 
-DADOS DA AULA:
-- Semana: {semana}
-- Número da Aula: {numero_aula}
-- Tema: {topic_instruction}
-- Turma: {turma}
-- Disciplina: {disciplina}
-
+# DADOS DE ENTRADA (OBRIGATÓRIOS)
+- **Escola:** {school_name}
+- **Professor:** {professor_name}
+- **Turma:** {turma}
+- **Disciplina:** {disciplina}
+- **Semana:** {semana}
+- **Aula Nº:** {numero_aula}
+- **Tema da Aula:** {topic_instruction}
 {texto_curriculo}
 
-CONTEÚDO BASE (Material de apoio obrigatório):
+# MATERIAL DE APOIO (CONTEÚDO BASE)
+Use o texto abaixo como fonte principal e obrigatória para o conteúdo da aula.
 ---
 {contexto_str}
 ---
 
-DIRETRIZES DE ESTILO E RIQUEZA VISUAL:
-1. Emojis: Use abundantemente para tornar a leitura amigável.
-2. Formatação: Use negrito para termos chave, tabelas se houver comparações, e blocos de código formatados.
-3. ILUSTRAÇÕES: Sempre que um conceito for complexo, inclua uma imagem usando o formato: `![Descrição Detalhada](https://source.unsplash.com/1600x900/?keyword)`. Escolha keywords em inglês que façam sentido com o tema (ex: 'robot', 'code', 'nature').
-4. LINKS REAIS (EXTRAÇÃO OBRIGATÓRIA): O CONTEÚDO BASE abaixo contém links e referências reais (YouTube, sites, etc). Sua missão é LOCALIZAR esses links no texto e copiá-los EXATAMENTE como estão para a seção de Recursos. Se você for um modelo local (sem internet), NÃO INVENTE URLs; use apenas as que encontrar no material de apoio. Se não houver links no material, sugira "Termos de Busca" precisos para o YouTube.
+# ESTRUTURA DE SAÍDA (SIGA ESTRITAMENTE ESTA ORDEM E FORMATAÇÃO)
+A estrutura da aula DEVE seguir a ordem definida em `{estrutura if estrutura else "1. Título; 2. Objetivos; 3. Introdução; 4. Conteúdo Teórico; 5. Exemplo Prático; 6. Desafio Prático (Script); 7. Conclusão; 8. Quiz."}`.
+O resultado final deve ser um único arquivo Markdown.
 
-Modelo de Saída (Siga este formato):
-# Aula {numero_aula}: {titulo_personalizado if titulo_personalizado else "[TEMA INFERIDO]"}
+--- INÍCIO DO TEMPLATE DE SAÍDA ---
+# Aula {numero_aula}: {titulo_personalizado if titulo_personalizado else "[TEMA INFERIDO A PARTIR DO CONTEÚDO BASE]"}
 
+**📚 Disciplina:** {disciplina}
+**🎓 Turma:** {turma}
 **🏫 Escola:** {school_name}
 **👨‍🏫 Professor:** {professor_name}
-**🎓 Turma:** {turma}
-**📚 Componente:** {disciplina}
-
----
-
-## 📑 Sumário
-1. 🏁 Introdução
-2. 🎯 Objetivos
-3. 💡 Conteúdo (com ilustrações)
-4. 📖 Glossário
-5. 🛠️ Atividade Prática
-6. 🧰 Recursos e Links Reais (Copiados do contexto)
-7. 📝 Quiz
 
 ---
 
 ## 🎯 Objetivos de Aprendizagem
-(Liste 3 objetivos claros e mensuráveis)
+*Liste 3 objetivos claros e mensuráveis, alinhados com a Referência Curricular, se disponível.*
 
-## 💡 Conteúdo
-(Explicação didática. Insira pelo menos 2 ilustrações usando o padrão Unsplash mencionado acima para quebrar o texto e facilitar o entendimento.)
+## 🏁 Introdução
+*Faça uma introdução cativante sobre o tema, conectando com o universo dos alunos.*
 
-## 📖 Glossário
-(Definição de termos chave.)
+##  Conteúdo Teórico
+*Desenvolva o conteúdo principal de forma didática, extraindo e explicando os conceitos do MATERIAL DE APOIO. Insira ilustrações onde for pertinente.*
 
-## 🛠️ Atividade Prática
-(Um desafio prático ou exercício de reflexão baseado no conteúdo.)
+## 🛠️ Exemplo Prático / Atividade
+*Crie um EXERCÍCIO DE CÓDIGO para o aluno copiar e testar. Obrigatoriamente inclua:*
+*1. Objetivo do exercício (o que o aluno vai praticar)*
+*2. Código completo e funcional em blocos ```python ``` ou ```html ```*
+*3. Instruções de como rodar (VS Code, Replit, OnlineGDB)*
+*O código deve ser FUNCIONAL e prontinho para copiar e colar.*
+
+## 🏁 Conclusão
+*Faça um resumo dos pontos principais e reforce a importância do aprendizado.*
+
+## 🧰 Recursos e Links
+*EXTRAÇÃO OBRIGATÓRIA: Localize e liste aqui todos os links (YouTube, artigos, etc.) encontrados no MATERIAL DE APOIO. Se não houver links, sugira termos de busca para pesquisa.*
 
 ---
 
-## 🧰 Recursos e Links Reais
-(Liste ferramentas, softwares e principalmente LINKS DE VÍDEOS OU ARTIGOS encontrados no CONTEÚDO BASE. Se não encontrar links reais, sugira termos de busca específicos para o YouTube.)
+## 📝 Quiz: Teste seu Conhecimento!
+*Crie 3 perguntas de múltipla escolha com 4 alternativas cada. Marque a resposta correta com `[x]` e as incorretas com `[ ]`.*
 
----
-
-## 📝 Quiz: {titulo_personalizado if titulo_personalizado else "[TEMA]"}
-
-(Crie 3 perguntas de múltipla escolha com 4 alternativas cada. Marque a resposta correta com um [x] e as incorretas com [ ].)
----
 ### ✅ Gabarito
-(Liste o gabarito de forma simples. Ex: 1. C, 2. A, 3. B)
+*Liste o gabarito de forma simples. Ex: 1. C, 2. A, 3. B*
+--- FIM DO TEMPLATE DE SAÍDA ---
 """
         return prompt
