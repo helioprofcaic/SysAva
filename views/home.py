@@ -182,19 +182,18 @@ def show_teacher_dashboard():
         st.markdown("**Aulas e Quizzes**")
         total_lessons = len(all_lessons)
 
-        # Conta quizzes associados a aulas
         lessons_with_quiz = 0
         for lesson in all_lessons:
             quiz = db.get_quiz_for_lesson(lesson['id'])
             if quiz:
                 lessons_with_quiz += 1
 
-        lessons_without_quiz = total_lessons - lessons_without_quiz if total_lessons > 0 else 0
+        lessons_without_quiz = total_lessons - lessons_with_quiz
 
         c_a, c_b, c_c = st.columns(3)
         c_a.metric("Aulas", total_lessons)
         c_b.metric("Com Quiz", lessons_with_quiz)
-        c_c.metric("Sem Quiz", total_lessons - lessons_with_quiz)
+        c_c.metric("Sem Quiz", lessons_without_quiz)
 
         if total_lessons > 0 and lessons_with_quiz < total_lessons:
             pct = lessons_with_quiz / total_lessons
