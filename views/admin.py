@@ -1026,17 +1026,21 @@ def show_page():
                                         st.rerun()
 
     elif selected_tab == "Auditoria":
-            st.subheader("🔍 Auditoria de Questões de Quizzes")
-            st.markdown("Esta ferramenta analisa todas as questões de quizzes em busca de problemas comuns, como opções duplicadas ou caracteres inválidos, e permite a correção.")
+            st.subheader("Auditoria de Conteudo")
+            st.markdown("Analise problemas em questoes, avaliacoes e identifique aulas sem quiz.")
+
+            audit_mode = st.radio(
+                "Modo de Auditoria",
+                ["Questoes de Quizzes", "Questoes de Avaliacoes", "Aulas sem Quiz"],
+                horizontal=True,
+                key="audit_mode_radio"
+            )
 
             # Filtros de Contexto
-            audit_type_label = st.radio("Alvo da Auditoria", ["Banco Mestre (Quizzes)", "Provas Geradas (Avaliações)"], horizontal=True, key="audit_type_radio")
-            audit_type = 'quiz' if 'Quizzes' in audit_type_label else 'assessment'
-
             classes = db.get_classes()
             class_options_aud = {c['name']: c['id'] for c in classes} if classes else {}
             selected_class_name_aud = st.selectbox("Selecione a Turma (Opcional)", options=["-- Todas as Turmas --"] + list(class_options_aud.keys()), key="sel_class_aud")
-            
+
             subject_id_aud = None
             if selected_class_name_aud != "-- Todas as Turmas --":
                 class_id_aud = int(class_options_aud[selected_class_name_aud])
@@ -1049,8 +1053,81 @@ def show_page():
             if 'audit_results' not in st.session_state:
                 st.session_state.audit_results = None
 
-            if st.button("🚀 Iniciar Análise de Questões", key="audit_start_btn"):
-                with st.spinner("Analisando o banco de questões... Isso pode levar um momento."):
+            # ====================================================================
+            # MODO: AULAS SEM QUIZ
+            # ====================================================================
+            if audit_mode == "Aulas sem Quiz":
+                if st.button("Buscar Aulas sem Quiz", key="audit_no_quiz_btn"):
+                    with st.spinner("Analisando aulas..."):
+                        # Busca disciplinas para analise
+                        if subject_id_aud:
+                            subjects_to_check = [{'id': subject_id_aud, 'name': selected_subject_name_aud}]
+                        else:
+                            all_subjects = db.get_subjects()
+                            subjects_to_check = [s for s in all_subjects if s.get('type') != 'training']
+
+                        lessons_without_quiz = []
+                        total_lessons_checked = 0
+
+                        for subj in subjects_to_check:
+                            lessons = db.get_lessons_for_subject(subj['id'])
+                            for lesson in lessons:
+                                total_lessons_checked += 1
+                                quiz = db.get_quiz_for_lesson(lesson['id'])
+                                if not quiz:
+                                    # Busca nome da turma
+                                    class_name = "N/A"
+                                    linked_classes = db.get_classes_for_subject(subj['id'])
+                                    if linked_classes:
+                                        all_classes = db.get_classes()
+                                        for c in all_classes:
+                                            if c['id'] in linked_classes:
+                                                class_name = c['name']
+                                                break
+
+                                    lessons_without_quiz.append({
+                                        'Disciplina': subj['name'],
+                                        'Turma': class_name,
+                                        'Aula': lesson['title'],
+                                        'ID': lesson['id']
+                                    })
+
+                        st.session_state.audit_results = {
+                            'mode': 'no_quiz',
+                            'lessons_without_quiz': lessons_without_quiz,
+                            'total_checked': total_lessons_checked
+                        }
+                        st.rerun()
+
+                if st.session_state.audit_results and st.session_state.audit_results.get('mode') == 'no_quiz':
+                    st.divider()
+                    results = st.session_state.audit_results
+                    lessons_no_quiz = results['lessons_without_quiz']
+                    total = results['total_checked']
+
+                    if not lessons_no_quiz:
+                        st.success(f"Todas as {total} aulas analisadas possuem quiz!")
+                    else:
+                        st.warning(f"{len(lessons_no_quiz)} aula(s) de {total} sem quiz ({len(lessons_no_quiz)/total*100:.0f}%)")
+
+                        # Salva como session_state para uso posterior
+                        st.session_state.lessons_no_quiz_df = lessons_no_quiz
+
+                        df_no_quiz = pd.DataFrame(lessons_no_quiz)
+                        st.dataframe(df_no_quiz[['Disciplina', 'Turma', 'Aula']], hide_index=True, width="stretch")
+
+                        csv = df_no_quiz.to_csv(index=False).encode('utf-8')
+                        st.download_button("Exportar Lista (CSV)", data=csv, file_name="aulas_sem_quiz.csv", mime="text/csv")
+
+                st.stop()
+
+            # ====================================================================
+            # MODO: QUESTOES DE QUIZZES / AVALIACOES
+            # ====================================================================
+            audit_type = 'quiz' if 'Quizzes' in audit_mode else 'assessment'
+
+            if st.button("Iniciar Analise de Questoes", key="audit_start_btn"):
+                with st.spinner("Analisando o banco de questoes..."):
                     if audit_type == 'quiz':
                         if subject_id_aud:
                             all_questions = db.get_all_quiz_questions_for_subject(subject_id_aud, assessment_type=None)
@@ -1073,7 +1150,7 @@ def show_page():
 
                     issues = []
                     evaluated_count = len(all_questions) if all_questions else 0
-                    
+
                     for q in all_questions:
                         q_issues = []
                         # 1. Verifica opções duplicadas
@@ -1134,65 +1211,69 @@ def show_page():
                     st.rerun()
 
             if st.session_state.audit_results is not None:
-                st.divider()
                 res_dict = st.session_state.audit_results
-                
-                # Suporte para cache antigo ou o novo formato
-                if isinstance(res_dict, list):
-                    results = res_dict
-                    evaluated = len(results)
-                    context_map = {}
-                    saved_audit_type = 'quiz'
+
+                # Pula exibicao se ja for modo no_quiz (tratado acima)
+                if res_dict.get('mode') == 'no_quiz':
+                    pass
                 else:
-                    results = res_dict.get("issues", [])
-                    evaluated = res_dict.get("evaluated_count", 0)
-                    context_map = res_dict.get("quiz_map", {})
-                    saved_audit_type = res_dict.get("audit_type", "quiz")
+                    st.divider()
 
-                st.markdown(f"### 🚨 Análise Concluída: {len(results)} problemas encontrados em {evaluated} questões avaliadas.")
+                    # Suporte para cache antigo ou o novo formato
+                    if isinstance(res_dict, list):
+                        results = res_dict
+                        evaluated = len(results)
+                        context_map = {}
+                        saved_audit_type = 'quiz'
+                    else:
+                        results = res_dict.get("issues", [])
+                        evaluated = res_dict.get("evaluated_count", 0)
+                        context_map = res_dict.get("quiz_map", {})
+                        saved_audit_type = res_dict.get("audit_type", "quiz")
 
-                if not results:
-                    st.success("Nenhum problema óbvio encontrado nas questões selecionadas!")
-                else:
-                    prefix = "Quiz:" if saved_audit_type == "quiz" else "Avaliação:"
-                    foreign_id_key = "quiz_id" if saved_audit_type == "quiz" else "assessment_id"
-                    
-                    for item in results:
-                        q = item['question']
-                        context_name = context_map.get(q.get(foreign_id_key), f"ID {q.get(foreign_id_key)}")
-                        with st.expander(f"[{prefix} {context_name}] Questão {q['id']}: {q.get('question_text', '')[:80]}"):
-                            st.error("Problemas Identificados:")
-                            for prob in item['problems']:
-                                st.write(f"- {prob}")
+                    st.markdown(f"### Analise Concluida: {len(results)} problemas encontrados em {evaluated} questoes avaliadas.")
 
-                            curr_opts = q.get('options', [])
-                            st.markdown("**Opções Atuais:**")
-                            st.json(curr_opts)
+                    if not results:
+                        st.success("Nenhum problema encontrado nas questoes selecionadas!")
+                    else:
+                        prefix = "Quiz:" if saved_audit_type == "quiz" else "Avaliacao:"
+                        foreign_id_key = "quiz_id" if saved_audit_type == "quiz" else "assessment_id"
 
-                            if curr_opts and isinstance(curr_opts, list):
-                                st.markdown("---")
-                                st.markdown("**Sugerir Correção:**")
+                        for item in results:
+                            q = item['question']
+                            context_name = context_map.get(q.get(foreign_id_key), f"ID {q.get(foreign_id_key)}")
+                            with st.expander(f"[{prefix} {context_name}] Questao {q['id']}: {q.get('question_text', '')[:80]}"):
+                                st.error("Problemas Identificados:")
+                                for prob in item['problems']:
+                                    st.write(f"- {prob}")
 
-                                # Sugestão de limpeza
-                                cleaned_options = [re.sub(r'\s*\[x\]|\s*\(x\)', '', opt).strip() for opt in curr_opts]
-                                unique_cleaned_options = list(dict.fromkeys(cleaned_options)) # Remove duplicadas mantendo a ordem
+                                curr_opts = q.get('options', [])
+                                st.markdown("**Opcoes Atuais:**")
+                                st.json(curr_opts)
 
-                                st.info("A sugestão abaixo remove caracteres como '[x]' e opções duplicadas. Verifique se a opção correta permanece válida.")
+                                if curr_opts and isinstance(curr_opts, list):
+                                    st.markdown("---")
+                                    st.markdown("**Sugerir Correcao:**")
 
-                                new_options_str = st.text_area("Opções Corrigidas (separadas por vírgula)", 
-                                                               value=", ".join(unique_cleaned_options),
-                                                               key=f"audit_new_opts_{saved_audit_type}_{q['id']}")
+                                    cleaned_options = [re.sub(r'\s*\[x\]|\s*\(x\)', '', opt).strip() for opt in curr_opts]
+                                    unique_cleaned_options = list(dict.fromkeys(cleaned_options))
 
-                                if st.button("💾 Salvar Correção", key=f"audit_save_btn_{saved_audit_type}_{q['id']}"):
-                                    final_options = [opt.strip() for opt in new_options_str.split(',') if opt.strip()]
-                                    
-                                    if saved_audit_type == 'quiz':
-                                        _, err = db.update_quiz_question_options(q['id'], final_options)
-                                    else:
-                                        _, err = db.update_assessment_question_options(q['id'], final_options)
-                                        
-                                    if err: st.error(f"Erro ao salvar: {err}")
-                                    else: st.success("Opções da questão atualizadas! Re-analise para confirmar.")
+                                    st.info("A sugestao abaixo remove caracteres como '[x]' e opcoes duplicadas. Verifique se a opcao correta permanece valida.")
+
+                                    new_options_str = st.text_area("Opcoes Corrigidas (separadas por virgula)",
+                                                                   value=", ".join(unique_cleaned_options),
+                                                                   key=f"audit_new_opts_{saved_audit_type}_{q['id']}")
+
+                                    if st.button("Salvar Correcao", key=f"audit_save_btn_{saved_audit_type}_{q['id']}"):
+                                        final_options = [opt.strip() for opt in new_options_str.split(',') if opt.strip()]
+
+                                        if saved_audit_type == 'quiz':
+                                            _, err = db.update_quiz_question_options(q['id'], final_options)
+                                        else:
+                                            _, err = db.update_assessment_question_options(q['id'], final_options)
+
+                                        if err: st.error(f"Erro ao salvar: {err}")
+                                        else: st.success("Opcoes da questao atualizadas! Re-analise para confirmar.")
 
     elif selected_tab == "Gabaritos":
             st.subheader("🔑 Revisor de Gabaritos")
