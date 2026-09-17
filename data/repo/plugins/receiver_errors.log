@@ -120427,3 +120427,18 @@ Traceback (most recent call last):
   File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 503, in <module>
     from waitress import serve
 ModuleNotFoundError: No module named 'waitress'
+
+--- Início do Log: 2026-09-09 10:03:12.490527 ---
+
+==================================================
+🚀 SysAva Receiver v2 (RAM + Diagnostics) Online
+📍 Endereco MAC: B8-F7-75-06-4B-36
+🔗 Rota IPv4: http://192.168.10.194:5000/diagnostics
+🔗 Rota IPv6: http://[Indisponível]:5000/diagnostics
+� Use este MAC no 'lab_agent.py' para busca automatica.
+==================================================
+
+Traceback (most recent call last):
+  File "D:\Florestan\Apps\SysAva\data\repo\plugins\lab_receiver.py", line 503, in <module>
+    from waitress import serve
+ModuleNotFoundError: No module named 'waitress'
