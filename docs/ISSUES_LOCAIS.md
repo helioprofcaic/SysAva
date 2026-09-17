@@ -178,4 +178,4 @@ python -c "from services import local_cache as lc; print(lc.cache_enabled())"
 | ------ | --------- |
 | `55e94f1` | Corrige quizzes com títulos duplicados e conclusão cruzada |
 | `3e365c5` | Cache SQLite de scores no plugin de atividades diárias |
-| _pendente_ | Cache de egress (local_cache default-on + funções quentes) |
+| `0393486` | Reduz egress do Supabase com cache local e documenta issues |
