@@ -7,9 +7,26 @@ __pycache__/
 data/repo/plugins/*.json
 data/frequencia/*.json
 data/*.log
+.mimocode/
+.opencode/
+
+# Cache local (SQLite) - nunca versionar
+data/cache/
+
+# Automação (PostarAulas migrado) - dados operacionais locais
+aulas/
+data/escola_ativa.db
+data/excecoes_alunos.json
+data/mappings.json
+data/calendario_letivo.json
+
+# Logs operacionais de raspagem/diagnóstico (dados sensíveis/efêmeros)
+data/logs/
 
 .streamlit/secrets.toml
 .env
+# Ignorar todo o conteúdo de apps
+apps/
 
 # Ignorar todo o conteúdo de data/Turmas (preservando apenas a pasta)
 data/Turmas/**
@@ -23,6 +40,8 @@ data/repo/plugins/*json
 data/repo/plugins/*log
 data/repo/plugins/*.db
 !data/repo/plugins/
+data/repo/plugins/aulas/
+plugins/aulas/prontas/*.txt
 docs/*.txt
 data/credentials.json
 
@@ -35,6 +54,8 @@ scripts/*
 !scripts/seed_students.py
 !scripts/fix_gabaritos.py
 !scripts/fix_quizzes.py
+!scripts/migrate_quiz_titles.py
+!scripts/reset_quiz_attempts.py
 !scripts\quiz_parser.py
 # Arquivos de IDEs e Editores
 .vscode/

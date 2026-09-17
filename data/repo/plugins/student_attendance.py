@@ -68,9 +68,14 @@ def show_attendance_plugin():
         if selected_class_name != "-- Selecione --":
             class_id = class_options[selected_class_name]
             subjects = db.get_subjects_for_class(class_id)
-            subject_options = {s['name']: s['id'] for s in subjects}
+            subjects = [s for s in subjects if s.get('is_active', True)]
+            subject_options = {}
+            for s in subjects:
+                s_name = s['name'].strip()
+                if s_name not in subject_options:
+                    subject_options[s_name] = s['id']
             selected_subject_name = st.selectbox("Selecione a Disciplina", list(subject_options.keys()))
-            selected_subject_id = subject_options[selected_subject_name]
+            selected_subject_id = subject_options.get(selected_subject_name)
 
         selected_date = st.date_input("Data da Aula", datetime.now())
         date_key = selected_date.isoformat()
@@ -220,6 +225,7 @@ def show_attendance_plugin():
                             "student_number": user_info_map[u_name]["n"],
                             "is_present": status in ["Presente", "Atraso"],
                             "class_name": selected_class_name,
+                            "subject_id": selected_subject_id,
                             "subject_name": selected_subject_name,
                             "date": d_key,
                             "professor_name": professor
@@ -227,10 +233,10 @@ def show_attendance_plugin():
             
             if db_records:
                 try:
-                    # O parâmetro on_conflict agora inclui subject_name para precisão por matéria
+                    # O parâmetro on_conflict usa subject_id conforme constraint do banco
                     db.supabase.table("attendance").upsert(
                         db_records, 
-                        on_conflict="student_name, class_name, subject_name, date"
+                        on_conflict="student_name, class_name, subject_id, date"
                     ).execute()
                     st.info(f"Sincronizados {len(db_records)} registros (incluindo backups) com o servidor.")
                 except Exception as e:

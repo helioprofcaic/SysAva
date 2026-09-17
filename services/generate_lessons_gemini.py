@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from services import database as db
 from dotenv import load_dotenv
 from services.contexto_aulas import GerenciadorContextoAula
@@ -33,22 +34,29 @@ class GeradorAulaGemini:
     def obter_nome_escola(self):
         """
         Busca o nome da escola, priorizando o banco de dados e usando o arquivo
-        Escola.txt como fallback.
+        Escola.txt como fallback, removendo prefixos redundantes como 'Escola:'.
         """
+        raw_name = ""
         # 1. Tenta buscar do banco de dados primeiro
         school_data = db.get_school()
         if school_data and school_data.get('name'):
-            return school_data['name']
+            raw_name = school_data['name']
+        else:
+            # 2. Fallback para o arquivo Escola.txt se não encontrar no banco
+            path_escola = os.path.join(DATA_DIR, "Turmas", "Escola.txt")
+            if os.path.exists(path_escola):
+                try:
+                    with open(path_escola, 'r', encoding='utf-8') as f:
+                        raw_name = f.readline().strip()
+                except Exception as e:
+                    print(f"[Aviso] Erro ao ler Escola.txt: {e}")
 
-        # 2. Fallback para o arquivo Escola.txt se não encontrar no banco
-        path_escola = os.path.join(DATA_DIR, "Turmas", "Escola.txt")
-        if os.path.exists(path_escola):
-            try:
-                with open(path_escola, 'r', encoding='utf-8') as f:
-                    return f.readline().strip()
-            except Exception as e:
-                print(f"[Aviso] Erro ao ler Escola.txt: {e}")
-        return "Escola Técnica Estadual" # Valor padrão final
+        if not raw_name:
+            raw_name = "Escola Técnica Estadual"
+
+        # Remove prefixos redundantes como "Escola:", "Escola: Escola:", etc.
+        clean_name = re.sub(r'^(?:(?:Escola|Institui[cç][aã]o|School)\s*:\s*)+', '', raw_name, flags=re.IGNORECASE).strip()
+        return clean_name or "Escola Técnica Estadual"
 
     def _carregar_competencias_curriculo(self, disciplina):
         """
@@ -138,13 +146,36 @@ class GeradorAulaGemini:
             )
         return contexto_str
 
-    def gerar_prompt_aula(self, turma, disciplina, semana, contexto_str: str, school_name: str = "Escola Técnica Estadual", professor_name: str = "Professor(a) Assistente", numero_aula: int = None, titulo_personalizado: str = None, persona: str = None, metodologia: str = None, estrutura: str = None, is_local_model: bool = False):
+    def gerar_prompt_aula(self, turma, disciplina, semana, contexto_str: str, school_name: str = "Escola Técnica Estadual", professor_name: str = "Professor(a) Assistente", numero_aula: int = None, titulo_personalizado: str = None, persona: str = None, metodologia: str = None, estrutura: str = None, is_local_model: bool = False, sem_ilustracoes: bool = False):
         """
         Gera o prompt final para o LLM a partir de um contexto já fornecido,
         usando o template estruturado que gera um plano de aula completo com quiz.
         """
         if numero_aula is None:
             numero_aula = semana
+
+        if sem_ilustracoes:
+            # 1. Remove todos os marcadores de posicionamento [📷 ILUSTRAÇÃO ...] do material de apoio
+            contexto_str = re.sub(r'\[📷\s*ILUSTRAÇÃO.*?\]', '', contexto_str, flags=re.IGNORECASE)
+            
+            # 2. Remove a seção inteira "## 🗺️ GUIA DE POSICIONAMENTO DAS ILUSTRAÇÕES" até o final do texto
+            contexto_str = re.sub(r'##\s*(?:🗺️\s*)?GUIA\s+DE\s+POSICIONAMENTO.*$', '', contexto_str, flags=re.DOTALL | re.IGNORECASE)
+
+        # Diretriz de ilustrações dinâmica
+        ilustracoes_diretriz = (
+            "- **Estilo Visual e Ilustrações:** Use Emojis para estruturar. Quando o MATERIAL DE APOIO contiver a seção "
+            "'GUIA DE POSICIONAMENTO DAS ILUSTRAÇÕES' ou marcadores '[📷 ILUSTRAÇÃO]', você DEVE posicionar cada tag "
+            "`![Descrição](caminho)` exatamente no início do parágrafo da respectiva subseção temática (ex: logo abaixo do "
+            "título '### 1. ...' ou '## 🏁 Introdução'). Isso permite que o texto envolva a ilustração lateralmente. "
+            "Nunca agrupe imagens juntas no mesmo parágrafo."
+        )
+        if sem_ilustracoes:
+            ilustracoes_diretriz = (
+                "- **Estilo Visual e Ilustrações:** Você DEVE usar **muitos emojis coloridos, didáticos e expressivos** "
+                "no início de cada título, cabeçalho e tópicos para manter o plano de aula dinâmico, vivo e visualmente "
+                "atraente para os alunos. **ENTRETANTO, NÃO inclua nenhum arquivo de imagem física, tag de imagem Markdown (![...](...)) "
+                "ou tag HTML <img> no texto.** Use apenas texto puramente enriquecido com emojis para a estruturação visual."
+            )
 
         # Instrução para a IA inferir o tópico ou usar o personalizado
         if titulo_personalizado:
@@ -201,7 +232,7 @@ class GeradorAulaGemini:
                 f'(Crie um EXERCÍCIO DE CÓDIGO para o aluno copiar e testar no VS Code ou IDE online. '
                 f'Inclua: 1) Objetivo do exercício, 2) Código completo e funcional, 3) Instruções de como rodar. '
                 f'Use blocos de código ```python ``` ou ```html ``` conforme a disciplina.)\n'
-                f'## 📝 Quiz (3 perguntas múltipla escolha com [x])\n'
+                f'## 📝 Quiz (4 perguntas múltipla escolha com [x])\n'
                 f'### ✅ Gabarito'
             )
             return prompt
@@ -212,14 +243,14 @@ class GeradorAulaGemini:
 Sua missão é criar um plano de aula completo em formato Markdown.
 
 # PERSONA
-{persona if persona else f"Atue como um Professor Assistente de {disciplina}, especialista em criação de materiais didáticos para o {nivel_pedagogico}."}
+{persona if persona else f"Um professor especialista em {disciplina}, didático e motivador. IMPORTANTE: Use estritamente o nome da Turma e da Disciplina informados nos parâmetros de configuração, ignorando quaisquer nomes de turmas ou professores diferentes que apareçam no material de contexto/base."}
 
 # DIRETRIZES GERAIS
 - **Público-Alvo:** {nivel_pedagogico} de escola pública ({turma}).
 - **Adaptação Pedagógica:** {instrucao_nivel}
 - **Metodologia:** {metodologia if metodologia else "Aula Expositiva Dialogada"}.
 - **Linguagem:** Use uma linguagem acessível, motivadora, com analogias do cotidiano e cultura pop.
-- **Estilo Visual:** Use Emojis para estruturar e ilustrações via `!descrição` para conceitos complexos.
+{ilustracoes_diretriz}
 
 # DADOS DE ENTRADA (OBRIGATÓRIOS)
 - **Escola:** {school_name}
@@ -276,10 +307,10 @@ O resultado final deve ser um único arquivo Markdown.
 ---
 
 ## 📝 Quiz: Teste seu Conhecimento!
-*Crie 3 perguntas de múltipla escolha com 4 alternativas cada. Marque a resposta correta com `[x]` e as incorretas com `[ ]`.*
+*Crie 4 perguntas de múltipla escolha com 4 alternativas cada. Marque a resposta correta com `[x]` e as incorretas com `[ ]`.*
 
 ### ✅ Gabarito
-*Liste o gabarito de forma simples. Ex: 1. C, 2. A, 3. B*
+*Liste o gabarito de forma simples. Ex: 1. C, 2. A, 3. B, 4. D*
 --- FIM DO TEMPLATE DE SAÍDA ---
 """
         return prompt

@@ -47,7 +47,7 @@ def analyze_course_friction():
             continue
 
         print(f"\n🔎 Analisando Disciplina: '{subject['name']}'")
-        lessons = db.get_lessons_for_subject(subject['id'])
+        lessons = db.get_lessons_for_subject_full(subject['id'])
         
         if not lessons:
             print("   - Nenhuma aula encontrada nesta disciplina.")

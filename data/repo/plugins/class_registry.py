@@ -360,7 +360,7 @@ def show_content_step():
             sid = sub_id if sub_id else (db.get_subject_by_name(disciplina_final) or {}).get('id')
             
             if sid:
-                db_lessons = db.get_lessons_for_subject(sid)
+                db_lessons = db.get_lessons_for_subject_full(sid)
                 
                 # Busca a aula pelo número no título (ex: "Aula 05" ou "Aula 5")
                 search_pat = rf"Aula\s*0?{n_aula}\b"

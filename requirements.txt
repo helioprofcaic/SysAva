@@ -23,3 +23,10 @@ streamlit-pdf-viewer
 supabase
 uvicorn
 llama-cpp-python==0.1.9
+nbformat>=4.2.0
+plotly
+pandas
+# Automação do portal (robô Selenium) - apps/api
+selenium
+webdriver-manager
+jinja2

@@ -74,7 +74,12 @@ def show_daily_activities():
 
         class_id = class_options[sel_class_name]
         subjects = db.get_subjects_for_class(class_id)
-        subject_options = {s['name']: s['id'] for s in subjects}
+        subjects = [s for s in subjects if s.get('is_active', True)]
+        subject_options = {}
+        for s in subjects:
+            s_name = s['name'].strip()
+            if s_name not in subject_options:
+                subject_options[s_name] = s['id']
         sel_subject_name = st.selectbox("Disciplina", list(subject_options.keys()))
         subject_id = subject_options[sel_subject_name]
 
@@ -142,15 +147,16 @@ def show_daily_activities():
         calc = get_cached_student_score(uname, subject_id)
         system_score = calc['total']
         
-        # Filtra pontos qualitativos JÁ ATRIBUÍDOS no bloco atual (1-20 ou 21-40)
-        qual_points_bloco = 0
+        # Filtra pontos qualitativos JÁ ATRIBUÍDOS no bloco atual (1-20 ou 21-40) com limite de 6.0
+        qual_points_bloco = 0.0
         for p in student_json.get("daily_qualitative_points", []):
             p_lesson_id = p.get('lesson_id')
             p_bloco = lesson_block_map.get(p_lesson_id)
             if p_bloco == bloco:
-                qual_points_bloco += p.get('points', 0)
+                qual_points_bloco += float(p.get('points', 0))
 
-        total_atual = system_score + qual_points_bloco
+        qual_points_bloco = min(6.0, qual_points_bloco)
+        total_atual = min(6.0, system_score + qual_points_bloco)
         restante = max(0.0, 6.0 - total_atual)
 
         table_data.append({
@@ -200,6 +206,8 @@ def show_daily_activities():
                         "date": datetime.now().strftime("%Y-%m-%d"),
                         "points": round(pontos_novos, 1),
                         "lesson_id": selected_lesson['id'],
+                        "subject_id": subject_id,
+                        "subject_name": sel_subject_name,
                         "notes": f"Atividade Aula {lesson_num}: {selected_lesson_title}"
                     })
                     saved_count += 1
@@ -210,6 +218,51 @@ def show_daily_activities():
             st.rerun()
         else:
             st.info("Nenhuma pontuação nova para salvar ou todos já atingiram o teto de 6.0.")
+
+    # --- VISUALIZAÇÃO: PONTUAÇÃO DISTRIBUÍDA POR ATIVIDADES ---
+    st.divider()
+    st.subheader("📊 Pontuação Distribuída por Atividades")
+
+    lesson_title_map = {l['id']: l['title'] for l in lessons}
+    student_name_map = {s['username']: s['name'] for s in students}
+
+    detail_rows = []
+    for uname, s_data in all_scores_data.get("students_data", {}).items():
+        if uname not in student_name_map:
+            continue
+        for p in s_data.get("daily_qualitative_points", []):
+            p_lesson_id = p.get('lesson_id')
+            p_subject_id = p.get('subject_id')
+            # Entradas antigas não possuem subject_id: infere pela aula da disciplina
+            pertence = (str(p_subject_id) == str(subject_id)) or (
+                p_subject_id is None and p_lesson_id in lesson_title_map
+            )
+            if not pertence:
+                continue
+            detail_rows.append({
+                "Data": p.get('date', ''),
+                "Estudante": student_name_map[uname],
+                "Aula": lesson_title_map.get(p_lesson_id, p.get('notes', '—')),
+                "Bloco": lesson_block_map.get(p_lesson_id, '—'),
+                "Pontos": round(float(p.get('points', 0)), 1)
+            })
+
+    if detail_rows:
+        bloco_filtro = st.selectbox("Filtrar por bloco", ["Todos", "1-20", "21-40"], key="filtro_bloco_detalhe")
+        df_detalhe = pd.DataFrame(detail_rows)
+        if bloco_filtro != "Todos":
+            df_detalhe = df_detalhe[df_detalhe["Bloco"] == bloco_filtro]
+        df_detalhe = df_detalhe.sort_values("Data", ascending=False)
+
+        if not df_detalhe.empty:
+            col_a, col_b = st.columns(2)
+            col_a.metric("Total distribuído", f"{df_detalhe['Pontos'].sum():.1f} pts")
+            col_b.metric("Lançamentos", len(df_detalhe))
+            st.dataframe(df_detalhe, hide_index=True, use_container_width=True)
+        else:
+            st.info("Nenhum ponto distribuído no bloco selecionado.")
+    else:
+        st.info("Nenhum ponto distribuído para esta disciplina até o momento.")
 
 if __name__ == "__main__":
     is_streamlit = False

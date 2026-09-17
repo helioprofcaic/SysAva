@@ -97,31 +97,51 @@ NOTIFY pgrst, 'reload schema';
 
 ---
 
-## ⚙️ Configuração de Disciplinas (Carga Horária)
+## ⚙️ Configuração de Disciplinas (Regime e Carga Horária)
 
-Na aba "Turmas" do painel administrativo, é possível configurar a carga horária de cada disciplina.
+Na aba **Admin > Configurações de Conteúdos > Turmas**, é possível configurar o formato, regime de aulas e a carga horária de cada disciplina de maneira agnóstica e flexível.
 
-### Opções Disponíveis
+### Opções de Regime Disponíveis
 
-| Carga Horária | `duration_type` | Aulas/Semana | Uso Recomendado |
-|---------------|-----------------|--------------|-----------------|
-| **40h** | `mensal` | 8 aulas | Disciplinas modulares, optativas |
-| **80h** | `anual` | 10 aulas | Disciplinas obrigatórias, anuais |
+| Regime / Formato | `max_hours` | `lessons_per_week` | `duration_type` | `group_type` | Uso / Exemplos |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **Mensal (8 aulas/sem - 40h)** | `40` | `8` | `mensal` | `semana` | Disciplinas modulares (ex: *Fundamentos de UI/UX*, *Web Front-End*, *POO*). Agrupadas de 8 em 8 por semana (`Semana 01 (Aulas 01-08)`). |
+| **Anual (1 aula/sem - 40h)** | `40` | `1` | `anual` | `anual` | Disciplinas distribuídas ao longo de todo o ano (ex: *PC II*, *Mentoria Tech II*, *Inteligência Artificial*, *Projeto de Vida*). Exibição contínua sem quebras de bloco. |
+| **Anual (2 aulas/sem - 80h)** | `80` | `2` | `anual` | `anual` | Disciplinas anuais estendidas de 80h. |
 
-### Como Configurar
+---
 
-1. Acesse **Admin > Configurações de Conteúdos > Turmas**.
-2. Selecione a turma desejada.
-3. Na seção "Configuração das Disciplinas":
-   - Use o seletor "Carga Horária" para escolher entre 40h ou 80h.
-   - Ative/desative disciplinas conforme necessário.
-4. Clique em "Salvar Configurações".
+## 💻 Questões Práticas de Código Web (HTML, CSS e JavaScript)
 
-### Impacto
+O SysAva permite criar avaliações práticas de desenvolvimento Web com editores dedicados para **HTML**, **CSS** e **JavaScript**, integrando validação sintática em tempo real para impedir respostas em texto corrido (anti-lero-lero).
 
-- A carga horária afeta o escopo de importação de questões para avaliações.
-- Disciplinas 40h são tratadas como modulares (mensais).
-- Disciplinas 80h são tratadas como anuais.
+### 1. Criação no Painel Admin (`views/admin.py`)
+- Em **Admin > Avaliações**, ao adicionar uma nova questão, selecione **"Código Web (HTML/CSS/JS)"**.
+- Opções configuráveis:
+  - ☑️ **Exigir CSS obrigatório?** (Impede o envio se o CSS estiver vazio ou inválido).
+  - ☑️ **Exigir JavaScript obrigatório?** (Impede o envio se o JS estiver vazio ou inválido).
+  - ☑️ **Solicitar link do projeto (GitHub/Vercel)?**
+- No banco de dados, a questão é gravada com `question_type = 'code_web'`.
+
+### 2. Resolução pelo Aluno (`views/avaliacoes.py`)
+- O aluno dispõe de uma interface com abas organizadas:
+  - **📄 HTML**: Campo de texto com syntax highlighting e placeholder estrutural.
+  - **🎨 CSS**: Campo de texto para regras de estilo.
+  - **⚡ JavaScript**: Campo de texto para lógica e manipulação de eventos do DOM.
+  - **ℹ️ Critérios de Validação**: Orientações das regras de código aceitas.
+
+### 3. Motor de Validação Sintática (`services/code_validator.py`)
+- **Validação de HTML**: Exige a presença de tags HTML válidas (`<div>`, `<h1>`, `<p>`, `<button>`, `<input>`, etc.). Rejeita mensagens sem tags ou com excesso de texto corrido.
+- **Validação de CSS**: Exige blocos com seletores e chaves no padrão `seletor { propriedade: valor; }` com propriedades CSS válidas.
+- **Validação de JavaScript**: Checa palavras-chave (`let`, `const`, `function`, `addEventListener`, `document.getElementById`) e balanceamento de parênteses/chaves `()`, `{}`, `[]`.
+- Se o aluno tentar enviar texto comum ou código com erro, o sistema bloqueia o envio e lista os erros apontando exatamente o que precisa ser corrigido.
+
+### 4. Correção e Visualização pelo Professor
+- Na tabela de notas, a questão é identificada com `[Código Web]`.
+- Ao marcar a caixa de seleção **"Visualizar"**, o professor pode:
+  - Inspecionar o código **HTML**, **CSS** e **JavaScript** em abas com destaque de sintaxe (`st.code`).
+  - Visualizar a aba **🌐 Visualização Web**, que renderiza a página construída pelo aluno em um iframe sandbox em tempo real.
+  - Clicar nos links externos para testar o deploy (GitHub/Vercel).
 
 ---
 

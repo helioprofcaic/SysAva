@@ -1,4 +1,6 @@
-# import google.generativeai as genai
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
+
 import google.generativeai as genai
 from google.api_core.exceptions import PermissionDenied
 import sys
@@ -256,6 +258,33 @@ def generate_content_with_fallback(prompt, model_names=None):
     
     return MockResponse(f"**ERRO GERAL DO GEMINI**\n\nFalha ao gerar conteúdo após tentar todos os modelos.\n\n*Último erro: {last_error}*")
 
+
+def generate_content_with_openai(prompt: str, api_key: str, model_name: str = "gpt-4o-mini"):
+    """Gera conteúdo usando a API oficial da OpenAI (ChatGPT)."""
+    try:
+        client = openai.OpenAI(api_key=api_key)
+        response = client.chat.completions.create(
+            model=model_name,
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=4000
+        )
+        text = response.choices[0].message.content
+        return MockResponse(text)
+    except Exception as e:
+        error_message = (
+            f"**ERRO DE AUTENTICAÇÃO OU CHAMADA COM A OPENAI**\n\n"
+            f"Falha ao chamar a API do ChatGPT.\n\n"
+            f"**Ações de Verificação:**\n"
+            f"1. Verifique se a sua OpenAI API Key foi inserida corretamente.\n"
+            f"2. Certifique-se de que sua conta da OpenAI tem créditos/saldo vaildo.\n\n"
+            f"*Detalhes técnicos: {e}*"
+        )
+        return MockResponse(error_message)
+
+
 def _extract_text_from_file(filepath):
     """Extrai texto de arquivos .txt, .md e tenta extrair de .pdf."""
     _, ext = os.path.splitext(filepath)
@@ -360,75 +389,94 @@ def generate_lesson_markdown(subject, class_name, topic, lesson_num, school_name
         context_instruction = f"\n\nCONTEXTO ADICIONAL (Ementas/Materiais encontrados no repositório):\n{repo_context}\nUse estas informações para garantir que o conteúdo esteja alinhado com a ementa oficial."
 
     prompt = f"""
-    Atue como o Professor {professor_name} de Desenvolvimento de Sistemas - Curso Técnico.
-    Público-Alvo: Estudantes adolescentes de escola pública (Ensino Médio Integrado). Use uma linguagem acessível, motivadora, com analogias do cotidiano e cultura pop, evitando termos excessivamente acadêmicos sem explicação.
-    
-    Crie o conteúdo de uma aula em formato Markdown seguindo ESTRITAMENTE o modelo abaixo.
+    Atue como o Professor {professor_name} de Desenvolvimento de Sistemas - Curso Tecnico.
+    Publico-Alvo: Estudantes adolescentes de escola publica (Ensino Medio Integrado). Use uma linguagem acessivel, motivadora, com analogias do cotidiano e cultura pop, evitando termos excessivamente academicos sem explicacao.
 
-    Variáveis:
-    - Número da Aula: {lesson_num}
+    Crie o conteudo de uma aula em formato Markdown seguindo ESTRITAMENTE o modelo abaixo.
+
+    Variaveis:
+    - Numero da Aula: {lesson_num}
     - Tema: {topic}
     - Turma: {class_name}
     - Disciplina: {subject}
     {context_instruction}
 
-    Instruções Visuais (Importante para engajamento):
-    1. Use Emojis (🚀, 💡, 💻, ⚠️) generosamente para estruturar tópicos e quebrar blocos de texto.
-    2. **ILUSTRAÇÕES VETORIAIS (SVG)**: 
-       - Para explicar conceitos visuais (fluxogramas, arquiteturas, esquemas elétricos), **GERE O CÓDIGO SVG** (<svg>...</svg>) diretamente no corpo do texto.
-       - O SVG deve ser responsivo (use `viewBox`), com cores vibrantes e estilo didático/lúdico.
-       - **IMPORTANTE:** O código SVG deve ser inserido como HTML puro, SEM blocos de código markdown (sem ``` ou `).
-       - Certifique-se de que há uma linha em branco ANTES e DEPOIS da tag <svg> para garantir a renderização correta e evitar conflitos de formatação.
-    3. Use formatação Markdown (negrito, listas, code blocks) para tornar a leitura dinâmica.
-    4. **TABELAS**: Use tabelas em Markdown para comparar conceitos ou listar dados de forma estruturada.
+    Instrucoes Visuais (Importante para engajamento):
+    1. Use Emojis para estruturar topicos e quebrar blocos de texto.
+    2. **ILUSTRACOES VETORIAIS (SVG)**:
+       - Para explicar conceitos visuais, **GERE O CODIGO SVG** (<svg>...</svg>) diretamente no corpo do texto.
+       - O SVG deve ser responsivo (use `viewBox`), com cores vibrantes e estilo didatico/ludico.
+       - **IMPORTANTE:** O codigo SVG deve ser inserido como HTML puro, SEM blocos de codigo markdown.
+       - Certifique-se de que ha uma linha em branco ANTES e DEPOIS da tag <svg>.
+    3. Use formatacao Markdown (negrito, listas, code blocks) para tornar a leitura dinamica.
+    4. **TABELAS**: Use tabelas em Markdown para comparar conceitos.
 
-    Modelo de Saída (Markdown):
-    # 🎨 Aula {lesson_num}: {topic}
-
-    **🏫 Escola:** {school_name}  
-    **👨‍🏫 Professor:** {professor_name}  
-    **🎓 Turma:** {class_name}
-    **📚 Componente:** {subject}  
-
-    ---
-
-    ## 📑 Sumário
-    1. 🏁 Introdução
-    2. 🎯 Objetivos
-    3. 💡 Conteúdo
-    4. 📖 Glossário
-    5. 🛠️ Atividade Prática
-    6. 🎬 Para Pesquisar (Vídeos)
-    7. 📝 Quiz
+    Modelo de Saida (Markdown):
+    # Aula {lesson_num}: {topic}
+    Escola: {school_name}
+    Professor: {professor_name}
+    Turma: {class_name}
+    Componente: {subject}
 
     ---
 
-    ## 🏁 Introdução
-    (Breve introdução ao tema)
+    ## Sumario
+    1. Introducao
+    2. Objetivos
+    3. Conteudo
+    4. Glossario
+    5. Atividade Pratica
+    6. Para Pesquisar (Videos)
+    7. Quiz
 
-    ## 🎯 Objetivos
+    ---
+
+    ## Introducao
+    (Breve introducao ao tema)
+
+    ## Objetivos
     (Liste 3 objetivos claros)
-    
-    ## 💡 Conteúdo
-    (Explicação detalhada, didática, com exemplos práticos ou de código se for programação)
-    
-    ## 📖 Glossário
-    (Definição de termos chave)
 
-    ## 🛠️ Atividade Prática
-    (Exercícios ou exemplos práticos)
+    ## Conteudo
+    (Explicacao detalhada, didatica, com exemplos praticos ou de codigo se for programacao)
 
-    ## 🎬 Para Pesquisar (Vídeos)
-    (Sugira 3 vídeos do YouTube sobre o tema, com título e link. Ex: - [Título do Vídeo](https://youtube.com/watch?v=...))
+    ## Glossario
+    (Definicao de termos chave)
+
+    ## Atividade Pratica
+    (Exercicios ou exemplos praticos)
+
+    ## Para Pesquisar (Videos)
+    (Sugira 3 videos do YouTube sobre o tema, com titulo e link)
 
     ---
-    ## 📝 Quiz Aula: {lesson_num} - {topic}
+    ## Quiz Aula: {lesson_num} - {topic}
 
-    (Crie 4 perguntas de múltipla escolha, cada uma com 4 alternativas. Para cada pergunta, marque a resposta correta com um [x] e as incorretas com [ ]. Exemplo: - [x] Opção correta)
-    
+    Formato OBRIGATORIO:
+
+    1. Pergunta?
+
+    a) Opcao
+    b) Opcao (RESPOSTA)
+    c) Opcao
+    d) Opcao
+
+    2. Proxima pergunta?
+
+    a) Opcao
+    b) Opcao
+    c) Opcao (RESPOSTA)
+    d) Opcao
+
+    REGRAS:
+    - UM ENTER entre pergunta e alternativas
+    - UM ENTER entre cada grupo
+    - Cada alternativa em linha separada
+    - Marque correta com (RESPOSTA)
+
     ---
     ## Gabarito Comentado
-    (Breve explicação da resposta correta)
+    (Breve explicacao)
     """
     
     response = generate_content_with_fallback(prompt)

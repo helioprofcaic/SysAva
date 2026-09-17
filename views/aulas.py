@@ -5,22 +5,77 @@ import re
 
 
 def clean_svg_content(text):
-    """Limpa e restaura o código SVG que pode ter sido corrompido pela IA ou markdown."""
+    """Limpa e restaura o código SVG que pode ter sido corrompido pela IA ou markdown e remove invólucros globais de código."""
     if not text: return ""
-    text = str(text)
-    # 1. Converte entidades escapadas (inclusive aspas e caracteres que quebram o XML)
+    text = str(text).strip()
+
+    # 1. Remove invólucros globais de bloco de código markdown (```markdown ... ```) produzidos pela IA
+    if text.startswith('```'):
+        m = re.match(r'^```(?:markdown|md)?\s*\n(.*?)\n```\s*$', text, flags=re.DOTALL | re.IGNORECASE)
+        if m:
+            text = m.group(1).strip()
+        else:
+            text = re.sub(r'^```(?:markdown|md)?\s*\n?', '', text, flags=re.IGNORECASE)
+            text = re.sub(r'\n?```\s*$', '', text)
+
+    # 2. Converte tags de imagem Markdown (![alt](path)) em SVGs autocontidos com base64
+    if "![" in text:
+        try:
+            from services.pdf_extractor import convert_markdown_images_to_svg
+            text = convert_markdown_images_to_svg(text)
+        except Exception:
+            pass
+
+    # 3. Converte entidades escapadas (inclusive aspas e caracteres que quebram o XML)
     text = text.replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"').replace('&#x27;', "'").replace('&nbsp;', ' ')
     
-    # 2. Corrige a linkificação de namespaces (IA transforma URLs em links markdown dentro de atributos)
+    # 4. Corrige a linkificação de namespaces (IA transforma URLs em links markdown dentro de atributos)
     text = re.sub(r'xmlns\s*=\s*["\']?\[(http.*?)\]\(.*?\)\s*["\']?', r'xmlns="\1"', text, flags=re.IGNORECASE)
     text = re.sub(r'xmlns\s*=\s*"(http.*?)"', r'xmlns="\1"', text, flags=re.IGNORECASE)
 
-    # 3. Remove blocos de código markdown residuais que envolvem o SVG (```xml ... ```)
+    # 5. Remove blocos de código markdown residuais que envolvem o SVG (```xml ... ```)
     text = re.sub(r'```(?:html|xml|svg)?\s*(<svg.*?</svg>)\s*```', r'\1', text, flags=re.DOTALL | re.IGNORECASE)
+
+    # 6. Remove repetições acidentais de cabeçalho como "Escola: Escola:"
+    text = re.sub(r'(\*\*🏫\s*Escola:\*\*\s*)(?:(?:Escola|Institui[cç][aã]o)\s*:\s*)+', r'\1', text, flags=re.IGNORECASE)
+
+    # 7. CONVERSÃO DE SVG COM IMAGEM BASE64 PARA TAG HTML <img /> (Resolve sanitização do Streamlit)
+    def svg_to_img_repl(match):
+        svg_block = match.group(0)
+        
+        # Extrai a URL do base64 (href ou src da tag <image>)
+        img_match = re.search(r'<image\s+[^>]*?href=["\'](data:image/.*?;base64,.*?)["\']', svg_block, flags=re.DOTALL | re.IGNORECASE)
+        if not img_match:
+            img_match = re.search(r'<image\s+[^>]*?src=["\'](data:image/.*?;base64,.*?)["\']', svg_block, flags=re.DOTALL | re.IGNORECASE)
+            
+        if img_match:
+            base64_src = img_match.group(1).strip()
+            # Remove quebras de linha/espaços em branco residuais no base64
+            base64_src = re.sub(r'\s+', '', base64_src)
+            
+            # Extrai atributos de estilo, largura e altura do <svg>
+            style_match = re.search(r'<svg\s+[^>]*?style=["\'](.*?)["\']', svg_block, flags=re.DOTALL | re.IGNORECASE)
+            width_match = re.search(r'<svg\s+[^>]*?width=["\'](.*?)["\']', svg_block, flags=re.DOTALL | re.IGNORECASE)
+            height_match = re.search(r'<svg\s+[^>]*?height=["\'](.*?)["\']', svg_block, flags=re.DOTALL | re.IGNORECASE)
+            
+            style_str = style_match.group(1) if style_match else "max-width: 100%; height: auto; border-radius: 8px;"
+            width_str = width_match.group(1) if width_match else ""
+            height_str = height_match.group(1) if height_match else ""
+            
+            # Reconstrói como tag <img /> HTML compatível
+            attrs = []
+            if width_str: attrs.append(f'width="{width_str}"')
+            if height_str: attrs.append(f'height="{height_str}"')
+            if style_str: attrs.append(f'style="{style_str}"')
+            
+            return f'<img src="{base64_src}" {" ".join(attrs)} />'
+            
+        return svg_block
+
+    # Substitui tags <svg>...</svg> contendo imagens base64 por tags <img> normais
+    text = re.sub(r'<svg\b[^>]*?>.*?</svg>', svg_to_img_repl, text, flags=re.DOTALL | re.IGNORECASE)
     
-    # 4. Garante linhas em branco ao redor de tags SVG para isolamento no parser do Streamlit
-    text = re.sub(r'(<svg.*?</svg>)', r'\n\n\1\n\n', text, flags=re.DOTALL | re.IGNORECASE)
-    return text
+    return text.strip()
 
 def markdown_to_html(text):
     """Converte texto markdown simples para HTML para impressão."""
@@ -31,6 +86,16 @@ def markdown_to_html(text):
     svg_blocks = re.findall(r'<svg.*?</svg>', text, flags=re.DOTALL | re.IGNORECASE)
     for i, svg in enumerate(svg_blocks):
         text = text.replace(svg, f"<!--SVG_BLOCK_{i}-->")
+
+    # Escapa tags HTML soltas (como <section>, <nav>, <div>, etc.) para não quebrarem o layout
+    text = re.sub(r'<(/?[a-zA-Z][a-zA-Z0-9_\-]*(\s+[^>]*)?)>', r'&lt;\1&gt;', text)
+
+    # Markdown Images: ![alt](src)
+    text = re.sub(
+        r'!\[(.*?)\]\((.*?)\)',
+        r'<div style="text-align: center; margin: 15px 0;"><img src="\2" alt="\1" style="max-width: 85%; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"><p style="font-size: 0.85em; color: #666; margin-top: 4px;"><em>\1</em></p></div>',
+        text
+    )
 
     # Headers
     text = re.sub(r'^# (.*$)', r'<h1>\1</h1>', text, flags=re.MULTILINE)
@@ -73,11 +138,11 @@ def generate_printable_lesson_view(school_name, subject_name, class_name, lesson
         options_html = ""
         options = q.get('options', [])
         for opt in options:
-            options_html += f'<div style="margin: 5px 0 5px 20px;">( &nbsp; ) {opt}</div>'
+            options_html += f'<div style="margin: 5px 0 5px 20px;">( &nbsp; ) {markdown_to_html(opt)}</div>'
         
         questions_html += f"""
         <div style="margin-bottom: 20px; page-break-inside: avoid;">
-            <p><strong>{i+1}. {q['question_text']}</strong></p>
+            <p><strong>{i+1}. {markdown_to_html(q['question_text'])}</strong></p>
             {options_html}
         </div>
         """
@@ -86,7 +151,7 @@ def generate_printable_lesson_view(school_name, subject_name, class_name, lesson
         correct_idx = q.get('correct_option_index', 0)
         correct_letter = chr(65 + correct_idx) # A=0, B=1...
         correct_text = options[correct_idx] if 0 <= correct_idx < len(options) else "?"
-        answers_html += f"<tr><td style='padding: 4px; border-bottom: 1px solid #eee;'><strong>{i+1}.</strong> {correct_letter} - {correct_text}</td></tr>"
+        answers_html += f"<tr><td style='padding: 4px; border-bottom: 1px solid #eee;'><strong>{i+1}.</strong> {correct_letter} - {markdown_to_html(correct_text)}</td></tr>"
 
     # 2. Monta o HTML Completo
     html = f"""
@@ -153,7 +218,9 @@ def generate_printable_lesson_view(school_name, subject_name, class_name, lesson
 
 def show_lesson_detail():
     """Renderiza a view de detalhe de uma aula selecionada."""
-    lesson = st.session_state.selected_lesson
+    selected = st.session_state.selected_lesson
+    # A listagem leve não traz o conteúdo; busca os campos completos apenas ao abrir a aula.
+    lesson = db.get_lesson_by_id(selected['id']) or selected
 
     st.title(lesson['title'])
 
@@ -320,33 +387,62 @@ def get_lesson_number(title):
     match = re.search(r'Aula\s*(\d+)', title, re.IGNORECASE)
     return int(match.group(1)) if match else None
 
-def group_lessons(lessons, subject_name, class_name):
-    """Agrupa as aulas por semana ou unidade com base nas regras."""
-    # Regras de agrupamento
-    safe_class_name = (class_name or "").upper()
-    safe_subject_name = (subject_name or "").upper()
+def group_lessons(lessons, subject_name, class_name, subject_id=None):
+    """
+    Agrupa as aulas por semana, unidade ou anual de forma agnóstica,
+    lendo as configurações diretamente dos metadados da disciplina no banco de dados.
+    """
+    subj_data = db.get_subject_by_id(subject_id) if subject_id else None
 
-    # Regras de exceção para disciplinas que não devem ser agrupadas
-    is_annual_exception = "MENTORIA TECH II" in safe_subject_name or "PCII" in safe_subject_name or "PROJETO DE VIDA" in safe_subject_name
+    # 1. Tipo de agrupamento ('anual', 'semana', 'unidade', 'modulo', 'livre')
+    group_type = 'semana'
+    if subj_data and subj_data.get('group_type'):
+        group_type = str(subj_data['group_type']).lower()
+    else:
+        # Fallback suave por nome
+        safe_subject_name = (subject_name or "").upper()
+        if any(exc in safe_subject_name for exc in ["MENTORIA", "PCII", "PROJETO DE VIDA"]):
+            group_type = 'anual'
 
-    if is_annual_exception:
+    if group_type == 'anual':
         return {"Anual": lessons}
+    elif group_type == 'livre':
+        return {"Aulas": lessons}
 
-    group_size = 0
-    group_prefix = ""
+    # 2. Aulas por grupo / semana (lessons_per_week ou inferido de max_hours)
+    group_size = None
+    if subj_data:
+        if subj_data.get('lessons_per_week'):
+            group_size = int(subj_data['lessons_per_week'])
+        elif subj_data.get('max_hours'):
+            max_h = int(subj_data['max_hours'])
+            group_size = 10 if max_h >= 80 else 8
+        elif subj_data.get('duration_type') == 'mensal':
+            group_size = 8
 
-    # Regra para disciplinas de 80h (geralmente cursos de DS)
-    if "DS" in safe_class_name or "DESENVOLVIMENTO DE SISTEMAS" in safe_class_name:
-        group_size = 10
-        group_prefix = "Semana"
-    # Regra para disciplinas de 40h (modulares)
-    elif "INTELIGÊNCIA ARTIFICIAL" in safe_subject_name or "ROBÓTICA" in safe_subject_name:
-        group_size = 8
+    if not group_size:
+        safe_class_name = (class_name or "").upper()
+        safe_subject_name = (subject_name or "").upper()
+        modular_keywords = [
+            "UI", "UX", "IHC", "INTELIGÊNCIA ARTIFICIAL", "INTELIGENCIA ARTIFICIAL",
+            "ROBÓTICA", "ROBOTICA", "MICROSSERVIÇOS", "MICROSSERVICOS", 
+            "ORIENTAÇÃO PROFISSIONAL", "ORIENTACAO PROFISSIONAL", "EMPREENDEDORISMO",
+            "ATIVIDADES INTEGRADORAS"
+        ]
+        if any(kw in safe_subject_name for kw in modular_keywords):
+            group_size = 8
+        elif "DS" in safe_class_name or "DESENVOLVIMENTO DE SISTEMAS" in safe_class_name:
+            group_size = 10
+        else:
+            group_size = 8
+
+    # Prefixo de exibição ('Semana', 'Unidade', 'Módulo', etc.)
+    if group_type == 'unidade':
         group_prefix = "Unidade"
-
-    # Se nenhuma regra de agrupamento se aplicar, retorna todas as aulas juntas
-    if group_size == 0:
-        return {"Aulas": lessons}  # Sem agrupamento
+    elif group_type == 'modulo':
+        group_prefix = "Módulo"
+    else:
+        group_prefix = "Semana"
 
     # Adiciona número da aula para ordenação
     for lesson in lessons:
@@ -384,6 +480,7 @@ def show_lesson_list(subject_id, subject_name):
     
     visited_lesson_titles = set()
     completed_quiz_titles = set()
+    completed_quiz_ids = set()
     
     for h in history:
         act = h.get('activity', '')
@@ -391,9 +488,15 @@ def show_lesson_list(subject_id, subject_name):
             title = act.split(':', 1)[1].split('|')[0].strip()
             visited_lesson_titles.add(title)
         elif "Concluiu Quiz:" in act:
-            raw_title = act.split(':', 1)[1].split('|')[0].strip()
-            title = re.sub(r'\s*\(\d+/\d+\)$', '', raw_title).strip()
-            completed_quiz_titles.add(title)
+            match_qid = re.search(r'\| quiz_id:(\d+)', act)
+            if match_qid:
+                completed_quiz_ids.add(int(match_qid.group(1)))
+            else:
+                raw_title = act.split(':', 1)[1].split('|')[0].strip()
+                title = re.sub(r'\s*\(\d+/\d+\)$', '', raw_title).strip()
+                # Títulos genéricos não identificam a aula: ignorados para evitar falsos positivos
+                if not db.is_generic_quiz_title(title):
+                    completed_quiz_titles.add(title)
 
     st.subheader(f"Aulas de {subject_name}")
 
@@ -409,17 +512,17 @@ def show_lesson_list(subject_id, subject_name):
     class_info = get_class_by_id(enrollment['class_id']) if enrollment else {}
     class_name = class_info.get('name', '')
 
-    grouped_lessons = group_lessons(lessons, subject_name, class_name)
+    grouped_lessons = group_lessons(lessons, subject_name, class_name, subject_id=subject_id)
 
     for group_title, lessons_in_group in grouped_lessons.items():
         # Se houver apenas um grupo chamado "Aulas", não usa o expander
         if len(grouped_lessons) == 1 and group_title == "Aulas":
-            render_lessons(lessons_in_group, visited_lesson_titles, completed_quiz_titles, quiz_map, subject_id)
+            render_lessons(lessons_in_group, visited_lesson_titles, completed_quiz_titles, completed_quiz_ids, quiz_map, subject_id)
         else:
             with st.expander(f"**{group_title}**", expanded=True):
-                render_lessons(lessons_in_group, visited_lesson_titles, completed_quiz_titles, quiz_map, subject_id)
+                render_lessons(lessons_in_group, visited_lesson_titles, completed_quiz_titles, completed_quiz_ids, quiz_map, subject_id)
 
-def render_lessons(lessons, visited_lesson_titles, completed_quiz_titles, quiz_map, subject_id):
+def render_lessons(lessons, visited_lesson_titles, completed_quiz_titles, completed_quiz_ids, quiz_map, subject_id):
     """Função auxiliar para renderizar uma lista de botões de aula."""
     for lesson in lessons:
         is_visited = lesson['title'] in visited_lesson_titles
@@ -431,7 +534,7 @@ def render_lessons(lessons, visited_lesson_titles, completed_quiz_titles, quiz_m
                 is_concluded = True
             else:
                 quiz = quiz_map.get(lesson['id'])
-                if quiz and quiz['title'] in completed_quiz_titles:
+                if quiz and (quiz['id'] in completed_quiz_ids or quiz['title'] in completed_quiz_titles):
                     is_concluded = True
         
         if is_concluded:
@@ -508,7 +611,7 @@ def show_admin_view():
 
             lessons = db.get_lessons_for_subject(subject_id)
             st.subheader(f"Aulas de {selected_subject_name}")
-            grouped_lessons = group_lessons(lessons, selected_subject_name, selected_class_name)
+            grouped_lessons = group_lessons(lessons, selected_subject_name, selected_class_name, subject_id=subject_id)
             for group_title, lessons_in_group in grouped_lessons.items():
                 with st.expander(f"**{group_title}**", expanded=True):
                     for lesson in lessons_in_group:

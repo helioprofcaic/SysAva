@@ -182,13 +182,10 @@ def show_teacher_dashboard():
         st.markdown("**Aulas e Quizzes**")
         total_lessons = len(all_lessons)
 
-        lessons_with_quiz = 0
-        for lesson in all_lessons:
-            quiz = db.get_quiz_for_lesson(lesson['id'])
-            if quiz:
-                lessons_with_quiz += 1
-
-        lessons_without_quiz = total_lessons - lessons_with_quiz
+        # Busca resumo de quizzes de uma só vez (1 requisição única em lote)
+        all_quizzes_summary = db.get_all_quizzes_summary() if db.is_db_connected() else []
+        lessons_with_quiz = len(set(q['lesson_id'] for q in all_quizzes_summary if q.get('lesson_id')))
+        lessons_without_quiz = max(0, total_lessons - lessons_with_quiz)
 
         c_a, c_b, c_c = st.columns(3)
         c_a.metric("Aulas", total_lessons)
@@ -204,14 +201,11 @@ def show_teacher_dashboard():
         all_assessments = db.get_all_assessments() if db.is_db_connected() else []
         total_assessments = len(all_assessments)
 
-        # Conta questoes totais
-        total_questions = 0
-        assessments_empty = 0
-        for a in all_assessments:
-            questions = db.get_assessment_questions(a['id'])
-            total_questions += len(questions)
-            if len(questions) == 0:
-                assessments_empty += 1
+        # Busca todas as questões de uma só vez (1 requisição única em lote)
+        all_questions = db.get_all_assessment_questions() if db.is_db_connected() else []
+        total_questions = len(all_questions)
+        asmt_ids_with_q = set(q['assessment_id'] for q in all_questions if q.get('assessment_id'))
+        assessments_empty = len([a for a in all_assessments if a['id'] not in asmt_ids_with_q])
 
         c_x, c_y, c_z = st.columns(3)
         c_x.metric("Provas", total_assessments)

@@ -1,3 +1,4 @@
+import warnings
 import streamlit as st
 from services import database as db
 import os
@@ -9,7 +10,9 @@ import importlib.util
 
 # Tenta importar o visualizador de PDF, se não existir, a funcionalidade ficará desabilitada.
 try:
-    from streamlit_pdf_viewer import pdf_viewer
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning)
+        from streamlit_pdf_viewer import pdf_viewer
     PDF_VIEWER_AVAILABLE = True
 except ImportError:
     PDF_VIEWER_AVAILABLE = False
@@ -32,18 +35,20 @@ def find_local_pdfs():
 def render_plugin_integrated(plugin_path):
     """
     Importa e executa um plugin dentro do contexto atual do Streamlit.
-    Isso evita o erro de 'missing ScriptRunContext'.
+    Garante recarregamento fresco do arquivo em disco.
     """
     try:
         module_name = os.path.basename(plugin_path).replace(".py", "")
-        # Define o nome do módulo no sys.modules para evitar conflitos
+        sys.modules.pop(module_name, None)
         spec = importlib.util.spec_from_file_location(module_name, plugin_path)
         module = importlib.util.module_from_spec(spec)
         sys.modules[module_name] = module
         spec.loader.exec_module(module)
         
-        # Procura por pontos de entrada conhecidos no plugin (como o da Agenda)
-        if hasattr(module, "show_agenda"):
+        # Procura por pontos de entrada conhecidos no plugin
+        if hasattr(module, "show_planos_plugin"):
+            module.show_planos_plugin()
+        elif hasattr(module, "show_agenda"):
             module.show_agenda()
         elif hasattr(module, "show_class_registry"):
             module.show_class_registry()
@@ -59,6 +64,8 @@ def render_plugin_integrated(plugin_path):
             module.show_grade_semanal()
         elif hasattr(module, "show_page"):
             module.show_page()
+        elif hasattr(module, "render"):
+            module.render()
         elif hasattr(module, "main"):
             module.main()
     except Exception as e:
@@ -79,10 +86,11 @@ def show_page():
     # Substituímos st.tabs por um seletor de rádio horizontal para controle de execução.
     # O Streamlit avalia o conteúdo de todas as abas no st.tabs, o que causava a poluição do sidebar.
     # Com o if/elif, apenas o código (e o sidebar) do plugin selecionado é processado.
-    menu_options = ["Nativos", "Externos", "Monitor", "Agenda", "Registro", "Atividades", "Notas", "Frequência", "Grade"]
+    menu_options = ["Nativos", "Externos", "Planos", "Monitor", "Agenda", "Registro", "Atividades", "Notas", "Frequência", "Grade"]
     icons = {
         "Nativos": "🔌", 
         "Externos": "📂", 
+        "Planos": "📄",
         "Agenda": "📅", 
         "Registro": "📋",
         "Atividades": "🎯",
@@ -181,6 +189,14 @@ def show_page():
                         with st.spinner(f"Executando..."):
                             result = subprocess.run([sys.executable, plugin_path], capture_output=True, text=True, encoding='utf-8')
                             st.code(result.stdout if result.stdout else "Executado sem saída.")
+
+    # --- Aba de Planos de Aula (TXT) ---
+    elif selected_tab == "Planos":
+        planos_path = os.path.join("data", "repo", "plugins", "gerar_planos_txt.py")
+        if os.path.exists(planos_path):
+            render_plugin_integrated(planos_path)
+        else:
+            st.info("O plugin de planos de aula não foi encontrado em `data/repo/plugins/gerar_planos_txt.py`.")
 
     # --- Aba de Monitoramento de Laboratório ---
     elif selected_tab == "Monitor":

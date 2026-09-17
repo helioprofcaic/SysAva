@@ -2,17 +2,59 @@ import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
 from services import database as db
+from services.code_validator import validate_web_submission
 from datetime import datetime
 import re
+import json
+import html
 
 # Tenta importar o componente de JS, se não existir, a funcionalidade ficará desabilitada.
 try:
     from streamlit_javascript import st_javascript
 except ImportError:
     st_javascript = None
+
+def format_display_text(text):
+    """
+    Formata texto para exibição correta no Markdown do Streamlit:
+    1. Desfaz entidades HTML literais (&lt; -> <, &gt; -> >).
+    2. Tags HTML soltas (como <section>, <div>) são automaticamente envolvidas em crases `<tag>`.
+    3. Tags já dentro de crases são mantidas como código inline.
+    Isso evita quebras de linha e exibe a tag formatada sem mostrar texto '&lt;'.
+    """
+    if not text:
+        return ""
+    text = html.unescape(str(text))
+
+    parts = text.split('`')
+    for i in range(0, len(parts), 2):
+        parts[i] = re.sub(r'(?<!`)(</?[a-zA-Z][a-zA-Z0-9_\-]*(\s+[^>]*)?>)(?!`)', r'`\1`', parts[i])
+    
+    result = '`'.join(parts)
+    result = re.sub(r'``+', r'`', result)
+    return result
+
+def parse_code_web_answer(answer_text):
+    """Extrai os códigos HTML, CSS e JS do texto salvo."""
+    if not answer_text:
+        return {"html": "", "css": "", "js": ""}
+    try:
+        data = json.loads(answer_text)
+        if isinstance(data, dict):
+            return {
+                "html": data.get("html", ""),
+                "css": data.get("css", ""),
+                "js": data.get("js", "")
+            }
+    except Exception:
+        pass
+    return {"html": str(answer_text), "css": "", "js": ""}
+
 def markdown_to_html(text):
     if not text: return ""
     text = str(text)
+    # Escapa caracteres e tags HTML antes do markdown para evitar tags de bloco no layout de impressão
+    text = html.escape(text, quote=False)
     # Bold **text**
     text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)
     # Italic *text*
@@ -41,6 +83,16 @@ def generate_printable_view(school_name, subject_name, class_name, student_name,
                     max-width: 100% !important; 
                     margin: 0 !important;
                 }}
+            }}
+            .code-block {{
+                background: #f8f9fa;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                padding: 8px;
+                margin: 4px 0;
+                font-family: Consolas, monospace;
+                font-size: 11px;
+                white-space: pre-wrap;
             }}
         </style>
     </head>
@@ -74,7 +126,8 @@ def generate_printable_view(school_name, subject_name, class_name, student_name,
         correct_resp = ""
         is_correct = False
         
-        if q['question_type'] == 'objective':
+        q_type = q.get('question_type', 'objective')
+        if q_type == 'objective':
             options = q.get('options', [])
             correct_idx = q.get('correct_option_index', 0)
             correct_resp = markdown_to_html(options[correct_idx]) if 0 <= correct_idx < len(options) else "?"
@@ -84,21 +137,36 @@ def generate_printable_view(school_name, subject_name, class_name, student_name,
                 if 0 <= user_idx < len(options):
                     user_resp = markdown_to_html(options[user_idx])
                 is_correct = (user_idx == correct_idx)
-        else:
+        elif q_type == 'code_web':
+            if ans:
+                codes = parse_code_web_answer(ans.get('answer_text', ''))
+                html_c = markdown_to_html(codes.get('html', ''))
+                css_c = markdown_to_html(codes.get('css', ''))
+                js_c = markdown_to_html(codes.get('js', ''))
+                user_resp = f"<br><strong>HTML:</strong><div class='code-block'>{html_c or '(vazio)'}</div>"
+                if css_c:
+                    user_resp += f"<strong>CSS:</strong><div class='code-block'>{css_c}</div>"
+                if js_c:
+                    user_resp += f"<strong>JavaScript:</strong><div class='code-block'>{js_c}</div>"
+                link = ans.get('answer_link', '')
+                if link:
+                    user_resp += f"<p><strong>Link:</strong> {link}</p>"
+            correct_resp = "(Questão Prática de Código Web)"
+        else: # subjective
             user_resp = ans.get('answer_text', '') if ans else ""
             link = ans.get('answer_link', '') if ans else ""
             if link:
                 user_resp += f" <br>(Link: {link})"
             correct_resp = "(Questão Subjetiva)"
         
-        color = "green" if is_correct else "red" if q['question_type'] == 'objective' else "black"
-        icon = "✅" if is_correct else "❌" if q['question_type'] == 'objective' else "📝"
+        color = "green" if is_correct else "red" if q_type == 'objective' else "black"
+        icon = "✅" if is_correct else "❌" if q_type == 'objective' else ("💻" if q_type == 'code_web' else "📝")
         
         html += f"""
         <div style="margin-bottom: 10px; border-bottom: 1px dotted #ccc; padding-bottom: 5px;">
             <p style="margin: 0 0 5px 0;"><strong>{i+1}. {q_text}</strong></p>
             <p style="margin: 0; color: {color};">Sua Resposta: {icon} {user_resp}</p>
-            {f'<p style="margin: 0; font-size: 0.9em; color: #555;">Gabarito: {correct_resp}</p>' if not is_correct and q['question_type'] == 'objective' else ''}
+            {f'<p style="margin: 0; font-size: 0.9em; color: #555;">Gabarito: {correct_resp}</p>' if not is_correct and q_type == 'objective' else ''}
         </div>
         """
         
@@ -158,15 +226,25 @@ def generate_blank_printable_view(school_name, subject_name, class_name, assessm
     
     for i, q in enumerate(questions):
         q_text = markdown_to_html(q['question_text'])
+        q_type = q.get('question_type', 'objective')
         html += f"""
         <div style="margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px dotted #ccc;">
             <p style="margin: 0 0 5px 0;"><strong>{i+1}. {q_text}</strong></p>
         """
-        if q['question_type'] == 'objective':
+        if q_type == 'objective':
             options = q.get('options', [])
             for opt in options:
                 opt_html = markdown_to_html(opt)
                 html += f'<p style="margin: 5px 0 5px 20px;">( &nbsp; ) {opt_html}</p>'
+        elif q_type == 'code_web':
+            html += '<p style="margin: 5px 0 2px 10px; font-weight: bold; font-size: 0.9em;">[ Código HTML ]:</p>'
+            html += '<div style="border: 1px solid #ddd; height: 90px; margin-top: 3px; padding: 5px;"></div>'
+            html += '<p style="margin: 5px 0 2px 10px; font-weight: bold; font-size: 0.9em;">[ Código CSS ]:</p>'
+            html += '<div style="border: 1px solid #ddd; height: 70px; margin-top: 3px; padding: 5px;"></div>'
+            html += '<p style="margin: 5px 0 2px 10px; font-weight: bold; font-size: 0.9em;">[ Código JavaScript ]:</p>'
+            html += '<div style="border: 1px solid #ddd; height: 70px; margin-top: 3px; padding: 5px;"></div>'
+            if q.get('options') and "LINK_REQUIRED" in q['options']:
+                html += '<p style="margin: 5px 0 5px 10px;">Link do Projeto: ________________________________________________</p>'
         else: # subjective
             if q.get('options') and "LINK_REQUIRED" in q['options']:
                  html += '<p style="margin: 5px 0 5px 20px;">Link para envio: ________________________________________________</p>'
@@ -193,10 +271,20 @@ def generate_assessment_print_html(school_name, subject_name, class_name, assess
     for i, q in enumerate(questions):
         q_text = markdown_to_html(q['question_text'])
         options_html = ""
-        if q['question_type'] == 'objective':
+        q_type = q.get('question_type', 'objective')
+        if q_type == 'objective':
             for opt in q.get('options', []):
                 opt_html = markdown_to_html(opt)
                 options_html += f'<p style="margin: 5px 0 5px 20px;">( &nbsp; ) {opt_html}</p>'
+        elif q_type == 'code_web':
+            options_html += '<p style="margin: 5px 0 2px 10px; font-weight: bold; font-size: 0.9em;">[ Código HTML ]:</p>'
+            options_html += '<div style="border: 1px solid #ddd; height: 80px; margin-top: 3px; padding: 5px;"></div>'
+            options_html += '<p style="margin: 5px 0 2px 10px; font-weight: bold; font-size: 0.9em;">[ Código CSS ]:</p>'
+            options_html += '<div style="border: 1px solid #ddd; height: 60px; margin-top: 3px; padding: 5px;"></div>'
+            options_html += '<p style="margin: 5px 0 2px 10px; font-weight: bold; font-size: 0.9em;">[ Código JavaScript ]:</p>'
+            options_html += '<div style="border: 1px solid #ddd; height: 60px; margin-top: 3px; padding: 5px;"></div>'
+            if q.get('options') and "LINK_REQUIRED" in q['options']:
+                options_html += '<p style="margin: 5px 0 5px 10px;">Link para envio: ________________________________________________</p>'
         else:
             if q.get('options') and "LINK_REQUIRED" in q['options']:
                 options_html += '<p style="margin: 5px 0 5px 20px;">Link para envio: ________________________________________________</p>'
@@ -438,11 +526,18 @@ def show_admin_view():
                                 answer_text = "---" # Padrão
                                 ans = answers_map.get(question['id'])
                                 if ans:
-                                    if question['question_type'] == 'objective':
+                                    q_type = question.get('question_type')
+                                    if q_type == 'objective':
                                         idx = ans.get('selected_option_index')
                                         opts = question.get('options', [])
                                         if idx is not None and 0 <= idx < len(opts):
                                             answer_text = opts[idx]
+                                    elif q_type == 'code_web':
+                                        codes = parse_code_web_answer(ans.get('answer_text', ''))
+                                        if codes.get('html') or codes.get('css') or codes.get('js'):
+                                            answer_text = "[Código Web]"
+                                        else:
+                                            answer_text = "---"
                                     else:
                                         answer_text = ans.get('answer_text', '')
                                 student_row[header] = answer_text
@@ -484,6 +579,76 @@ def show_admin_view():
                             if row['Nota'] is not None and (pd.isna(orig['Nota']) or orig['Nota'] != row['Nota']):
                                 db.update_submission_score(orig['_submission'].get('id'), row['Nota'])
                         st.success("Notas atualizadas!"); st.rerun()
+
+                    # Detalhes das submissões marcadas para visualização
+                    selected_visualize = edited_df[edited_df['Visualizar'] == True]
+                    if not selected_visualize.empty:
+                        st.divider()
+                        st.markdown("### 👁️ Detalhes das Respostas dos Alunos Selecionados")
+                        for _, row in selected_visualize.iterrows():
+                            sub_item = row['_submission']
+                            user_meta = row['_user_info']
+                            st_name = user_meta.get('name', 'Aluno')
+                            st_ra = user_meta.get('ra', 'N/A')
+
+                            with st.expander(f"📋 Respostas de: {st_name} (RA: {st_ra}) - Nota Atual: {row.get('Nota', 'Sem nota')}", expanded=True):
+                                sub_answers = db.get_submission_answers(sub_item['id'])
+                                sub_ans_map = {a['question_id']: a for a in sub_answers}
+
+                                for qi, q in enumerate(questions):
+                                    q_type = q.get('question_type', 'objective')
+                                    st.markdown(f"**{qi+1}. {format_display_text(q['question_text'])}**")
+                                    a_record = sub_ans_map.get(q['id'])
+                                    if not a_record:
+                                        st.caption("Aluno não respondeu esta questão.")
+                                        st.markdown("---")
+                                        continue
+
+                                    if q_type == 'objective':
+                                        opts = q.get('options', [])
+                                        u_idx = a_record.get('selected_option_index')
+                                        c_idx = q.get('correct_option_index', 0)
+                                        u_resp = opts[u_idx] if (u_idx is not None and 0 <= u_idx < len(opts)) else "Não respondida"
+                                        c_resp = opts[c_idx] if (0 <= c_idx < len(opts)) else "?"
+                                        if u_idx == c_idx:
+                                            st.success(f"✅ Resposta correta: {format_display_text(u_resp)}")
+                                        else:
+                                            st.error(f"❌ Resposta do aluno: {format_display_text(u_resp)} | Gabarito esperado: {format_display_text(c_resp)}")
+                                    elif q_type == 'code_web':
+                                        codes = parse_code_web_answer(a_record.get('answer_text', ''))
+                                        html_val = codes.get('html', '')
+                                        css_val = codes.get('css', '')
+                                        js_val = codes.get('js', '')
+                                        tab_h, tab_c, tab_j, tab_p = st.tabs(["📄 HTML", "🎨 CSS", "⚡ JavaScript", "🌐 Visualização Web"])
+                                        with tab_h:
+                                            st.code(html_val if html_val else "<!-- Nenhum código HTML informado -->", language="html")
+                                        with tab_c:
+                                            st.code(css_val if css_val else "/* Nenhum código CSS informado */", language="css")
+                                        with tab_j:
+                                            st.code(js_val if js_val else "// Nenhum código JavaScript informado", language="javascript")
+                                        with tab_p:
+                                            live_html = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>{css_val}</style>
+</head>
+<body>
+  {html_val}
+  <script>{js_val}</script>
+</body>
+</html>"""
+                                            components.html(live_html, height=280, scrolling=True)
+                                        
+                                        link_val = a_record.get('answer_link')
+                                        if link_val:
+                                            st.markdown(f"🔗 **Link do Projeto:** [{link_val}]({link_val})")
+                                    else: # subjective
+                                        st.info(f"📝 **Resposta:**\n\n{a_record.get('answer_text', 'Sem texto')}")
+                                        link_val = a_record.get('answer_link')
+                                        if link_val:
+                                            st.markdown(f"🔗 **Link enviado:** [{link_val}]({link_val})")
+                                    st.markdown("---")
 
 def show_student_view():
     username = st.session_state.get('username')
@@ -539,14 +704,74 @@ def show_student_view():
                 if attempts > 0:
                     best_score = -1
                     is_corrected = False
-                    for sub in submissions: 
+                    best_submission = None
+                    for sub in submissions:
                         s = sub.get('score')
-                        if s is not None: 
+                        if s is not None:
                             is_corrected = True
-                            if s > best_score: best_score = s
-                    
-                    if is_corrected: st.success(f"**Melhor Nota: {best_score}**")
-                    else: st.caption("Aguardando correção.")
+                            if s > best_score:
+                                best_score = s
+                                best_submission = sub
+
+                    if is_corrected:
+                        st.success(f"**Melhor Nota: {best_score}**")
+                    else:
+                        st.caption("Aguardando correcao do professor.")
+
+                    # Botao para imprimir prova corrigida (so aparece apos correcao)
+                    if is_corrected and best_submission:
+                        with st.expander("Prova Corrigida (com respostas)", expanded=False):
+                            st.info("Voce pode visualizar e imprimir sua prova com as respostas e o gabarito.")
+
+                            # Busca dados para impressao
+                            school_info = db.get_school()
+                            school_name = school_info['name'] if school_info else "Escola Tecnica"
+
+                            # Busca turma
+                            enrollment = db.get_user_enrollment(username)
+                            class_name = "Turma"
+                            if enrollment:
+                                all_classes = db.get_classes()
+                                for c in all_classes:
+                                    if c['id'] == enrollment['class_id']:
+                                        class_name = c['name']
+                                        break
+
+                            # Busca nome do aluno
+                            user_data = db.get_user(username)
+                            student_name = user_data.get('name', username) if user_data else username
+                            ra = user_data.get('ra', '') if user_data else ''
+
+                            # Busca questoes e respostas
+                            questions = db.get_assessment_questions(assessment['id'])
+                            answers = db.get_submission_answers(best_submission['id'])
+                            answers_map = {a['question_id']: a for a in answers}
+
+                            # Gera HTML da prova corrigida
+                            corrected_html = generate_printable_view(
+                                school_name,
+                                selected_subject_name,
+                                class_name,
+                                student_name,
+                                ra,
+                                best_score,
+                                questions,
+                                answers_map
+                            )
+
+                            col_prev, col_dl = st.columns(2)
+                            with col_prev:
+                                if st.button("Visualizar Prova Corrigida", key=f"preview_corrected_{assessment['id']}"):
+                                    components.html(corrected_html, height=700, scrolling=True)
+                                    st.stop()
+                            with col_dl:
+                                st.download_button(
+                                    label="Salvar Prova Corrigida (HTML)",
+                                    data=corrected_html.encode('utf-8'),
+                                    file_name=f"prova_corrigida_{assessment['type']}.html",
+                                    mime="text/html",
+                                    key=f"dl_corrected_{assessment['id']}"
+                                )
 
                 if attempts < 2:
                     st.caption("Você ainda não realizou esta avaliação.")
@@ -680,15 +905,60 @@ def show_student_view():
         with st.form(key=f"assessment_form_{assessment['id']}"):
             answers = []
             for i, q in enumerate(questions):
-                st.markdown(f"**Questão {i+1}:** {q['question_text']}")
+                q_type = q.get('question_type', 'objective')
                 
-                if q['question_type'] == 'objective':
+                if q_type == 'objective':
+                    st.markdown(f"**Questão {i+1}:** {format_display_text(q['question_text'])}")
                     opts = q.get('options', [])
-                    val = st.radio("Selecione a alternativa:", opts, key=f"q_{q['id']}", index=None)
+                    val = st.radio("Selecione a alternativa:", opts, key=f"q_{q['id']}", index=None, format_func=format_display_text)
                     idx = opts.index(val) if val in opts else -1
                     answers.append({'question_id': q['id'], 'type': 'objective', 'value': idx})
                     
-                elif q['question_type'] == 'subjective':
+                elif q_type == 'code_web':
+                    st.markdown(f"**Questão {i+1} [Prática Web]:** {format_display_text(q['question_text'])}")
+                    st.caption("💻 Preencha o código nos campos abaixo. Textos sem código HTML/CSS/JS válido serão rejeitados.")
+                    
+                    tabs_web = st.tabs(["📄 HTML", "🎨 CSS", "⚡ JavaScript", "ℹ️ Critérios de Validação"])
+                    with tabs_web[0]:
+                        html_val = st.text_area(
+                            "Código HTML:", 
+                            key=f"code_html_{q['id']}", 
+                            height=170, 
+                            placeholder="<!-- Digite sua estrutura HTML aqui -->\n<div class=\"container\">\n  <h1>Meu Título</h1>\n  <button id=\"btnAcao\">Clique Aqui</button>\n</div>"
+                        )
+                    with tabs_web[1]:
+                        css_val = st.text_area(
+                            "Código CSS:", 
+                            key=f"code_css_{q['id']}", 
+                            height=150, 
+                            placeholder="/* Digite seu estilo CSS aqui */\nbody {\n  font-family: Arial, sans-serif;\n  background-color: #f5f5f5;\n}\n.container {\n  padding: 20px;\n}"
+                        )
+                    with tabs_web[2]:
+                        js_val = st.text_area(
+                            "Código JavaScript:", 
+                            key=f"code_js_{q['id']}", 
+                            height=150, 
+                            placeholder="// Digite sua lógica JavaScript aqui\nconst btn = document.getElementById('btnAcao');\nif (btn) {\n  btn.addEventListener('click', () => alert('Ação executada!'));\n}"
+                        )
+                    with tabs_web[3]:
+                        st.info("📌 **Validação do Sistema:**\n- **HTML:** É obrigatório conter elementos/tags estruturados válidos (ex: `<div class='...'>`, `<h1>`, `<p>`, `<button>`).\n- **CSS:** As regras devem seguir a sintaxe `seletor { propriedade: valor; }`.\n- **JavaScript:** Deve conter comandos e palavras-chave de JS (ex: `let`, `function`, manipulação DOM, eventos).")
+                    
+                    link_resp = ""
+                    if q.get('options') and "LINK_REQUIRED" in q['options']:
+                        link_resp = st.text_input("Link do projeto online (GitHub / Vercel):", key=f"lnk_web_{q['id']}")
+                    
+                    answers.append({
+                        'question_id': q['id'],
+                        'type': 'code_web',
+                        'html': html_val,
+                        'css': css_val,
+                        'js': js_val,
+                        'link': link_resp,
+                        'options': q.get('options', [])
+                    })
+
+                elif q_type == 'subjective':
+                    st.markdown(f"**Questão {i+1}:** {q['question_text']}")
                     text_resp = st.text_area("Sua resposta:", key=f"txt_{q['id']}")
                     link_resp = ""
                     if q.get('options') and "LINK_REQUIRED" in q['options']:
@@ -697,38 +967,80 @@ def show_student_view():
                 st.markdown("---")
             
             if st.form_submit_button("Finalizar e Enviar Avaliação"):
-                # Validação simples
-                if any((a['type'] == 'objective' and a['value'] == -1) for a in answers):
-                    st.error("Responda todas as questões objetivas.")
+                # 1. Validação de questões objetivas não respondidas
+                unanswered_obj = [i+1 for i, a in enumerate(answers) if a['type'] == 'objective' and a['value'] == -1]
+                if unanswered_obj:
+                    st.error(f"Por favor, responda todas as questões objetivas (Questão {', '.join(map(str, unanswered_obj))}).")
                 else:
+                    # 2. Validação estrita de questões de código web
+                    code_validation_errors = []
+                    for i, a in enumerate(answers):
+                        if a['type'] == 'code_web':
+                            is_valid, err_list = validate_web_submission(
+                                a['html'], a['css'], a['js'], a.get('options', [])
+                            )
+                            if not is_valid:
+                                for err_msg in err_list:
+                                    code_validation_errors.append(f"Questão {i+1}: {err_msg}")
+                    
+                    if code_validation_errors:
+                        st.error("⚠️ Foram encontrados problemas no código informado:")
+                        for c_err in code_validation_errors:
+                            st.error(f"• {c_err}")
+                        st.warning("Corrija os campos de código antes de finalizar o envio.")
+                    else:
+                        with st.spinner("Corrigindo e enviando sua avaliação..."):
+                            # --- LÓGICA DE AUTOCORREÇÃO E PREPARAÇÃO DOS DADOS ---
+                            objective_score = 0
+                            has_subjective = False
+                            total_questions = len(questions)
+                            points_per_question = 10 / total_questions if total_questions > 0 else 0
 
-                    with st.spinner("Corrigindo e enviando sua avaliação..."):
-                        # --- LÓGICA DE AUTOCORREÇÃO ---
-                        objective_score = 0
-                        has_subjective = False
-                        total_questions = len(questions)
-                        points_per_question = 10 / total_questions if total_questions > 0 else 0
+                            question_map = {q['id']: q for q in questions}
+                            db_answers = []
 
-                        question_map = {q['id']: q for q in questions}
-
-                        for ans in answers:
-                            if ans['type'] == 'objective':
-                                question = question_map.get(ans['question_id'])
-                                if question and question.get('correct_option_index') == ans.get('value'):
-                                    objective_score += points_per_question
-                            elif ans['type'] == 'subjective':
-                                has_subjective = True
-                        
-                        # Se não houver subjetivas, a nota final é a nota objetiva. Senão, é nula para correção manual.
-                        final_score = round(objective_score, 2) if not has_subjective else None
-                        
-                        success, err = db.submit_assessment(username, assessment['id'], answers, final_score)
-                        if success:
-                            st.success("Avaliação enviada com sucesso!")
-                            del st.session_state.active_assessment
-                            st.rerun()
-                        else:
-                            st.error(f"Erro ao enviar: {err}")
+                            for ans in answers:
+                                if ans['type'] == 'objective':
+                                    question = question_map.get(ans['question_id'])
+                                    if question and question.get('correct_option_index') == ans.get('value'):
+                                        objective_score += points_per_question
+                                    db_answers.append({
+                                        'question_id': ans['question_id'],
+                                        'type': 'objective',
+                                        'value': ans.get('value')
+                                    })
+                                elif ans['type'] == 'code_web':
+                                    has_subjective = True
+                                    json_text = json.dumps({
+                                        'html': ans.get('html', ''),
+                                        'css': ans.get('css', ''),
+                                        'js': ans.get('js', '')
+                                    }, ensure_ascii=False)
+                                    db_answers.append({
+                                        'question_id': ans['question_id'],
+                                        'type': 'code_web',
+                                        'text': json_text,
+                                        'link': ans.get('link', '')
+                                    })
+                                elif ans['type'] == 'subjective':
+                                    has_subjective = True
+                                    db_answers.append({
+                                        'question_id': ans['question_id'],
+                                        'type': 'subjective',
+                                        'text': ans.get('text', ''),
+                                        'link': ans.get('link', '')
+                                    })
+                            
+                            # Se não houver subjetivas ou código web, a nota final é a nota objetiva
+                            final_score = round(objective_score, 2) if not has_subjective else None
+                            
+                            success, err = db.submit_assessment(username, assessment['id'], db_answers, final_score)
+                            if success:
+                                st.success("Avaliação enviada com sucesso!")
+                                del st.session_state.active_assessment
+                                st.rerun()
+                            else:
+                                st.error(f"Erro ao enviar: {err}")
 
 
 def show_page():

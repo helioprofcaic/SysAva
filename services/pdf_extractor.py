@@ -5,9 +5,13 @@ Utiliza pdfplumber para extração precisa e preservação de estrutura.
 
 import os
 import re
+import io
+import base64
+import hashlib
 from typing import Optional, Dict, List, Any
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+from PIL import Image
 
 try:
     import pdfplumber
@@ -42,6 +46,26 @@ class PDFMetadata:
 
 
 @dataclass
+class ExtractedAsset:
+    """Ilustração ou imagem extraída do PDF."""
+    filename: str
+    relative_path: str
+    absolute_path: str
+    page_number: int
+    image_index: int
+    width: int
+    height: int
+    image_format: str
+    image_hash: str
+    context_topic: str = ""
+    caption_hint: str = ""
+    svg_filename: str = ""
+    svg_relative_path: str = ""
+    svg_absolute_path: str = ""
+    svg_content: str = ""
+
+
+@dataclass
 class ExtractedContent:
     """Conteúdo extraído de um PDF."""
     metadata: PDFMetadata
@@ -49,6 +73,7 @@ class ExtractedContent:
     pages: List[Dict[str, Any]]
     tables: List[List[List[str]]]
     structure_summary: str
+    assets: List[ExtractedAsset] = field(default_factory=list)
 
 
 class PDFExtractor:
@@ -76,13 +101,25 @@ class PDFExtractor:
             r'^•\s+|^\d+\)\s+|^\-\s+',
         ]
     
-    def extract_from_file(self, file_path: str, extract_tables: bool = True) -> ExtractedContent:
+    def extract_from_file(
+        self,
+        file_path: str,
+        extract_tables: bool = True,
+        extract_assets: bool = True,
+        output_assets_dir: Optional[str] = None,
+        relative_to_dir: Optional[str] = None,
+        save_images: bool = True
+    ) -> ExtractedContent:
         """
-        Extrai texto e estrutura de um arquivo PDF.
+        Extrai texto, tabelas e ilustrações de um arquivo PDF.
         
         Args:
             file_path: Caminho para o arquivo PDF
             extract_tables: Se deve extrair tabelas (padrão: True)
+            extract_assets: Se deve extrair imagens e ilustrações (padrão: True)
+            output_assets_dir: Diretório de destino para imagens extraídas
+            relative_to_dir: Diretório base para geração de caminhos relativos em Markdown
+            save_images: Se deve salvar os arquivos de imagem no disco (padrão: True)
             
         Returns:
             ExtractedContent com todo o conteúdo extraído
@@ -133,15 +170,27 @@ class PDFExtractor:
                 # Combina todo o texto
                 full_text = "\n\n".join(all_text)
                 
+                # Extrai imagens/ilustrações se solicitado
+                assets = []
+                if extract_assets:
+                    assets = self._extract_images_from_pdf(
+                        file_path=file_path,
+                        pages_content=pages_content,
+                        output_assets_dir=output_assets_dir,
+                        relative_to_dir=relative_to_dir,
+                        save_images=save_images
+                    )
+
                 # Gera resumo estruturado
-                structure_summary = self._generate_structure_summary(pages_content, all_tables)
+                structure_summary = self._generate_structure_summary(pages_content, all_tables, len(assets))
                 
                 return ExtractedContent(
                     metadata=metadata,
                     full_text=full_text,
                     pages=pages_content,
                     tables=all_tables,
-                    structure_summary=structure_summary
+                    structure_summary=structure_summary,
+                    assets=assets
                 )
                 
         except Exception as e:
@@ -295,7 +344,230 @@ class PDFExtractor:
         """Verifica se a linha é um item numerado."""
         return bool(re.match(r'^\d+[\.\)]\s+', line))
     
-    def _generate_structure_summary(self, pages: List[Dict], tables: List) -> str:
+    def _detect_context_for_image(self, page_text: str, page_num: int, img_idx: int) -> tuple:
+        """Detecta o tópico da seção e gera uma sugestão de legenda para a imagem com base no texto da página."""
+        if not page_text:
+            return f"Tópico da Página {page_num}", f"Ilustração {img_idx + 1}"
+        
+        lower = page_text.lower()
+        
+        # 1. Checagens semânticas por ordem de especificidade e estrutura de seções
+        if "1. introdução" in lower:
+            if img_idx == 0:
+                return "Introdução ao Design Visual", "Conceito e Cenário do Design Visual"
+            else:
+                return "Princípios C-R-A-P e Avaliação de Design", "Princípios de Contraste e Repetição"
+
+        if "2. avaliação de design" in lower and "1. introdução" not in lower:
+            return "Princípios C-R-A-P e Avaliação de Design", "Princípios de Contraste e Repetição"
+
+        if "3. especificação do design" in lower or "protótipos de alta" in lower or "matriz csd" in lower:
+            if img_idx == 0 and ("alinhamento" in lower or "proximidade" in lower):
+                return "Alinhamento e Proximidade em Interfaces", "Disposição e Agrupamento Visual (CRAP)"
+            return "Especificação do Design, Protótipos e Matriz CSD", "Protótipos de Alta Fidelidade e Matriz CSD"
+
+        if "4. usabilidade" in lower:
+            if ("acessibilidade" in lower or "inclusivas" in lower) and img_idx >= 1:
+                return "Usabilidade e Acessibilidade em Interfaces", "Acessibilidade e Inclusão Digital"
+            return "Pilares de Usabilidade e Wireframing", "Os Cinco Pilares da Usabilidade"
+
+        if "5. a/b testing" in lower or "teste a/b" in lower or "criação das versões a e b" in lower:
+            return "Metodologia de Teste A/B", "Comparação de Versões em Teste A/B"
+
+        if "feedback" in lower or "expressão honesta" in lower:
+            if ("integrar" in lower or "jornada digital" in lower) and img_idx >= 1:
+                return "Integração do Feedback na Jornada Digital", "Evolução Contínua da Experiência do Usuário"
+            return "Feedback do Usuário e Diálogo Contínuo", "Coleta e Valorização do Feedback do Usuário"
+
+        if "alinhamento" in lower or "proximidade" in lower:
+            if img_idx == 0:
+                return "Alinhamento e Proximidade em Interfaces", "Disposição e Agrupamento Visual (CRAP)"
+
+        # 2. Fallback para cabeçalhos encontrados na página
+        lines = [l.strip() for l in page_text.split('\n') if l.strip()]
+        headers = []
+        for line in lines:
+            if re.match(r'^\d+\.\s+[A-ZÁÉÍÓÚÃÕÇ\s]+', line):
+                clean_line = re.sub(r'^\d+\.\s*', '', line).strip().title()
+                headers.append(clean_line)
+        
+        if headers:
+            h_idx = min(img_idx, len(headers) - 1)
+            return headers[h_idx], f"Ilustração de {headers[h_idx]}"
+
+        return f"Conteúdo da Página {page_num}", f"Ilustração {img_idx + 1}"
+
+    def _extract_images_from_pdf(
+        self,
+        file_path: str,
+        pages_content: List[Dict[str, Any]],
+        output_assets_dir: Optional[str] = None,
+        relative_to_dir: Optional[str] = None,
+        save_images: bool = True
+    ) -> List[ExtractedAsset]:
+        """
+        Extrai imagens/ilustrações relevantes do PDF, salvando-as na pasta de assets
+        e filtrando cabeçalhos/logos repetidos e capas de página inteira.
+        """
+        assets = []
+        try:
+            from pypdf import PdfReader
+        except ImportError:
+            return assets
+
+        try:
+            reader = PdfReader(file_path)
+            total_pages = len(reader.pages)
+            if total_pages == 0:
+                return assets
+
+            pdf_stem = Path(file_path).stem
+            # Gera nome padronizado de pasta: ex. aula_06
+            m_aula = re.search(r'(?i)aula[_\s-]*0?(\d+)', pdf_stem)
+            m_num = re.search(r'^0?(\d+)$', pdf_stem)
+            if m_aula:
+                lesson_folder = f"aula_{int(m_aula.group(1)):02d}"
+                file_prefix = f"aula_{int(m_aula.group(1)):02d}"
+            elif m_num:
+                lesson_folder = f"aula_{int(m_num.group(1)):02d}"
+                file_prefix = f"aula_{int(m_num.group(1)):02d}"
+            else:
+                clean_stem = re.sub(r'[^a-zA-Z0-9_-]', '_', pdf_stem).lower()
+                lesson_folder = clean_stem
+                file_prefix = clean_stem
+
+            pdf_dir = os.path.dirname(os.path.abspath(file_path))
+            
+            if output_assets_dir is None:
+                # Se está dentro de 'seductec', cria seductec/assets/<lesson_folder>
+                output_assets_dir = os.path.join(pdf_dir, "assets", lesson_folder)
+
+            if save_images:
+                os.makedirs(output_assets_dir, exist_ok=True)
+
+            # Primeira passagem: hash das imagens para identificar logos repetidos
+            hash_counts = {}
+            raw_images_list = []
+
+            for page_idx, page in enumerate(reader.pages, 1):
+                for img_idx, img in enumerate(page.images):
+                    try:
+                        raw_data = img.data
+                        img_hash = hashlib.md5(raw_data).hexdigest()
+                        hash_counts[img_hash] = hash_counts.get(img_hash, 0) + 1
+                        
+                        im = Image.open(io.BytesIO(raw_data))
+                        fmt = (im.format or 'png').lower()
+                        if fmt == 'jpeg':
+                            fmt = 'jpg'
+                            
+                        raw_images_list.append({
+                            'page_num': page_idx,
+                            'img_idx': img_idx,
+                            'name': img.name,
+                            'data': raw_data,
+                            'hash': img_hash,
+                            'width': im.width,
+                            'height': im.height,
+                            'format': fmt
+                        })
+                    except Exception:
+                        continue
+
+            # Filtra logos de cabeçalho e capas de fundo
+            page_img_counter = {}
+            for item in raw_images_list:
+                p_num = item['page_num']
+                h = item['hash']
+                w = item['width']
+                height = item['height']
+                
+                # 1. Filtra logos de cabeçalho repetidos em 2+ páginas
+                if hash_counts[h] > 1 and height < 200:
+                    continue
+                    
+                # 2. Filtra capa inteira da primeira página ou ícones da capa
+                if p_num == 1:
+                    continue
+                    
+                # 3. Filtra imagens minúsculas (ícones de layout < 50px)
+                if w < 50 or height < 50:
+                    continue
+
+                page_img_counter[p_num] = page_img_counter.get(p_num, 0) + 1
+                curr_idx = page_img_counter[p_num]
+                
+                base_name = f"{file_prefix}_p{p_num:02d}_{curr_idx:02d}"
+                out_filename = f"{base_name}.{item['format']}"
+                svg_filename = f"{base_name}.svg"
+                
+                abs_dest = os.path.join(output_assets_dir, out_filename)
+                abs_svg_dest = os.path.join(output_assets_dir, svg_filename)
+                
+                # Gera Base64 e String SVG autocontida
+                b64_data = base64.b64encode(item['data']).decode('utf-8')
+                mime_type = f"image/{'jpeg' if item['format'] in ['jpg', 'jpeg'] else 'png'}"
+                svg_id = f"clip-{file_prefix}-p{p_num:02d}-{curr_idx:02d}"
+                
+                # Dimensões e proporções para encaixe lateral elegante ao texto (layout editorial)
+                render_w = min(w, 240)
+                render_h = int(height * (render_w / w)) if w > 0 else height
+
+                svg_content = (
+                    f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {height}" '
+                    f'width="{render_w}" height="{render_h}" '
+                    f'style="float: right; margin: 4px 0 16px 24px; max-width: 38%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); clear: right;">'
+                    f'<defs><clipPath id="{svg_id}"><rect width="{w}" height="{height}" rx="8" ry="8"/></clipPath></defs>'
+                    f'<image href="data:{mime_type};base64,{b64_data}" width="{w}" height="{height}" clip-path="url(#{svg_id})" />'
+                    f'</svg>'
+                )
+
+                if save_images:
+                    with open(abs_dest, 'wb') as f_out:
+                        f_out.write(item['data'])
+                    with open(abs_svg_dest, 'w', encoding='utf-8') as f_svg:
+                        f_svg.write(svg_content)
+
+                # Calcula caminhos relativos
+                if relative_to_dir:
+                    rel_path = os.path.relpath(abs_dest, relative_to_dir).replace('\\', '/')
+                    rel_svg_path = os.path.relpath(abs_svg_dest, relative_to_dir).replace('\\', '/')
+                else:
+                    rel_path = os.path.relpath(abs_dest, os.path.dirname(os.path.dirname(output_assets_dir))).replace('\\', '/')
+                    rel_svg_path = os.path.relpath(abs_svg_dest, os.path.dirname(os.path.dirname(output_assets_dir))).replace('\\', '/')
+
+                # Busca texto da página correspondente
+                page_text = ""
+                if p_num <= len(pages_content):
+                    page_text = pages_content[p_num - 1].get('text', '')
+
+                context_topic, caption_hint = self._detect_context_for_image(page_text, p_num, curr_idx - 1)
+
+                asset = ExtractedAsset(
+                    filename=out_filename,
+                    relative_path=rel_path,
+                    absolute_path=abs_dest,
+                    page_number=p_num,
+                    image_index=curr_idx,
+                    width=w,
+                    height=height,
+                    image_format=item['format'],
+                    image_hash=h,
+                    context_topic=context_topic,
+                    caption_hint=caption_hint,
+                    svg_filename=svg_filename,
+                    svg_relative_path=rel_svg_path,
+                    svg_absolute_path=abs_svg_dest,
+                    svg_content=svg_content
+                )
+                assets.append(asset)
+
+        except Exception as e:
+            print(f"[Aviso] Falha ao extrair imagens do PDF: {e}")
+
+        return assets
+
+    def _generate_structure_summary(self, pages: List[Dict], tables: List, asset_count: int = 0) -> str:
         """
         Gera um resumo estruturado do documento.
         """
@@ -322,6 +594,9 @@ class PDFExtractor:
                     cols = len(table[0]) if table else 0
                     summary_parts.append(f"  Tabela {i}: {rows} linhas x {cols} colunas")
         
+        if asset_count > 0:
+            summary_parts.append(f"Ilustrações extraídas: {asset_count}")
+
         pages_with_content = sum(1 for p in pages if p.get('text', '').strip())
         summary_parts.append(f"Páginas com conteúdo textual: {pages_with_content}")
         
@@ -355,14 +630,25 @@ class PDFExtractor:
         if content.structure_summary:
             output_parts.append(f"RESUMO: {content.structure_summary}")
 
-        # Conteúdo textual —紧凑格式
+        # Indexa ilustrações por página para âncoras contextuais inline
+        assets_by_page = {}
+        for asset in content.assets:
+            assets_by_page.setdefault(asset.page_number, []).append(asset)
+
+        # Conteúdo textual — com âncoras de ilustrações posicionadas no fluxo da leitura
         for page in content.pages:
             page_num = page['page_number']
             text = page.get('text', '')
             tables = page.get('tables', [])
+            page_assets = assets_by_page.get(page_num, [])
 
-            if text.strip() or tables:
+            if text.strip() or tables or page_assets:
                 output_parts.append(f"--- Página {page_num} ---")
+
+                # Se a página contém ilustrações, insere a âncora contextual
+                if page_assets:
+                    for a in page_assets:
+                        output_parts.append(f"[📷 ILUSTRAÇÃO DESTA SEÇÃO: ![{a.caption_hint}]({a.relative_path}) -> Tópico: {a.context_topic}]")
 
                 if text.strip():
                     output_parts.append(text)
@@ -371,6 +657,16 @@ class PDFExtractor:
                 if tables:
                     for i, table in enumerate(tables, 1):
                         output_parts.append(self._format_table(table, i))
+
+        # Guia explícito de posicionamento para o LLM
+        if content.assets:
+            output_parts.append("\n## 🗺️ GUIA DE POSICIONAMENTO DAS ILUSTRAÇÕES (MUITO IMPORTANTE):")
+            output_parts.append("Distribua as ilustrações exatamente nos tópicos explicativos correspondentes. Posicione cada tag de imagem no início do parágrafo da sua seção para que o texto envolva a imagem:")
+            for asset in content.assets:
+                output_parts.append(
+                    f"- `![{asset.caption_hint}]({asset.relative_path})` ➔ Posicionar no início de: **{asset.context_topic}** (Página {asset.page_number})"
+                )
+            output_parts.append("\nREGRA DE DESIGN: Cada ilustração deve ficar junto ao seu conceito específico. Nunca agrupe múltiplas ilustrações no mesmo parágrafo ou no final do texto.\n")
 
         return "\n".join(output_parts)
     
@@ -396,19 +692,183 @@ class PDFExtractor:
         return "\n".join(lines)
 
 
-def extract_pdf_text(file_path: str, format_for_ai: bool = True) -> str:
+def convert_markdown_images_to_svg(
+    markdown_text: str,
+    assets: Optional[List[ExtractedAsset]] = None,
+    assets_dir: Optional[str] = None
+) -> str:
     """
-    Função de conveniência para extração rápida de texto de PDF.
+    Converte referências de imagens Markdown (![alt](caminho)) e arquivos de assets
+    em strings SVG autocontidas, permitindo persistência direta e portabilidade no Supabase.
+    """
+    if not markdown_text:
+        return ""
+
+    result = markdown_text
+
+    # Se uma lista de assets extraídos foi fornecida, constrói um mapa por nome de arquivo e caminho relativo
+    asset_map = {}
+    if assets:
+        for a in assets:
+            if a.svg_content:
+                asset_map[a.filename.lower()] = a.svg_content
+                asset_map[a.svg_filename.lower()] = a.svg_content
+                asset_map[a.relative_path.lower()] = a.svg_content
+                asset_map[a.svg_relative_path.lower()] = a.svg_content
+                # Também mapeia apenas o nome do arquivo sem extensão
+                stem = Path(a.filename).stem.lower()
+                asset_map[stem] = a.svg_content
+
+    # Se foi passado um assets_dir, carrega os SVGs ou converte imagens locais
+    if assets_dir and os.path.exists(assets_dir):
+        for root, _, files in os.walk(assets_dir):
+            for file in files:
+                f_path = os.path.join(root, file)
+                f_lower = file.lower()
+                f_stem = Path(file).stem.lower()
+                
+                if f_lower.endswith('.svg') and f_lower not in asset_map:
+                    try:
+                        with open(f_path, 'r', encoding='utf-8') as f:
+                            svg_data = f.read().strip()
+                            asset_map[f_lower] = svg_data
+                            asset_map[f_stem] = svg_data
+                    except Exception:
+                        pass
+                elif f_lower.endswith(('.png', '.jpg', '.jpeg')) and f_lower not in asset_map:
+                    try:
+                        with open(f_path, 'rb') as f:
+                            raw = f.read()
+                        im = Image.open(io.BytesIO(raw))
+                        fmt = 'jpeg' if f_lower.endswith(('.jpg', '.jpeg')) else 'png'
+                        b64 = base64.b64encode(raw).decode('utf-8')
+                        w, h = im.size
+                        svg_id = f"clip-{f_stem}"
+                        render_w = min(w, 240)
+                        render_h = int(h * (render_w / w)) if w > 0 else h
+                        svg_data = (
+                            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" '
+                            f'width="{render_w}" height="{render_h}" '
+                            f'style="float: right; margin: 4px 0 16px 24px; max-width: 38%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); clear: right;">'
+                            f'<defs><clipPath id="{svg_id}"><rect width="{w}" height="{h}" rx="8" ry="8"/></clipPath></defs>'
+                            f'<image href="data:image/{fmt};base64,{b64}" width="{w}" height="{h}" clip-path="url(#{svg_id})" />'
+                            f'</svg>'
+                        )
+                        asset_map[f_lower] = svg_data
+                        asset_map[f_stem] = svg_data
+                    except Exception:
+                        pass
+
+    # Substitui tags de imagem Markdown (![alt](path))
+    def _repl_img(match):
+        alt = match.group(1).strip()
+        src = match.group(2).strip()
+        src_lower = src.lower()
+        src_filename = os.path.basename(src).lower()
+        src_stem = Path(src_filename).stem.lower()
+
+        # 1. Busca no mapa de assets pré-carregados
+        if src_lower in asset_map:
+            return f"\n{asset_map[src_lower]}\n"
+        elif src_filename in asset_map:
+            return f"\n{asset_map[src_filename]}\n"
+        elif src_stem in asset_map:
+            return f"\n{asset_map[src_stem]}\n"
+
+        # 2. Se o caminho direto existe no disco
+        if os.path.exists(src) and os.path.isfile(src):
+            try:
+                if src_lower.endswith('.svg'):
+                    with open(src, 'r', encoding='utf-8') as f:
+                        return f"\n{f.read().strip()}\n"
+                with open(src, 'rb') as f:
+                    raw = f.read()
+                im = Image.open(io.BytesIO(raw))
+                fmt = 'jpeg' if src_lower.endswith(('.jpg', '.jpeg')) else 'png'
+                b64 = base64.b64encode(raw).decode('utf-8')
+                w, h = im.size
+                render_w = min(w, 240)
+                render_h = int(h * (render_w / w)) if w > 0 else h
+                svg_id = f"clip-{src_stem}"
+                return (
+                    f'\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" '
+                    f'width="{render_w}" height="{render_h}" '
+                    f'style="float: right; margin: 4px 0 16px 24px; max-width: 38%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); clear: right;">'
+                    f'<defs><clipPath id="{svg_id}"><rect width="{w}" height="{h}" rx="8" ry="8"/></clipPath></defs>'
+                    f'<image href="data:image/{fmt};base64,{b64}" width="{w}" height="{h}" clip-path="url(#{svg_id})" />'
+                    f'</svg>\n'
+                )
+            except Exception:
+                pass
+
+        # 3. Busca recursiva na pasta data/Turmas por nome de arquivo correspondente
+        data_dir = os.path.join(os.getcwd(), "data")
+        if os.path.exists(data_dir):
+            for root, _, files in os.walk(data_dir):
+                for f in files:
+                    if f.lower() == src_filename or Path(f).stem.lower() == src_stem:
+                        candidate_path = os.path.join(root, f)
+                        try:
+                            if candidate_path.lower().endswith('.svg'):
+                                with open(candidate_path, 'r', encoding='utf-8') as f_svg:
+                                    return f"\n{f_svg.read().strip()}\n"
+                            elif candidate_path.lower().endswith(('.jpg', '.jpeg', '.png')):
+                                with open(candidate_path, 'rb') as f_img:
+                                    raw = f_img.read()
+                                im = Image.open(io.BytesIO(raw))
+                                fmt = 'jpeg' if candidate_path.lower().endswith(('.jpg', '.jpeg')) else 'png'
+                                b64 = base64.b64encode(raw).decode('utf-8')
+                                w, h = im.size
+                                render_w = min(w, 240)
+                                render_h = int(h * (render_w / w)) if w > 0 else h
+                                svg_id = f"clip-{src_stem}"
+                                return (
+                                    f'\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" '
+                                    f'width="{render_w}" height="{render_h}" '
+                                    f'style="float: right; margin: 4px 0 16px 24px; max-width: 38%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); clear: right;">'
+                                    f'<defs><clipPath id="{svg_id}"><rect width="{w}" height="{h}" rx="8" ry="8"/></clipPath></defs>'
+                                    f'<image href="data:image/{fmt};base64,{b64}" width="{w}" height="{h}" clip-path="url(#{svg_id})" />'
+                                    f'</svg>\n'
+                                )
+                        except Exception:
+                            pass
+
+        # 4. Se não encontrar o arquivo de imagem, não deixa o link quebrado que gera o ícone de imagem quebrada no navegador
+        if alt:
+            return f"\n\n> 🎨 **Ilustração Oficial:** *{alt}*\n\n"
+        return ""
+
+    result = re.sub(r'!\[(.*?)\]\((.*?)\)', _repl_img, result)
+    return result
+
+
+def extract_pdf_text(
+    file_path: str,
+    format_for_ai: bool = True,
+    extract_assets: bool = True,
+    output_assets_dir: Optional[str] = None,
+    relative_to_dir: Optional[str] = None
+) -> str:
+    """
+    Função de conveniência para extração rápida de texto e ilustrações de PDF.
     
     Args:
         file_path: Caminho para o arquivo PDF
         format_for_ai: Se deve formatar para leitura por IA (padrão: True)
+        extract_assets: Se deve extrair ilustrações (padrão: True)
+        output_assets_dir: Diretório para salvar imagens extraídas
+        relative_to_dir: Diretório base para caminhos relativos de markdown
         
     Returns:
         Texto extraído e formatado
     """
     extractor = PDFExtractor()
-    content = extractor.extract_from_file(file_path)
+    content = extractor.extract_from_file(
+        file_path,
+        extract_assets=extract_assets,
+        output_assets_dir=output_assets_dir,
+        relative_to_dir=relative_to_dir
+    )
     
     if format_for_ai:
         return extractor.format_for_ai(content)
@@ -416,13 +876,20 @@ def extract_pdf_text(file_path: str, format_for_ai: bool = True) -> str:
         return content.full_text
 
 
-def extract_multiple_pdfs(file_paths: List[str], format_for_ai: bool = True) -> str:
+def extract_multiple_pdfs(
+    file_paths: List[str],
+    format_for_ai: bool = True,
+    extract_assets: bool = True,
+    relative_to_dir: Optional[str] = None
+) -> str:
     """
     Extrai texto de múltiplos PDFs e combina.
     
     Args:
         file_paths: Lista de caminhos para arquivos PDF
         format_for_ai: Se deve formatar para leitura por IA
+        extract_assets: Se deve extrair ilustrações
+        relative_to_dir: Diretório base para caminhos relativos
         
     Returns:
         Texto combinado de todos os PDFs
@@ -432,7 +899,11 @@ def extract_multiple_pdfs(file_paths: List[str], format_for_ai: bool = True) -> 
     
     for file_path in file_paths:
         try:
-            content = extractor.extract_from_file(file_path)
+            content = extractor.extract_from_file(
+                file_path,
+                extract_assets=extract_assets,
+                relative_to_dir=relative_to_dir
+            )
             
             if format_for_ai:
                 formatted = extractor.format_for_ai(content)

@@ -93,14 +93,60 @@ set STREAMLIT_SERVER_ADDRESS=0.0.0.0
 
 REM Força o modo local ignorando o secrets.toml
 set FORCE_LOCAL_MODE=1
-:start_app
+
 REM Lê o nome da escola do arquivo de configuração para exibir na mensagem
 set "SCHOOL_CONFIG_FILE=data\Turmas\Escola.txt"
 set school_name=SysAva
 if exist "%SCHOOL_CONFIG_FILE%" set /p school_name=<"%SCHOOL_CONFIG_FILE%"
 
-REM Executa a aplicacao
+:menu
+cls
+echo ========================================================
+echo                 PAINEL DE CONTROLE SYSAVA               
+echo ========================================================
+echo.
+echo Selecione a aplicação que deseja iniciar:
+echo.
+echo [1] Iniciar o %school_name% (Aplicação Principal)
+echo [2] Iniciar o Verificador de Duplicatas (historico_aulas)
+echo [3] Iniciar o Monitor de Consumo do Supabase (Egress)
+echo [4] Iniciar o Acompanhamento de Planejamento e Registro
+echo [5] Sair do Painel
+echo.
+echo ========================================================
+set /p escolha="Digite a opção desejada (1-5): "
+
+if "%escolha%"=="1" goto start_app
+if "%escolha%"=="2" goto start_dup
+if "%escolha%"=="3" goto start_mon
+if "%escolha%"=="4" goto start_plan
+if "%escolha%"=="5" exit /b 0
+goto menu
+
+:start_app
 echo.
 echo Iniciando o %school_name%...
 call "%VENV_PATH%\Scripts\streamlit.exe" run app.py
 pause
+goto menu
+
+:start_dup
+echo.
+echo Iniciando o Verificador de Duplicatas...
+call "%VENV_PATH%\Scripts\streamlit.exe" run apps/duplicate_checker/duplicate_checker_streamlit.py
+pause
+goto menu
+
+:start_mon
+echo.
+echo Iniciando o Monitor de Consumo Supabase...
+call "%VENV_PATH%\Scripts\streamlit.exe" run apps/supabase_monitor/supabase_monitor_streamlit.py
+pause
+goto menu
+
+:start_plan
+echo.
+echo Iniciando o Acompanhamento de Planejamento e Registro (porta 8510)...
+call "%VENV_PATH%\Scripts\streamlit.exe" run apps/planejamento_registro/planejamento_registro_streamlit.py --server.port 8510
+pause
+goto menu

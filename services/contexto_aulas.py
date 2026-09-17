@@ -1,6 +1,7 @@
 import os
 import glob
 import re
+import unicodedata
 from typing import Optional, List
 
 # Tenta usar o novo extrador otimizado, senão usa pypdf como fallback
@@ -11,6 +12,70 @@ except ImportError:
     HAS_PDF_EXTRACTOR = False
     from pypdf import PdfReader
 
+def normalizar_para_matching(texto: str) -> str:
+    """Normaliza texto removendo acentos, pontuações e convertendo para maiúsculas."""
+    if not texto:
+        return ""
+    nfkd = unicodedata.normalize('NFKD', str(texto))
+    sem_acento = "".join([c for c in nfkd if not unicodedata.combining(c)])
+    return re.sub(r'[^A-Z0-9]', '', sem_acento.upper())
+
+def resolver_pasta_turma(base_turmas_path: str, nome_turma: str, folder_name: str = None) -> str:
+    """Encontra a pasta física da turma mesmo com variações de nomenclatura ou caracteres."""
+    if not os.path.exists(base_turmas_path):
+        return folder_name or nome_turma
+    
+    if folder_name and os.path.exists(os.path.join(base_turmas_path, folder_name)):
+        return folder_name
+
+    direto = os.path.join(base_turmas_path, nome_turma)
+    if os.path.exists(direto):
+        return nome_turma
+
+    try:
+        pastas = [d for d in os.listdir(base_turmas_path) if os.path.isdir(os.path.join(base_turmas_path, d))]
+    except Exception:
+        return folder_name or nome_turma
+
+    norm_alvo = normalizar_para_matching(folder_name or nome_turma)
+    for p in pastas:
+        if normalizar_para_matching(p) == norm_alvo:
+            return p
+    for p in pastas:
+        norm_p = normalizar_para_matching(p)
+        if norm_alvo and (norm_alvo in norm_p or norm_p in norm_alvo):
+            return p
+    return folder_name or nome_turma
+
+def resolver_pasta_disciplina(base_turma_path: str, nome_disciplina: str, folder_name: str = None) -> str:
+    """Encontra a pasta física da disciplina usando folder_name ou busca resiliente no disco."""
+    if not os.path.exists(base_turma_path):
+        return folder_name or nome_disciplina.replace('/', '  ').replace('\\', '  ')
+    
+    if folder_name and os.path.exists(os.path.join(base_turma_path, folder_name)):
+        return folder_name
+
+    # Se não tiver barras e existir direto
+    if '/' not in nome_disciplina and '\\' not in nome_disciplina:
+        direto = os.path.join(base_turma_path, nome_disciplina)
+        if os.path.exists(direto):
+            return nome_disciplina
+
+    try:
+        pastas = [d for d in os.listdir(base_turma_path) if os.path.isdir(os.path.join(base_turma_path, d))]
+    except Exception:
+        return folder_name or nome_disciplina.replace('/', '  ').replace('\\', '  ')
+
+    norm_alvo = normalizar_para_matching(folder_name or nome_disciplina)
+    for p in pastas:
+        if normalizar_para_matching(p) == norm_alvo:
+            return p
+    for p in pastas:
+        norm_p = normalizar_para_matching(p)
+        if norm_alvo and (norm_alvo in norm_p or norm_p in norm_alvo):
+            return p
+    return folder_name or nome_disciplina.replace('/', '  ').replace('\\', '  ')
+
 class GerenciadorContextoAula:
     def __init__(self, base_data_path):
         """
@@ -18,6 +83,15 @@ class GerenciadorContextoAula:
         :param base_data_path: Caminho raiz para a pasta 'data' (ex: b:\\Dev\\SysAva\\data)
         """
         self.base_data_path = base_data_path
+
+    def obter_caminho_aula(self, turma, disciplina, semana):
+        """Retorna o caminho do diretório da semana da aula resolvendo pastas físicas no disco."""
+        turmas_dir = os.path.join(self.base_data_path, "Turmas")
+        turma_real = resolver_pasta_turma(turmas_dir, turma)
+        turma_path = os.path.join(turmas_dir, turma_real)
+        disc_real = resolver_pasta_disciplina(turma_path, disciplina)
+        semana_str = f"S{int(semana):02d}"
+        return os.path.join(turma_path, disc_real, semana_str)
 
     def _rota_1_arquivo_txt(self, arquivo_lista_path, numero_aula):
         """
@@ -47,15 +121,7 @@ class GerenciadorContextoAula:
         """
         Retorna uma lista de arquivos disponíveis e uma lista de sugeridos.
         """
-        semana_str = f"S{int(semana):02d}"
-        
-        path_aula = os.path.join(
-            self.base_data_path, 
-            "Turmas", 
-            turma, 
-            disciplina, 
-            semana_str, 
-        )
+        path_aula = self.obter_caminho_aula(turma, disciplina, semana)
 
         if not os.path.exists(path_aula):
             return None, f"Pasta não encontrada: {path_aula}"
@@ -88,23 +154,18 @@ class GerenciadorContextoAula:
     def _rota_2_pasta_arquivos(self, turma, disciplina, semana):
         """
         ROTA 2: Busca PDFs e Links na estrutura de pastas data/Turmas/...
-        Estrutura esperada: data/Turmas/<turma>/<disciplina>/S<semana>/seductec/
+        Estrutura esperada: data/Turmas/<turma>/<disciplina>/S<semana>/ (ou com subpasta seductec/)
         """
         # Formata semana para S01, S02, etc.
         semana_str = f"S{int(semana):02d}"
         
-        # Monta o caminho relativo
-        path_aula = os.path.join(
-            self.base_data_path, 
-            "Turmas", 
-            turma, 
-            disciplina, 
-            semana_str, 
-            "seductec"
-        )
+        path_semana = self.obter_caminho_aula(turma, disciplina, semana)
 
-        if not os.path.exists(path_aula):
-            return f"Aviso: Pasta da aula não encontrada: {path_aula}"
+        if not os.path.exists(path_semana):
+            return f"Aviso: Pasta da aula não encontrada: {path_semana}"
+
+        path_seductec = os.path.join(path_semana, "seductec")
+        path_aula = path_seductec if os.path.exists(path_seductec) else path_semana
 
         texto_acumulado = [f"CONTEXTO DE ARQUIVOS (ROTA 2 - {semana_str}):\n"]
 
@@ -126,8 +187,10 @@ class GerenciadorContextoAula:
             # Se não, NÃO retorna todos. Retorna uma lista vazia para que a mensagem de "nenhum arquivo" seja mostrada.
             return arquivos_filtrados
 
-        # 1. Busca e filtra PDFs
+        # 1. Busca e filtra PDFs (varre a pasta e subpastas se necessário)
         todos_pdfs = glob.glob(os.path.join(path_aula, "*.pdf"))
+        if not todos_pdfs and os.path.exists(path_semana) and path_aula != path_semana:
+            todos_pdfs = glob.glob(os.path.join(path_semana, "*.pdf"))
         pdfs_selecionados = selecionar_arquivos_relevantes(todos_pdfs)
 
         # Adiciona uma mensagem se múltiplos arquivos foram encontrados mas nenhum foi selecionado
@@ -140,8 +203,13 @@ class GerenciadorContextoAula:
                 nome_pdf = os.path.basename(pdf_file)
                 
                 if HAS_PDF_EXTRACTOR:
-                    # Usa o novo extrador otimizado para IA
-                    texto_pdf = extract_pdf_text(pdf_file, format_for_ai=True)
+                    # Usa o novo extrador otimizado para IA com extração de imagens
+                    texto_pdf = extract_pdf_text(
+                        pdf_file,
+                        format_for_ai=True,
+                        extract_assets=True,
+                        relative_to_dir=path_semana
+                    )
                     texto_acumulado.append(f"--- Conteúdo do PDF ({nome_pdf}) ---\n{texto_pdf}\n")
                 else:
                     # Fallback para pypdf (extração básica)
@@ -158,6 +226,8 @@ class GerenciadorContextoAula:
 
         # 2. Busca e filtra Links/Markdown/Txt
         todos_textos = glob.glob(os.path.join(path_aula, "*.md")) + glob.glob(os.path.join(path_aula, "*.txt"))
+        if not todos_textos and os.path.exists(path_semana) and path_aula != path_semana:
+            todos_textos = glob.glob(os.path.join(path_semana, "*.md")) + glob.glob(os.path.join(path_semana, "*.txt"))
         mds = selecionar_arquivos_relevantes(todos_textos)
 
         for md_file in mds:
@@ -169,6 +239,8 @@ class GerenciadorContextoAula:
 
         if len(texto_acumulado) == 1: # Só tem o cabeçalho
             return "Aviso: Nenhum arquivo PDF ou de texto encontrado na pasta da semana."
+            
+        return "\n".join(texto_acumulado)
             
         return "\n".join(texto_acumulado)
 
@@ -185,9 +257,19 @@ class GerenciadorContextoAula:
 
             try:
                 if ext == '.pdf':
+                    # Calcula diretório base da semana para caminhos relativos
+                    rel_dir = os.path.dirname(arquivo)
+                    if os.path.basename(rel_dir).lower() == 'seductec':
+                        rel_dir = os.path.dirname(rel_dir)
+                    
                     if HAS_PDF_EXTRACTOR:
-                        # Usa o novo extrador otimizado para IA
-                        texto_pdf = extract_pdf_text(arquivo, format_for_ai=True)
+                        # Usa o novo extrador otimizado para IA com imagens
+                        texto_pdf = extract_pdf_text(
+                            arquivo,
+                            format_for_ai=True,
+                            extract_assets=True,
+                            relative_to_dir=rel_dir
+                        )
                         texto_acumulado.append(f"--- Conteúdo PDF ({nome_base}) ---\n{texto_pdf}\n")
                     else:
                         # Fallback para pypdf (extração básica)

@@ -2,10 +2,14 @@ import streamlit as st
 import os
 import re
 import time
+import shutil
 from services.generate_lessons_gemini import GeradorAulaGemini, DATA_DIR
-from services.ai_generation import generate_content_with_fallback, generate_content_local_openai_compatible, configure_api, generate_content_with_mimo
+from services.ai_generation import generate_content_with_fallback, generate_content_local_openai_compatible, configure_api, generate_content_with_mimo, generate_content_with_openai
 from services import database as db
 from services import quiz_parser
+from services.contexto_aulas import resolver_pasta_turma, resolver_pasta_disciplina, normalizar_para_matching
+from services.pdf_extractor import convert_markdown_images_to_svg
+from views.aulas import clean_svg_content
 
 def show_page():
     st.header("🎓 Gerador de Planos de Aula (Gemini)")
@@ -54,12 +58,14 @@ def show_page():
         
         ia_source_option = st.radio(
             "Escolha o modelo de IA:",
-            ("Google Gemini (Nuvem)", "MiMo (Assistente)", "Modelo Local (LM Studio)", "Modelo Local (Llama Serve)", "Modelo Local (Jan)"),
-            help="Use o Gemini para qualidade, MiMo para geração via terminal, ou um modelo local para privacidade."
+            ("Google Gemini (Nuvem)", "ChatGPT - OpenAI (Nuvem)", "MiMo (Assistente)", "Modelo Local (LM Studio)", "Modelo Local (Llama Serve)", "Modelo Local (Jan)"),
+            help="Use o Gemini ou ChatGPT para qualidade, MiMo para geração via terminal, ou um modelo local para privacidade."
         )
 
         ia_source = "gemini" # Default
-        if "MiMo" in ia_source_option:
+        if "ChatGPT" in ia_source_option:
+            ia_source = "openai"
+        elif "MiMo" in ia_source_option:
             ia_source = "mimo"
         elif "LM Studio" in ia_source_option:
             ia_source = "lm-studio"
@@ -69,9 +75,14 @@ def show_page():
             ia_source = "jan"
 
         api_key_gemini = None
+        api_key_openai = None
+        openai_model_name = "gpt-4o-mini"
         local_model_port = 1234  # Default
         if ia_source == "gemini":
             api_key_gemini = st.text_input("Chave de API do Google Gemini", type="password", help="Necessária para usar o Gemini.")
+        elif ia_source == "openai":
+            api_key_openai = st.text_input("Chave de API da OpenAI", type="password", help="Chave sk-proj-...")
+            openai_model_name = st.selectbox("Modelo ChatGPT:", ["gpt-4o-mini", "gpt-4o"], index=0, help="gpt-4o-mini é super veloz e econômico, gpt-4o é o mais avançado.")
         elif ia_source == "mimo":
             st.info("💡 O MiMo será chamado via terminal. Executável: `~/.mimocode/bin/mimo.exe`")
         else:
@@ -83,10 +94,20 @@ def show_page():
                 help=f"A porta onde seu servidor local ({ia_source_option}) está escutando.")
 
         st.divider()
+        st.header("🖼️ Tratamento de Imagens")
+        remover_ilustracoes = st.checkbox(
+            "🚫 Bloquear imagens Base64",
+            value=True,
+            help="Se marcado, o gerador manterá apenas links normais de imagens, sem converter arquivos locais para Base64 pesado. Isso reduz o tamanho do arquivo de 2MB para 2KB, protegendo sua cota gratuita do Supabase contra estouro."
+        )
+
+        st.divider()
         st.header("🎨 Estilo e Metodologia")
         with st.expander("Customizar Geração", expanded=False):
+            disc_label = f" em {disciplina_selecionada}" if disciplina_selecionada != "Selecione..." else ""
+            default_persona = f"Um professor especialista{disc_label}, didático e motivador. IMPORTANTE: Use estritamente o nome da Turma e da Disciplina informados nos parâmetros de configuração, ignorando quaisquer nomes de turmas ou professores diferentes que apareçam no material de contexto/base."
             ai_persona = st.text_area("Persona (Ator)", 
-                value="Um professor especialista, didático e motivador. IMPORTANTE: Use estritamente o nome da Turma e da Disciplina informados nos parâmetros de configuração, ignorando quaisquer nomes de turmas ou professores diferentes que apareçam no material de contexto/base.",
+                value=default_persona,
                 help="Ex: 'Um tutor técnico focado em certificações' ou 'Um mentor de carreira'.")
             
             metodologia = st.selectbox("Metodologia", 
@@ -200,8 +221,10 @@ def show_page():
         if st.button("2. Gerar Plano de Aula com IA", disabled=(st.session_state.gerador_contexto is None), use_container_width=True):
             if ia_source == "gemini" and not api_key_gemini:
                 st.error("Por favor, insira sua Chave de API do Google Gemini na barra lateral.")
+            elif ia_source == "openai" and not api_key_openai:
+                st.error("Por favor, insira sua Chave de API da OpenAI na barra lateral.")
             else:
-                spinner_text = "Analisando contexto e gerando aula com Gemini..."
+                spinner_text = f"Analisando contexto e gerando aula com {ia_source_option}..."
                 if ia_source == "mimo":
                     spinner_text = "Gerando aula com MiMo..."
                 elif ia_source == "lm-studio":
@@ -216,16 +239,43 @@ def show_page():
 
                         # Pega o nome do professor logado na sessão (ou usa padrão se offline/não logado)
                         
-                        contexto_para_ia = st.session_state.gerador_contexto
+                        # Função utilitária para remover imagens em Base64
+                        def remover_base64_do_texto(text):
+                            if not text: return ""
+                            # 1. Remove blocos SVG contendo base64
+                            def _svg_repl(match):
+                                block = match.group(0)
+                                if "base64" in block.lower():
+                                    return ""
+                                return block
+                            text = re.sub(r'<svg\b[^>]*?>.*?</svg>', _svg_repl, text, flags=re.DOTALL | re.IGNORECASE)
+                            # 2. Remove tags HTML <img> contendo base64
+                            text = re.sub(r'<img\s+[^>]*?src=["\']data:image/.*?;base64,.*?["\'][^>]*?>', '', text, flags=re.DOTALL | re.IGNORECASE)
+                            # 3. Remove tags de imagem markdown contendo base64
+                            text = re.sub(r'!\[.*?\]\(data:image/.*?;base64,.*?\)', '', text, flags=re.DOTALL | re.IGNORECASE)
+                            return text
 
-                        # Adiciona lógica de truncamento para modelos locais (não se aplica a Gemini nem MiMo)
-                        if ia_source not in ("gemini", "mimo"):
+                        contexto_para_ia = st.session_state.gerador_contexto
+                        if remover_ilustracoes:
+                            # Remove blocos pesados de imagens em Base64 para economizar tokens/custos na OpenAI
+                            # e garantir que a IA não repita os blocos no plano final
+                            contexto_para_ia = remover_base64_do_texto(contexto_para_ia)
+
+                        # Limite inteligente para modelos em nuvem (Gemini e ChatGPT) para economizar tokens/custos de API
+                        # 32.000 caracteres equivalem a aproximadamente 8.000 a 10.000 tokens (cerca de 15 páginas de texto puro)
+                        MAX_CHARS_CONTEXTO_NUVEM = 32000
+                        if ia_source in ("gemini", "openai") and len(contexto_para_ia) > MAX_CHARS_CONTEXTO_NUVEM:
+                            st.info(f"⚡ Para economizar seus tokens e reduzir custos de API, o material base foi otimizado para os primeiros {MAX_CHARS_CONTEXTO_NUVEM} caracteres (suficiente para a aula).")
+                            contexto_para_ia = contexto_para_ia[:MAX_CHARS_CONTEXTO_NUVEM] + "\n\n[... CONTEÚDO OTIMIZADO PARA CRÉDITOS DE API ...]"
+
+                        # Adiciona lógica de truncamento para modelos locais (não se aplica a Gemini, ChatGPT nem MiMo)
+                        if ia_source not in ("gemini", "openai", "mimo"):
                             # Modelos locais geralmente têm janelas de contexto menores (ex: 4096 tokens).
                             # O prompt em si consome tokens, então limitamos o contexto para evitar erros.
                             # 1 token ~ 3-4 caracteres. 2500 tokens de contexto ~ 9000 caracteres.
                             MAX_CHARS_CONTEXTO_LOCAL = 9000
                             if len(contexto_para_ia) > MAX_CHARS_CONTEXTO_LOCAL:
-                                st.warning(f"⚠️ O contexto era muito longo para o modelo local e foi truncado para {MAX_CHARS_CONTEXTO_LOCAL} caracteres para evitar erros.")
+                                st.warning(f"⚠️ O contexto era muito longo para o modelo local e foi truncated para {MAX_CHARS_CONTEXTO_LOCAL} caracteres para evitar erros.")
                                 contexto_para_ia = contexto_para_ia[:MAX_CHARS_CONTEXTO_LOCAL] + "\n\n[... CONTEÚDO TRUNCADO ...]"
                         
                         prompt = gerador.gerar_prompt_aula(
@@ -239,7 +289,8 @@ def show_page():
                             persona=ai_persona,
                             metodologia=metodologia,
                             estrutura=estrutura_aula,
-                            is_local_model=(ia_source != "gemini")
+                            is_local_model=(ia_source not in ("gemini", "openai")),
+                            sem_ilustracoes=remover_ilustracoes
                         )
                         
                         st.session_state['last_prompt'] = prompt
@@ -247,6 +298,8 @@ def show_page():
                         if ia_source == "gemini":
                             configure_api(api_key_gemini)
                             response = generate_content_with_fallback(prompt)
+                        elif ia_source == "openai":
+                            response = generate_content_with_openai(prompt, api_key_openai, openai_model_name)
                         elif ia_source == "mimo":
                             response = generate_content_with_mimo(prompt)
                         else: # Modelos locais
@@ -254,7 +307,26 @@ def show_page():
                             response = generate_content_local_openai_compatible(prompt, port=local_model_port, server_name=server_name)
                         
                         if response and hasattr(response, 'text'):
-                            st.session_state['aula_gerada'] = response.text
+                            raw_resp = response.text.strip()
+                            # Remove invólucros de código markdown globais ```markdown ... ``` gerados pelo LLM
+                            if raw_resp.startswith('```'):
+                                m = re.match(r'^```(?:markdown|md)?\s*\n(.*?)\n```\s*$', raw_resp, flags=re.DOTALL | re.IGNORECASE)
+                                if m:
+                                    raw_resp = m.group(1).strip()
+                                else:
+                                    raw_resp = re.sub(r'^```(?:markdown|md)?\s*\n?', '', raw_resp, flags=re.IGNORECASE)
+                                    raw_resp = re.sub(r'\n?```\s*$', '', raw_resp).strip()
+
+                            path_semana = gerador.contexto_mgr.obter_caminho_aula(turma_selecionada, disciplina_selecionada, semana)
+                            assets_dir_semana = os.path.join(path_semana, "seductec", "assets") if os.path.exists(os.path.join(path_semana, "seductec", "assets")) else path_semana
+                            
+                            if remover_ilustracoes:
+                                # Mantém o texto limpo de imagens em Base64 (garante remoção se a IA tiver repetido algo)
+                                texto_convertido = remover_base64_do_texto(raw_resp)
+                            else:
+                                texto_convertido = convert_markdown_images_to_svg(raw_resp, assets_dir=assets_dir_semana)
+                                
+                            st.session_state['aula_gerada'] = texto_convertido
                             st.session_state['generated_subject_id'] = subject_id
                             st.success("Aula gerada com sucesso!")
                         else:
@@ -272,7 +344,7 @@ def show_page():
         with tab_aula:
             if 'aula_gerada' in st.session_state:
                 conteudo_aula = st.session_state['aula_gerada']
-                st.markdown(conteudo_aula)
+                st.markdown(clean_svg_content(conteudo_aula), unsafe_allow_html=True)
                 
                 # Lógica para extrair nome do arquivo
                 nome_arquivo = f"Aula_{numero_aula:02d}_{disciplina_selecionada}.md" # Default
@@ -348,6 +420,149 @@ def show_page():
                                 st.success(f"Aula '{lesson_title_clean}' salva com sucesso no banco de dados!")
                         else:
                             st.error("Erro: Contexto da disciplina perdido. Selecione a disciplina novamente antes de salvar.")
+
+                # --- Opção de Replicar a Aula para Outra Turma (Mesma Disciplina) ---
+                st.markdown("---")
+                with st.expander("🔄 Replicar Aula para Outra Turma (Mesma Disciplina)", expanded=False):
+                    st.caption("Reutilize esta aula para outra turma que tenha a mesma disciplina, atualizando automaticamente o cabeçalho, banco de dados (Supabase) e arquivos.")
+
+                    # Busca turmas irmãs com a mesma disciplina
+                    outras_turmas = {}
+                    norm_curr_disc = normalizar_para_matching(disciplina_selecionada)
+
+                    # 1. Busca via banco de dados
+                    for c_name, c_id in class_options.items():
+                        if c_name == turma_selecionada or c_name == "Selecione...":
+                            continue
+                        try:
+                            c_subjects = db.get_subjects_for_class(c_id)
+                            matching_subjs = [
+                                s for s in c_subjects
+                                if normalizar_para_matching(s['name']) == norm_curr_disc or
+                                   norm_curr_disc in normalizar_para_matching(s['name']) or
+                                   normalizar_para_matching(s['name']) in norm_curr_disc
+                            ]
+                            if matching_subjs:
+                                outras_turmas[c_name] = {
+                                    'class_id': c_id,
+                                    'subject_id': matching_subjs[0]['id'],
+                                    'subject_name': matching_subjs[0]['name'],
+                                    'source': 'db'
+                                }
+                        except Exception:
+                            pass
+
+                    # 2. Busca via pastas locais (fallback)
+                    turmas_path = os.path.join(DATA_DIR, "Turmas")
+                    if os.path.exists(turmas_path):
+                        for d_turma in os.listdir(turmas_path):
+                            full_t_path = os.path.join(turmas_path, d_turma)
+                            if os.path.isdir(full_t_path) and d_turma != turma_selecionada and not d_turma.startswith('.'):
+                                d_discs = [d for d in os.listdir(full_t_path) if os.path.isdir(os.path.join(full_t_path, d))]
+                                for disc in d_discs:
+                                    if (norm_curr_disc in normalizar_para_matching(disc) or normalizar_para_matching(disc) in norm_curr_disc) and d_turma not in outras_turmas:
+                                        outras_turmas[d_turma] = {
+                                            'class_id': class_options.get(d_turma),
+                                            'subject_id': None,
+                                            'subject_name': disc,
+                                            'source': 'disk'
+                                        }
+
+                    if outras_turmas:
+                        turmas_alvo_nomes = list(outras_turmas.keys())
+                        turmas_selecionadas_rep = st.multiselect(
+                            "Selecione a(s) Turma(s) de Destino:",
+                            options=turmas_alvo_nomes,
+                            default=turmas_alvo_nomes[:1] if len(turmas_alvo_nomes) == 1 else [],
+                            help="Turmas que possuem a mesma disciplina."
+                        )
+
+                        col_rep1, col_rep2 = st.columns(2)
+                        with col_rep1:
+                            rep_salvar_db = st.checkbox("💾 Salvar no Supabase (Banco)", value=True, help="Grava aula, quiz e fórum no banco de dados.")
+                        with col_rep2:
+                            rep_salvar_disco = st.checkbox("📂 Salvar arquivo .md na pasta da turma", value=True, help="Salva o arquivo .md na pasta física da turma.")
+
+                        if st.button("🚀 Replicar Aula para as Turmas Selecionadas", type="secondary", use_container_width=True):
+                            if not turmas_selecionadas_rep:
+                                st.warning("Selecione ao menos uma turma de destino.")
+                            else:
+                                with st.spinner("Replicando aula para outras turmas..."):
+                                    for t_nome in turmas_selecionadas_rep:
+                                        t_info = outras_turmas[t_nome]
+                                        t_class_id = t_info.get('class_id')
+                                        t_sub_id = t_info.get('subject_id')
+
+                                        # Ajusta o cabeçalho do Markdown para a turma de destino
+                                        conteudo_replicado = re.sub(
+                                            r'(?m)^(\*\*🎓\s*Turma:\*\*\s*)(.+)',
+                                            rf'\g<1>{t_nome}',
+                                            conteudo_aula
+                                        )
+                                        lesson_title_clean = nome_arquivo.replace(".md", "")
+
+                                        # 1. Salva no Banco de Dados
+                                        db_ok = False
+                                        if rep_salvar_db:
+                                            if not t_sub_id and t_class_id:
+                                                try:
+                                                    c_subjs = db.get_subjects_for_class(t_class_id)
+                                                    for s in c_subjs:
+                                                        if normalizar_para_matching(s['name']) == norm_curr_disc:
+                                                            t_sub_id = s['id']
+                                                            break
+                                                except Exception:
+                                                    pass
+
+                                            if t_sub_id:
+                                                l_content, q_content = quiz_parser.split_lesson_and_quiz(conteudo_replicado)
+                                                rep_lesson_id = db.upsert_lesson(lesson_title_clean, t_sub_id, l_content, "")
+                                                if rep_lesson_id:
+                                                    if q_content:
+                                                        quiz_parser.process_quiz_content(rep_lesson_id, q_content, lesson_title_clean)
+                                                    
+                                                    challenge_pattern = r'(?si)(#+.*?(?:Desafio|Atividade|Exemplo)\s+(?:Prático|Prática|de Código).*?)(?=\n#+\s*(?:Quiz|Gabarito|Conclusão|Recursos|Referências)|$)'
+                                                    challenge_match = re.search(challenge_pattern, l_content)
+                                                    if challenge_match:
+                                                        forum_msg = (
+                                                            f"🚀 **DESAFIO PRÁTICO — {lesson_title_clean}**\n\n"
+                                                            f"{challenge_match.group(1).strip()}\n\n"
+                                                            "---\n\n"
+                                                            "### 💡 Como resolver:\n"
+                                                            "1. **Copie o código** acima\n"
+                                                            "2. **Cole em um IDE** e execute (VS Code, Replit, OnlineGDB)\n"
+                                                            "3. **Poste sua solução** aqui no fórum!"
+                                                        )
+                                                        db.add_forum_post("EduBot 🤖", forum_msg, lesson_id=rep_lesson_id)
+                                                    db_ok = True
+                                            else:
+                                                st.warning(f"Disciplina correspondente não encontrada no Supabase para '{t_nome}'.")
+
+                                        # 2. Salva no Disco
+                                        disk_ok = False
+                                        if rep_salvar_disco:
+                                            try:
+                                                t_real_folder = resolver_pasta_turma(turmas_path, t_nome)
+                                                t_path = os.path.join(turmas_path, t_real_folder)
+                                                d_real_folder = resolver_pasta_disciplina(t_path, t_info['subject_name'] or disciplina_selecionada)
+                                                semana_str = f"S{int(semana):02d}"
+                                                dest_semana_dir = os.path.join(t_path, d_real_folder, semana_str)
+                                                os.makedirs(dest_semana_dir, exist_ok=True)
+
+                                                dest_file = os.path.join(dest_semana_dir, nome_arquivo)
+                                                with open(dest_file, 'w', encoding='utf-8') as f_rep:
+                                                    f_rep.write(conteudo_replicado)
+                                                disk_ok = True
+                                            except Exception as e_disk:
+                                                st.error(f"Erro ao salvar arquivo para '{t_nome}': {e_disk}")
+
+                                        status_parts = []
+                                        if db_ok: status_parts.append("Supabase ✅")
+                                        if disk_ok: status_parts.append("Disco Local 📁")
+                                        status_text = " e ".join(status_parts) if status_parts else "concluída"
+                                        st.success(f"Aula replicada para **{t_nome}** ({status_text})!")
+                    else:
+                        st.info("Nenhuma outra turma com a mesma disciplina foi identificada.")
             else:
                 st.info("Clique em 'Gerar Plano de Aula com IA' para ver o resultado aqui.")
         
@@ -361,11 +576,16 @@ def show_page():
     # Rodapé com verificação de pastas
     st.markdown("---")
     if usar_arquivos and disciplina_selecionada != "Selecione...":
-        caminho_esp = os.path.join(DATA_DIR, "Turmas", turma_selecionada, disciplina_selecionada, f"S{semana:02d}", "seductec")
-        if os.path.exists(caminho_esp):
-            st.caption(f"✅ Pasta encontrada: `{caminho_esp}`")
+        gerador = GeradorAulaGemini()
+        path_semana = gerador.contexto_mgr.obter_caminho_aula(turma_selecionada, disciplina_selecionada, semana)
+        caminho_seductec = os.path.join(path_semana, "seductec")
+        
+        if os.path.exists(caminho_seductec):
+            st.caption(f"✅ Pasta encontrada: `{caminho_seductec}`")
+        elif os.path.exists(path_semana):
+            st.caption(f"✅ Pasta encontrada: `{path_semana}`")
         else:
-            st.caption(f"❌ Pasta não encontrada: `{caminho_esp}` (Certifique-se que ela existe para a Rota 2)")
+            st.caption(f"❌ Pasta não encontrada: `{path_semana}` (Certifique-se que ela existe para a Rota 2)")
 
         
     

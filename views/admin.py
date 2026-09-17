@@ -7,10 +7,68 @@ from views.aulas import clean_svg_content
 from services import quiz_parser
 import re
 import json
+import html
 import pandas as pd
 import time
 import os
 import random
+
+# Caminho para o arquivo de exceções de frequência
+ATTENDANCE_EXCEPTIONS_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "repo", "plugins", "attendance_exceptions.json")
+
+def adicionar_aluno_excecao_frequencia(username: str, nome_aluno: str, ra: str, turma: str = "geral", status: str = "Falta"):
+    """Adiciona um aluno ao arquivo de exceções de frequência (attendance_exceptions.json)."""
+    try:
+        if os.path.exists(ATTENDANCE_EXCEPTIONS_PATH):
+            with open(ATTENDANCE_EXCEPTIONS_PATH, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        else:
+            data = {"exceptions": []}
+        
+        # Verifica se o aluno já existe nas exceções
+        for exc in data.get("exceptions", []):
+            if exc.get("ra") == ra or exc.get("nome_aluno", "").upper() == nome_aluno.upper():
+                # Atualiza o status se já existir
+                exc["status"] = status
+                exc["turma"] = turma
+                with open(ATTENDANCE_EXCEPTIONS_PATH, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, indent=4, ensure_ascii=False)
+                return True, "Aluno já existe nas exceções, status atualizado."
+        
+        # Adiciona nova exceção
+        nova_excecao = {
+            "turma": turma,
+            "ra": ra,
+            "nome_aluno": nome_aluno.upper(),
+            "status": status
+        }
+        data["exceptions"].append(nova_excecao)
+        
+        with open(ATTENDANCE_EXCEPTIONS_PATH, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+        
+        return True, "Aluno adicionado às exceções de frequência."
+    except Exception as e:
+        return False, f"Erro ao adicionar exceção: {str(e)}"
+
+def format_display_text(text):
+    """
+    Formata texto para exibição correta no Markdown do Streamlit:
+    1. Desfaz entidades HTML literais (&lt; -> <, &gt; -> >).
+    2. Tags HTML soltas (como <section>, <div>) são automaticamente envolvidas em crases `<tag>`.
+    3. Tags já dentro de crases são mantidas como código inline.
+    """
+    if not text:
+        return ""
+    text = html.unescape(str(text))
+
+    parts = text.split('`')
+    for i in range(0, len(parts), 2):
+        parts[i] = re.sub(r'(?<!`)(</?[a-zA-Z][a-zA-Z0-9_\-]*(\s+[^>]*)?>)(?!`)', r'`\1`', parts[i])
+    
+    result = '`'.join(parts)
+    result = re.sub(r'``+', r'`', result)
+    return result
 
 def generate_printable_answer_key_html(school_name, subject_name, type_label, export_data):
     """Gera uma visualização HTML formatada para impressão do gabarito."""
@@ -98,33 +156,45 @@ def show_page():
     if selected_tab == "Setup":
             st.subheader("🛠️ Setup Inicial do Sistema")
 
-            with st.expander("1️⃣ Conexão com Banco de Dados (Supabase)", expanded=not db.is_db_connected()):
+            with st.expander("1 Conexao com Banco de Dados (Supabase)", expanded=not db.is_db_connected()):
                 st.markdown("""
                 1. Crie uma conta em [supabase.com](https://supabase.com).
                 2. Crie um novo projeto.
-                3. Vá em **Project Settings > API**.
+                3. Va em **Project Settings > API**.
                 4. Copie a **Project URL** e a **anon public key**.
                 """)
 
-                c1, c2 = st.columns(2)
-                url_input = c1.text_input("Project URL", value=os.environ.get("SUPABASE_URL", ""), key="setup_url")
-                key_input = c2.text_input("Anon Public Key", type="password", value=os.environ.get("SUPABASE_KEY", ""), key="setup_key")
+                # Le valores atuais (secrets ou env)
+                current_url = os.environ.get("SUPABASE_URL", "")
+                current_key = os.environ.get("SUPABASE_KEY", "")
+                try:
+                    if not current_url:
+                        current_url = st.secrets.get("SUPABASE_URL", "")
+                    if not current_key:
+                        current_key = st.secrets.get("SUPABASE_KEY", "")
+                except Exception:
+                    pass
 
-                if st.button("💾 Salvar Credenciais (Sessão Atual)", key="setup_save_creds"):
+                c1, c2 = st.columns(2)
+                url_input = c1.text_input("Project URL", value=current_url, key="setup_url")
+                key_input = c2.text_input("Anon Public Key", type="password", value=current_key, key="setup_key")
+
+                if st.button("Salvar Credenciais (Sessao Atual)", key="setup_save_creds"):
                     if url_input and key_input:
                         os.environ["SUPABASE_URL"] = url_input
                         os.environ["SUPABASE_KEY"] = key_input
-                        st.cache_resource.clear() # Limpa o cache para forçar reconexão
-                        st.success("Credenciais salvas na memória! A página será recarregada.")
+                        st.cache_resource.clear()
+                        st.success("Credenciais salvas! Recarregando...")
                         time.sleep(1)
                         st.rerun()
                     else:
                         st.error("Preencha ambos os campos.")
 
                 if db.is_db_connected():
-                    st.success("✅ Conectado ao Supabase com sucesso!")
+                    st.success("Conectado ao Supabase com sucesso!")
                 else:
-                    st.error("❌ Desconectado.")
+                    st.error("Desconectado.")
+                    st.info("Se as credenciais estao configuradas no Streamlit Cloud, clique em 'Salvar Credenciais' acima para forcar a reconexao.")
 
             with st.expander("2️⃣ Criar Estrutura do Banco (Primeira Vez)", expanded=db.is_db_connected() and not db_structure_exists):
                 st.warning("Atenção: As tabelas do banco de dados parecem não existir.")
@@ -291,16 +361,17 @@ def show_page():
                             continue
 
                         with st.expander(f"{cname} ({len(students)} alunos)", expanded=False):
-                            col_h1, col_h2, col_h3, col_h4, col_h5 = st.columns([0.25, 0.2, 0.15, 0.2, 0.2])
+                            col_h1, col_h2, col_h3, col_h4, col_h5, col_h6 = st.columns([0.25, 0.2, 0.15, 0.2, 0.2, 0.15])
                             col_h1.markdown("**Nome**")
                             col_h2.markdown("**Usuario**")
                             col_h3.markdown("**Status**")
                             col_h4.markdown("**Acao**")
-                            col_h5.markdown("**Excluir**")
+                            col_h5.markdown("**Desligar**")
+                            col_h6.markdown("**Excluir**")
                             st.divider()
 
                             for u in students:
-                                c1, c2, c3, c4, c5 = st.columns([0.25, 0.2, 0.15, 0.2, 0.2])
+                                c1, c2, c3, c4, c5, c6 = st.columns([0.25, 0.2, 0.15, 0.2, 0.2, 0.15])
                                 c1.write(u['name'])
                                 c2.write(u['username'])
 
@@ -333,8 +404,32 @@ def show_page():
                                     else:
                                         c4.caption("-")
 
+                                    # Botao Desligar (desativar + remover de frequência)
+                                    if has_active_field and is_active:
+                                        if c5.button("Desligar", key=f"desligar_{u['username']}", type="primary"):
+                                            # 1. Desativa no banco
+                                            _, err = db.toggle_user_active(u['username'], False)
+                                            if err:
+                                                st.error(f"Erro ao desativar: {err}")
+                                            else:
+                                                # 2. Adiciona às exceções de frequência
+                                                ok, msg = adicionar_aluno_excecao_frequencia(
+                                                    username=u['username'],
+                                                    nome_aluno=u['name'],
+                                                    ra=u.get('ra', ''),
+                                                    turma=str(cid),
+                                                    status="Falta"
+                                                )
+                                                if ok:
+                                                    st.success(f"✅ {u['name']} desligado e removido das listas de frequência.")
+                                                    st.rerun()
+                                                else:
+                                                    st.warning(f"Conta desativada, mas: {msg}")
+                                    else:
+                                        c5.caption("-")
+
                                     # Botao Excluir
-                                    if c5.button("Excluir", key=f"del_user_{u['username']}"):
+                                    if c6.button("Excluir", key=f"del_user_{u['username']}"):
                                         _, err = db.delete_user(u['username'])
                                         if err:
                                             st.error(f"Erro: {err}")
@@ -344,21 +439,23 @@ def show_page():
                                 else:
                                     c4.caption("Voce")
                                     c5.caption("-")
+                                    c6.caption("-")
                                 st.divider()
 
                     # Alunos sem turma
                     if unassigned:
                         with st.expander(f"Sem Turma ({len(unassigned)})", expanded=False):
-                            col_h1, col_h2, col_h3, col_h4, col_h5 = st.columns([0.25, 0.2, 0.15, 0.2, 0.2])
+                            col_h1, col_h2, col_h3, col_h4, col_h5, col_h6 = st.columns([0.25, 0.2, 0.15, 0.2, 0.2, 0.15])
                             col_h1.markdown("**Nome**")
                             col_h2.markdown("**Usuario**")
                             col_h3.markdown("**Status**")
                             col_h4.markdown("**Acao**")
-                            col_h5.markdown("**Excluir**")
+                            col_h5.markdown("**Desligar**")
+                            col_h6.markdown("**Excluir**")
                             st.divider()
 
                             for u in unassigned:
-                                c1, c2, c3, c4, c5 = st.columns([0.25, 0.2, 0.15, 0.2, 0.2])
+                                c1, c2, c3, c4, c5, c6 = st.columns([0.25, 0.2, 0.15, 0.2, 0.2, 0.15])
                                 c1.write(u['name'])
                                 c2.write(u['username'])
                                 is_active = u.get('is_active', True) if has_active_field else True
@@ -381,27 +478,52 @@ def show_page():
                                                 else: st.rerun()
                                     else:
                                         c4.caption("-")
-                                    if c5.button("Excluir", key=f"del_un_{u['username']}"):
+
+                                    # Botao Desligar (desativar + remover de frequência)
+                                    if has_active_field and is_active:
+                                        if c5.button("Desligar", key=f"desligar_un_{u['username']}", type="primary"):
+                                            _, err = db.toggle_user_active(u['username'], False)
+                                            if err:
+                                                st.error(f"Erro ao desativar: {err}")
+                                            else:
+                                                ok, msg = adicionar_aluno_excecao_frequencia(
+                                                    username=u['username'],
+                                                    nome_aluno=u['name'],
+                                                    ra=u.get('ra', ''),
+                                                    turma="sem_turma",
+                                                    status="Falta"
+                                                )
+                                                if ok:
+                                                    st.success(f"✅ {u['name']} desligado e removido das listas de frequência.")
+                                                    st.rerun()
+                                                else:
+                                                    st.warning(f"Conta desativada, mas: {msg}")
+                                    else:
+                                        c5.caption("-")
+
+                                    if c6.button("Excluir", key=f"del_un_{u['username']}"):
                                         _, err = db.delete_user(u['username'])
                                         if err: st.error(f"Erro: {err}")
                                         else: st.rerun()
                                 else:
                                     c4.caption("Voce")
                                     c5.caption("-")
+                                    c6.caption("-")
                                 st.divider()
 
                 else:
                     # --- VISAO FLAT (Professores, Admins, ou Turma especifica) ---
-                    col_h1, col_h2, col_h3, col_h4, col_h5 = st.columns([0.25, 0.2, 0.15, 0.2, 0.2])
+                    col_h1, col_h2, col_h3, col_h4, col_h5, col_h6 = st.columns([0.25, 0.2, 0.15, 0.2, 0.2, 0.15])
                     col_h1.markdown("**Nome**")
                     col_h2.markdown("**Usuario**")
                     col_h3.markdown("**Funcao**")
                     col_h4.markdown("**Acao**")
-                    col_h5.markdown("**Excluir**")
+                    col_h5.markdown("**Desligar**")
+                    col_h6.markdown("**Excluir**")
                     st.divider()
 
                     for u in users:
-                        c1, c2, c3, c4, c5 = st.columns([0.25, 0.2, 0.15, 0.2, 0.2])
+                        c1, c2, c3, c4, c5, c6 = st.columns([0.25, 0.2, 0.15, 0.2, 0.2, 0.15])
                         c1.write(u['name'])
                         c2.write(u['username'])
                         c3.write(role_map.get(u['role'], u['role']))
@@ -423,13 +545,39 @@ def show_page():
                             else:
                                 c4.caption("-")
 
-                            if c5.button("Excluir", key=f"del_user_{u['username']}"):
+                            # Botao Desligar (desativar + remover de frequência) - apenas para alunos
+                            if has_active_field and is_active and u.get('role') == 'student':
+                                if c5.button("Desligar", key=f"desligar_flat_{u['username']}", type="primary"):
+                                    _, err = db.toggle_user_active(u['username'], False)
+                                    if err:
+                                        st.error(f"Erro ao desativar: {err}")
+                                    else:
+                                        # Busca a turma do aluno
+                                        enrollment = db.get_user_enrollment(u['username'])
+                                        turma_id = str(enrollment.get('class_id', 'geral')) if enrollment else 'geral'
+                                        ok, msg = adicionar_aluno_excecao_frequencia(
+                                            username=u['username'],
+                                            nome_aluno=u['name'],
+                                            ra=u.get('ra', ''),
+                                            turma=turma_id,
+                                            status="Falta"
+                                        )
+                                        if ok:
+                                            st.success(f"✅ {u['name']} desligado e removido das listas de frequência.")
+                                            st.rerun()
+                                        else:
+                                            st.warning(f"Conta desativada, mas: {msg}")
+                            else:
+                                c5.caption("-")
+
+                            if c6.button("Excluir", key=f"del_user_{u['username']}"):
                                 _, err = db.delete_user(u['username'])
                                 if err: st.error(f"Erro: {err}")
                                 else: st.rerun()
                         else:
                             c4.caption("Voce")
                             c5.caption("-")
+                            c6.caption("-")
                         st.divider()
             else:
                 st.info("Nenhum usuario encontrado com os filtros selecionados.")
@@ -580,7 +728,7 @@ def show_page():
                     subjects_links = []
                     if db.is_db_connected():
                         try:
-                            res = db.supabase.table("class_subjects").select("*, subjects(name, duration_type, id)").eq("class_id", class_id).execute()
+                            res = db.supabase.table("class_subjects").select("*, subjects(name, duration_type, max_hours, lessons_per_week, group_type, id)").eq("class_id", class_id).execute()
                             subjects_links = res.data if res.data else []
                         except Exception as e:
                             st.error(f"Erro ao buscar disciplinas vinculadas: {e}")
@@ -591,12 +739,22 @@ def show_page():
                         df_links = []
                         for link in subjects_links:
                             subj = link.get('subjects') or {}
-                            is_mensal = subj.get('duration_type') == 'mensal'
+                            dur_type = subj.get('duration_type')
+                            lpw = subj.get('lessons_per_week')
+                            
+                            if dur_type == 'anual' or subj.get('group_type') == 'anual':
+                                if lpw and int(lpw) >= 2:
+                                    regime_str = "Anual (2 aulas/sem - 80h)"
+                                else:
+                                    regime_str = "Anual (1 aula/sem - 40h)"
+                            else:
+                                regime_str = "Mensal (8 aulas/sem - 40h)"
+
                             df_links.append({
                                 "id": link['id'],
                                 "subject_id": subj.get('id'),
                                 "Disciplina": subj.get('name', 'N/A'),
-                                "Carga Horaria": "40h" if is_mensal else "80h",
+                                "Regime": regime_str,
                                 "Ativo": link.get('is_active', True)
                             })
 
@@ -607,10 +765,14 @@ def show_page():
                                 "id": None,
                                 "subject_id": None,
                                 "Disciplina": st.column_config.TextColumn(disabled=True),
-                                "Carga Horaria": st.column_config.SelectboxColumn(
-                                    "Carga Horaria",
-                                    options=["40h", "80h"],
-                                    help="40h = Modular (8 aulas/semana) | 80h = Anual (10 aulas/semana)"
+                                "Regime": st.column_config.SelectboxColumn(
+                                    "Regime / Formato",
+                                    options=[
+                                        "Mensal (8 aulas/sem - 40h)",
+                                        "Anual (1 aula/sem - 40h)",
+                                        "Anual (2 aulas/sem - 80h)"
+                                    ],
+                                    help="Mensal = 40h (8 aulas/semana) | Anual = 40h (1 aula/semana) ou 80h"
                                 ),
                                 "Ativo": st.column_config.CheckboxColumn("Ativo", help="Se desmarcado, a disciplina sera ocultada nos seletores desta turma.")
                             },
@@ -625,12 +787,37 @@ def show_page():
                                 # Atualiza visibilidade
                                 if row['Ativo'] != orig['Ativo']:
                                     db.supabase.table("class_subjects").update({"is_active": row['Ativo']}).eq("id", row['id']).execute()
-                                # Atualiza carga horaria
-                                if row['Carga Horaria'] != orig['Carga Horaria']:
-                                    new_duration = 'mensal' if row['Carga Horaria'] == '40h' else 'anual'
+                                # Atualiza carga horaria e regime
+                                if row['Regime'] != orig['Regime']:
+                                    selected_regime = row['Regime']
+                                    if "Mensal" in selected_regime:
+                                        dur_val = 'mensal'
+                                        max_h = 40
+                                        lpw_val = 8
+                                        grp_val = 'semana'
+                                    elif "80h" in selected_regime:
+                                        dur_val = 'anual'
+                                        max_h = 80
+                                        lpw_val = 2
+                                        grp_val = 'anual'
+                                    else: # Anual 40h (1 aula/sem)
+                                        dur_val = 'anual'
+                                        max_h = 40
+                                        lpw_val = 1
+                                        grp_val = 'anual'
+
                                     subject_id_to_update = int(row['subject_id']) if pd.notna(row['subject_id']) else None
                                     if subject_id_to_update:
-                                        db.supabase.table("subjects").update({"duration_type": new_duration}).eq("id", subject_id_to_update).execute()
+                                        update_data = {
+                                            "duration_type": dur_val,
+                                            "max_hours": max_h,
+                                            "lessons_per_week": lpw_val,
+                                            "group_type": grp_val
+                                        }
+                                        try:
+                                            db.supabase.table("subjects").update(update_data).eq("id", subject_id_to_update).execute()
+                                        except Exception:
+                                            db.supabase.table("subjects").update({"duration_type": dur_val}).eq("id", subject_id_to_update).execute()
                             st.success("Configuracoes atualizadas!")
                             st.rerun()
 
@@ -661,7 +848,7 @@ def show_page():
                                     db.link_subject_to_class(class_id, new_sub_id)
                                     
                                     # 3. Clonar Aulas, Quizzes e Questões
-                                    lessons = db.get_lessons_for_subject(matrix_id)
+                                    lessons = db.get_lessons_for_subject_full(matrix_id)
                                     for l in lessons:
                                         new_l_data, err = db.create_lesson(l['title'], new_sub_id, l.get('description', ''), l.get('video_url', ''))
                                         if not err and new_l_data:
@@ -816,8 +1003,8 @@ def show_page():
                                                 for i, q in enumerate(questions):
                                                     col_q, col_del = st.columns([0.9, 0.1])
                                                     with col_q:
-                                                        st.markdown(f"**{i+1}. {q['question_text']}**")
-                                                        st.caption(f"Opções: {', '.join(q['options'])} | Correta: {q['options'][q['correct_option_index']]}")
+                                                        st.markdown(f"**{i+1}. {format_display_text(q['question_text'])}**")
+                                                        st.caption(f"Opções: {', '.join([format_display_text(o) for o in q.get('options', [])])} | Correta: {format_display_text(q['options'][q['correct_option_index']]) if 0 <= q.get('correct_option_index', 0) < len(q.get('options', [])) else '?'}")
                                                     with col_del:
                                                         if st.button("🗑️", key=f"del_qq_{q['id']}", help="Excluir questão"):
                                                             db.delete_quiz_question(q['id'])
@@ -923,10 +1110,21 @@ def show_page():
                             for i, q in enumerate(questions):
                                 col_q, col_del = st.columns([0.9, 0.1])
                                 with col_q:
-                                    tipo_icon = "📝" if q.get('question_type') == 'subjective' else "🔘"
-                                    st.markdown(f"{i+1}. {tipo_icon} {q['question_text']}")
-                                    if q.get('question_type') == 'subjective' and q.get('options') and "LINK_REQUIRED" in q['options']:
-                                        st.caption("   ↳ 🔗 Solicita link externo (GitHub/Drive)")
+                                    q_type_val = q.get('question_type')
+                                    q_text_fmt = format_display_text(q['question_text'])
+                                    if q_type_val == 'code_web':
+                                        tipo_icon = "💻"
+                                        st.markdown(f"{i+1}. {tipo_icon} **[Código Web]** {q_text_fmt}")
+                                        if q.get('options') and "LINK_REQUIRED" in q['options']:
+                                            st.caption("   ↳ 🔗 Solicita link externo (GitHub/Vercel)")
+                                    elif q_type_val == 'subjective':
+                                        tipo_icon = "📝"
+                                        st.markdown(f"{i+1}. {tipo_icon} {q_text_fmt}")
+                                        if q.get('options') and "LINK_REQUIRED" in q['options']:
+                                            st.caption("   ↳ 🔗 Solicita link externo (GitHub/Drive)")
+                                    else:
+                                        tipo_icon = "🔘"
+                                        st.markdown(f"{i+1}. {tipo_icon} {q_text_fmt}")
                                 with col_del:
                                     if st.button("🗑️", key=f"del_aq_{q['id']}", help="Excluir questão"):
                                         db.delete_assessment_question(q['id'])
@@ -999,8 +1197,14 @@ def show_page():
                                         st.rerun()
 
                             st.markdown("#### Adicionar Questão")
+                            q_type = st.radio(
+                                "Tipo da Questão",
+                                ["Objetiva", "Subjetiva", "Código Web (HTML/CSS/JS)"],
+                                horizontal=True,
+                                key=f"av_new_q_type_{assessment['id']}"
+                            )
+
                             with st.form("add_assessment_question"):
-                                q_type = st.radio("Tipo da Questão", ["Objetiva", "Subjetiva"], horizontal=True, key=f"av_new_q_type_{assessment['id']}")
                                 q_text = st.text_area("Enunciado da Questão", key=f"av_new_q_text_{assessment['id']}")
 
                                 options = []
@@ -1011,14 +1215,34 @@ def show_page():
                                     correct_idx = st.number_input("Índice da Correta (0 = 1ª opção)", min_value=0, step=1, key=f"av_new_q_idx_{assessment['id']}")
                                     if opts_str:
                                         options = [o.strip() for o in opts_str.split(',') if o.strip()]
-                                else:
-                                    st.info("ℹ️ O aluno terá um campo de texto para a resposta.")
+                                elif q_type == "Subjetiva":
+                                    st.info("ℹ️ O aluno terá um campo de texto para a resposta dissertativa.")
                                     require_link = st.checkbox("Adicionar campo para envio de Link (GitHub/Drive)?", value=True, key=f"av_new_q_link_{assessment['id']}")
                                     options = ["LINK_REQUIRED"] if require_link else []
-                                    correct_idx = 0 # Padrão 0 conforme solicitado
+                                    correct_idx = 0
+                                else: # Código Web (HTML/CSS/JS)
+                                    st.info("ℹ️ O aluno terá 3 editores (HTML, CSS, JavaScript) com live preview e validação automática de sintaxe para impedir respostas em texto comum/inválido.")
+                                    col_opt1, col_opt2, col_opt3 = st.columns(3)
+                                    with col_opt1:
+                                        req_css = st.checkbox("Exigir CSS obrigatório?", value=False, key=f"av_new_q_req_css_{assessment['id']}")
+                                    with col_opt2:
+                                        req_js = st.checkbox("Exigir JavaScript obrigatório?", value=False, key=f"av_new_q_req_js_{assessment['id']}")
+                                    with col_opt3:
+                                        req_link_web = st.checkbox("Solicitar link do projeto (GitHub/Vercel)?", value=False, key=f"av_new_q_link_web_{assessment['id']}")
+                                    
+                                    options = ["CODE_WEB", "REQ_HTML"]
+                                    if req_css: options.append("REQ_CSS")
+                                    if req_js: options.append("REQ_JS")
+                                    if req_link_web: options.append("LINK_REQUIRED")
+                                    correct_idx = 0
 
                                 if st.form_submit_button("Salvar Questão"):
-                                    type_db = 'subjective' if q_type == "Subjetiva" else 'objective'
+                                    if q_type == "Subjetiva":
+                                        type_db = 'subjective'
+                                    elif q_type == "Código Web (HTML/CSS/JS)":
+                                        type_db = 'code_web'
+                                    else:
+                                        type_db = 'objective'
                                     _, err = db.create_assessment_question(assessment['id'], q_text, type_db, options, correct_idx)
                                     if err: st.error(err)
                                     else: 
@@ -1071,10 +1295,12 @@ def show_page():
 
                         for subj in subjects_to_check:
                             lessons = db.get_lessons_for_subject(subj['id'])
+                            quizzes_subj = db.get_quizzes_for_subject(subj['id'])
+                            lessons_with_quiz_set = set(q['lesson_id'] for q in quizzes_subj if q.get('lesson_id'))
+
                             for lesson in lessons:
                                 total_lessons_checked += 1
-                                quiz = db.get_quiz_for_lesson(lesson['id'])
-                                if not quiz:
+                                if lesson['id'] not in lessons_with_quiz_set:
                                     # Busca nome da turma
                                     class_name = "N/A"
                                     linked_classes = db.get_classes_for_subject(subj['id'])
@@ -1195,7 +1421,7 @@ def show_page():
                         
                         # 6. Verifica se a questão tem menos de 4 alternativas (padrão)
                         # Aplica-se apenas a questões objetivas que possuem opções
-                        if q.get('question_type') != 'subjective' and opts and isinstance(opts, list) and len(opts) < 4:
+                        if q.get('question_type') not in ['subjective', 'code_web'] and opts and isinstance(opts, list) and len(opts) < 4:
                             q_issues.append(f"Número de alternativas inferior ao padrão. Encontradas: {len(opts)}/4.")
 
 

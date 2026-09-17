@@ -33,6 +33,8 @@ O `app.py` funciona como o "bootloader" e roteador principal do sistema.
   - `auth.py`: Contém a lógica de autenticação, como criptografar e verificar senhas.
   - `ai_generation.py`: Gerencia a interação com a API do Google Gemini, construindo os prompts para geração de aulas e análise de cronogramas.
   - `quiz_parser.py`: Contém a lógica para analisar o conteúdo Markdown de um quiz e extrair perguntas, opções e gabarito.
+  - `code_validator.py`: **Motor de Validação de Código Web**. Valida a sintaxe e a estrutura de códigos HTML, CSS e JavaScript submetidos pelos alunos em avaliações práticas, rejeitando textos comuns ou lero-lero.
+  - `contexto_aulas.py`: Gerencia a recuperação de materiais de contexto (PDFs, Markdown, links) para alimentação da IA no Gerador de Aulas, com resolvedores resilientes de diretórios físicos para lidar com caracteres especiais (`/`, acentos, etc.).
 
 ## 4. Ferramentas e Scripts Auxiliares - `scripts/`
 
