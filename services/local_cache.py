@@ -30,6 +30,7 @@ _CONN = None
 TTL_BASE = 6 * 3600     # tabelas que mudam pouco (classes, subjects, ...)
 TTL_MEDIUM = 3600       # dados que mudam ocasionalmente
 TTL_FORUM = 300         # fórum
+TTL_SCORE = 600         # score do aluno (dados de engajamento)
 
 
 def _read_flag() -> bool:
@@ -64,6 +65,15 @@ def _conn() -> sqlite3.Connection:
             data      TEXT NOT NULL,
             row_count INTEGER,
             synced_at TEXT NOT NULL
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS _score_cache (
+            username   TEXT NOT NULL,
+            subject_id TEXT NOT NULL,
+            payload    TEXT NOT NULL,
+            synced_at  TEXT NOT NULL,
+            PRIMARY KEY (username, subject_id)
         )
     """)
     conn.commit()
@@ -136,6 +146,72 @@ def get_or_fetch(cache_key: str, fetch_fn, ttl: int = TTL_BASE, force: bool = Fa
         except Exception:
             pass
         return fetch_fn()
+
+
+def get_scores_bulk(subject_id, usernames, ttl: int = TTL_SCORE) -> dict:
+    """Lê do cache SQLite os scores frescos de vários alunos de uma disciplina.
+
+    Retorna {username: score_dict} apenas para entradas dentro do TTL. O que não
+    estiver aqui deve ser buscado no Supabase e depois gravado com `set_scores_bulk`.
+    """
+    if not cache_enabled() or not usernames:
+        return {}
+    try:
+        usernames = [str(u) for u in usernames]
+        placeholders = ",".join("?" for _ in usernames)
+        rows = _conn().execute(
+            f"SELECT username, payload, synced_at FROM _score_cache "
+            f"WHERE subject_id = ? AND username IN ({placeholders})",
+            (str(subject_id), *usernames),
+        ).fetchall()
+        out = {}
+        for username, payload, synced_at in rows:
+            age = _age_seconds(synced_at)
+            if age is not None and age < ttl:
+                out[username] = json.loads(payload)
+        return out
+    except Exception:
+        return {}
+
+
+def set_scores_bulk(subject_id, scores: dict):
+    """Grava {username: score_dict} no cache SQLite (upsert)."""
+    if not cache_enabled() or not scores:
+        return
+    try:
+        now = _now()
+        payload_rows = [
+            (str(u), str(subject_id), json.dumps(s, ensure_ascii=False, default=str), now)
+            for u, s in scores.items()
+        ]
+        with _LOCK:
+            conn = _conn()
+            conn.executemany(
+                "INSERT INTO _score_cache (username, subject_id, payload, synced_at) "
+                "VALUES (?, ?, ?, ?) "
+                "ON CONFLICT(username, subject_id) DO UPDATE SET "
+                "payload=excluded.payload, synced_at=excluded.synced_at",
+                payload_rows,
+            )
+            conn.commit()
+    except Exception:
+        pass
+
+
+def invalidate_scores(subject_id=None):
+    """Invalida o cache de scores (de uma disciplina ou tudo)."""
+    if not cache_enabled():
+        return
+    try:
+        with _LOCK:
+            conn = _conn()
+            if subject_id is None:
+                conn.execute("DELETE FROM _score_cache")
+            else:
+                conn.execute("DELETE FROM _score_cache WHERE subject_id = ?", (str(subject_id),))
+            conn.commit()
+    except Exception:
+        pass
 
 
 def invalidate(cache_key: str = None):

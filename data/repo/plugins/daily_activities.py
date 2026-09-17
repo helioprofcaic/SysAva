@@ -23,8 +23,10 @@ if project_root not in sys.path:
 
 try:
     from services import database as db
+    from services import local_cache as lc
 except ImportError:
     db = None
+    lc = None
 
 def load_json(file_path):
     if os.path.exists(file_path):
@@ -38,12 +40,34 @@ def save_json(file_path, data):
     with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
-@st.cache_data(ttl=300)
-def get_cached_student_score(username, subject_id):
-    """Wrapper para cachear a consulta de scores e evitar ConnectionTerminated/Timeouts."""
-    if db:
-        return db.get_student_score(username, filter_subject_id=subject_id)
+def _empty_score():
     return {'total': 0.0, 'lesson': 0, 'quiz': 0, 'forum': 0}
+
+def get_scores_for_students(students, subject_id, force_refresh=False):
+    """
+    Carrega os scores da turma usando o cache SQLite local ANTES de ir ao Supabase.
+    Só consulta o Supabase para os alunos sem entrada fresca no cache (evita o N+1).
+    """
+    usernames = [s['username'] for s in students]
+
+    cached = {} if (force_refresh or lc is None) else lc.get_scores_bulk(subject_id, usernames)
+    result = dict(cached)
+
+    missing = [u for u in usernames if u not in result]
+    if missing and db is not None:
+        fetched = {}
+        for u in missing:
+            try:
+                fetched[u] = db.get_student_score(u, filter_subject_id=subject_id)
+            except Exception:
+                fetched[u] = _empty_score()
+        if lc is not None:
+            lc.set_scores_bulk(subject_id, fetched)
+        result.update(fetched)
+
+    for u in usernames:
+        result.setdefault(u, _empty_score())
+    return result
 
 def get_lesson_number(title):
     match = re.search(r'Aula\s*(\d+)', title, re.IGNORECASE)
@@ -123,10 +147,20 @@ def show_daily_activities():
     st.divider()
 
     # --- LANÇAMENTO DE PONTOS ---
-    st.subheader("⭐ Atribuir Pontos para esta Aula")
+    col_titulo, col_refresh = st.columns([4, 1])
+    col_titulo.subheader("⭐ Atribuir Pontos para esta Aula")
+    if col_refresh.button("🔄 Atualizar notas", use_container_width=True,
+                          help="Ignora o cache local e rebusca os scores no Supabase"):
+        if lc is not None:
+            lc.invalidate_scores(subject_id)
+        st.rerun()
+
     students = db.get_students_by_class(class_id)
     all_scores_data = load_json(SCORES_FILE)
     if "students_data" not in all_scores_data: all_scores_data["students_data"] = {}
+
+    # Carrega todos os scores de uma vez (cache SQLite local antes do Supabase)
+    scores_map = get_scores_for_students(students, subject_id)
 
     # Otimização: Criamos um mapa de blocos para todas as aulas da disciplina de uma vez só
     lesson_block_map = {l['id']: ("1-20" if get_lesson_number(l['title']) <= 20 else "21-40") 
@@ -142,10 +176,9 @@ def show_daily_activities():
         if "daily_qualitative_points" not in student_json:
             student_json["daily_qualitative_points"] = []
         
-        # Cálculo de engajamento do sistema (conforme home.py)
-        # Usando a versão cacheada para evitar erro de terminação de conexão
-        calc = get_cached_student_score(uname, subject_id)
-        system_score = calc['total']
+        # Cálculo de engajamento do sistema (conforme home.py), já vindo do cache local
+        calc = scores_map.get(uname, _empty_score())
+        system_score = calc.get('total', 0.0)
         
         # Filtra pontos qualitativos JÁ ATRIBUÍDOS no bloco atual (1-20 ou 21-40) com limite de 6.0
         qual_points_bloco = 0.0
