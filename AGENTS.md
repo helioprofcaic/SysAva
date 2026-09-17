@@ -22,8 +22,11 @@ O SysAva é um portal de apoio educacional construído em **Streamlit** integrad
 
 O projeto opera no **plano gratuito do Supabase**, que possui uma cota rígida de **5GB de saída de banda (Egress) mensal**. Devido à arquitetura "Rerun" do Streamlit, é extremamente fácil estourar esse limite caso as regras abaixo não sejam seguidas:
 
-### 1. Caching Obrigatório (`@st.cache_data`)
-* **Qualquer consulta de leitura repetitiva** no arquivo `services/database.py` (ex: `get_lessons()`, `get_classes()`, `get_subjects()`) **DEVE** utilizar o decorador `@st.cache_data(ttl=300)` para evitar chamadas duplicadas ao Supabase a cada clique do usuário.
+### 1. Caching Obrigatório (`services/local_cache.py`)
+* **Qualquer consulta de leitura repetitiva** no arquivo `services/database.py` (ex: `get_lessons()`, `get_classes()`, `get_subjects()`) **DEVE** passar por `local_cache.get_or_fetch(chave, fetch_fn, ttl=...)` para evitar chamadas duplicadas ao Supabase a cada rerun do Streamlit.
+* O cache SQLite é **ligado por padrão** (`services/local_cache.py`) e funciona também no Streamlit Cloud (arquivo efêmero por instância). Para desligar, use `DISABLE_LOCAL_CACHE = true` ou `ENABLE_LOCAL_CACHE = false` em `.streamlit/secrets.toml`/variável de ambiente.
+* **Toda escrita deve invalidar o cache correspondente.** Ex.: ao gravar histórico, chamar `local_cache.invalidate(f"user_history:{username}")`; ao mexer em quizzes, usar `_invalidate_quizzes_cache()`. Sem invalidação, dados ficam desatualizados até o TTL expirar.
+* TTLs disponíveis: `TTL_SHORT` (120s, histórico/score), `TTL_FORUM` (300s), `TTL_SCORE` (600s, cache de score em lote), `TTL_MEDIUM` (1h), `TTL_BASE` (6h). Nunca quebra: em erro de SQLite cai no Supabase.
 
 ### 2. Evite `select("*")` para Listagens
 * Nunca use `select("*")` para listar aulas em menus ou páginas de seleção. A coluna `full_content` na tabela `lessons` contém resumos de texto longos.
@@ -44,6 +47,12 @@ O projeto opera no **plano gratuito do Supabase**, que possui uma cota rígida d
 ### 2. Resiliência do Parser (`services/quiz_parser.py`)
 * O separador de quizzes procura pelo cabeçalho `## Quiz` de forma resiliente usando expressões regulares. **Nunca modifique o padrão regex para algo rígido** que dependa do emoji `📝`, pois variações da IA farão a aula ser salva sem nenhum quiz associado.
 * O parser traduz as variações de perguntas (`Pergunta 1`, `Questão 01`) de forma flexível e compara os números do gabarito como inteiros (`int`) para evitar falhas de matching com zeros à esquerda.
+
+### 3. Identificação por `quiz_id` (nunca só pelo título)
+* O título do quiz **deve ser único por aula** (`Quiz: {título da aula}`). O template da IA gera cabeçalhos genéricos repetidos (ex: `## 📝 Quiz: Teste seu Conhecimento!`) que **não** podem virar título do quiz, sob pena de um quiz respondido marcar vários outros como concluídos.
+* Conclusão, tentativas e pontuação devem ser identificadas por **`quiz_id`** (gravado no histórico como `| quiz_id:X`). Nunca volte a comparar apenas por título.
+* Ao salvar uma aula, remova os quizzes anteriores daquela aula antes de criar os novos (evita duplicatas). Use `db.delete_quizzes_for_lesson(lesson_id)`.
+* Migração e reset de tentativas: `scripts/migrate_quiz_titles.py` e `scripts/reset_quiz_attempts.py` (ver `docs/ISSUES_LOCAIS.md`).
 
 ---
 
@@ -67,3 +76,11 @@ project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(_
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 ```
+
+---
+
+## 🗂️ Registro de Issues Locais (obrigatório)
+
+* Toda correção/melhoria relevante deve ser registrada em **`docs/ISSUES_LOCAIS.md`** (índice com ID `IS-NNN`, status, arquivos afetados e como validar).
+* Ao concluir uma tarefa, **atualize o registro** antes de finalizar: adicione/edite a entrada, o status e o commit relacionado.
+* Mantenha o formato existente (símbolos 🟢/🟡/🔴/⚪ e a seção "Comandos úteis").

@@ -8,7 +8,9 @@ data/repo/plugins/*.json
 data/frequencia/*.json
 data/*.log
 .mimocode/
-.opencode/
+# Ignora o conteúdo do .opencode, mas versiona os agentes do projeto
+.opencode/*
+!.opencode/agent/
 
 # Cache local (SQLite) - nunca versionar
 data/cache/

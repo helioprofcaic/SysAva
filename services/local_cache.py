@@ -2,11 +2,12 @@
 Cache local (SQLite) para reduzir o egress do Supabase.
 
 Segurança / deploy:
-- É **inerte por padrão**. Só atua quando `ENABLE_LOCAL_CACHE` estiver ligado
-  (via `.streamlit/secrets.toml` local ou variável de ambiente). Sem a flag,
-  `get_or_fetch()` simplesmente chama o fetch original — comportamento idêntico
-  ao de hoje. Isso torna o commit seguro para o Streamlit Cloud (alunos).
-- Nunca quebra: qualquer erro de SQLite cai de volta para o Supabase.
+- Está **ligado por padrão** (para economizar egress no Cloud). Para desligar,
+  defina `DISABLE_LOCAL_CACHE = true` (ou `ENABLE_LOCAL_CACHE = false`) em
+  `.streamlit/secrets.toml` ou variável de ambiente. Quando desligado,
+  `get_or_fetch()` simplesmente chama o fetch original.
+- Nunca quebra: qualquer erro de SQLite cai de volta para o Supabase (inclusive
+  em ambientes onde o disco não é gravável, como alguns deploys).
 
 Uso:
     from services import local_cache as lc
@@ -31,18 +32,33 @@ TTL_BASE = 6 * 3600     # tabelas que mudam pouco (classes, subjects, ...)
 TTL_MEDIUM = 3600       # dados que mudam ocasionalmente
 TTL_FORUM = 300         # fórum
 TTL_SCORE = 600         # score do aluno (dados de engajamento)
+TTL_SHORT = 120         # histórico do usuário (muda a cada ação)
+
+_TRUTHY = ("1", "true", "yes", "on", "sim")
+_FALSY = ("0", "false", "no", "off", "nao", "não")
 
 
-def _read_flag() -> bool:
-    """Lê ENABLE_LOCAL_CACHE de env ou st.secrets. Default: desligado."""
-    val = os.environ.get("ENABLE_LOCAL_CACHE", "")
+def _read_setting(key: str):
+    """Lê uma chave de st.secrets ou de variável de ambiente."""
+    val = os.environ.get(key, "")
     if not val:
         try:
             import streamlit as st
-            val = st.secrets.get("ENABLE_LOCAL_CACHE", "")
+            val = st.secrets.get(key, "")
         except Exception:
             val = ""
-    return str(val).strip().lower() in ("1", "true", "yes", "on", "sim")
+    return val
+
+
+def _read_flag() -> bool:
+    """Cache ligado por padrão; desligado só se explicitamente configurado."""
+    disable = str(_read_setting("DISABLE_LOCAL_CACHE")).strip().lower()
+    if disable in _TRUTHY:
+        return False
+    enable = str(_read_setting("ENABLE_LOCAL_CACHE")).strip().lower()
+    if enable in _FALSY:
+        return False
+    return True
 
 
 def cache_enabled() -> bool:

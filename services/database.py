@@ -124,12 +124,13 @@ def get_all_users():
 
     def _fetch():
         try:
-            response = supabase.table("app_users").select("*").execute()
+            # Nunca baixa o hash de senha para listagens
+            response = supabase.table("app_users").select("username, name, ra, role, is_active").execute()
             return response.data
         except Exception:
             try:
                 # Fallback para bancos sem a coluna is_active
-                response = supabase.table("app_users").select("username, password, name, ra, role").execute()
+                response = supabase.table("app_users").select("username, name, ra, role").execute()
                 for u in response.data:
                     u['is_active'] = True
                 return response.data
@@ -178,18 +179,25 @@ def add_user_history(username: str, activity: str):
         response = supabase.table("user_history").insert({
             "username": username, "activity": activity
         }).execute()
+        # Invalida caches derivados do histórico para refletir imediatamente
+        local_cache.invalidate(f"user_history:{username}")
+        local_cache.invalidate_prefix(f"student_score:{username}:")
         return response.data, None
     except Exception as e:
         return None, str(e)
 
 def get_user_history(username: str):
-    """Busca o histórico de um usuário."""
+    """Busca o histórico de um usuário (cacheado por TTL curto)."""
     if not is_db_connected(): return []
-    try:
-        response = supabase.table("user_history").select("username, activity, timestamp").eq("username", username).order("timestamp", desc=True).execute()
-        return response.data
-    except Exception as e:
-        return []
+
+    def _fetch():
+        try:
+            response = supabase.table("user_history").select("username, activity, timestamp").eq("username", username).order("timestamp", desc=True).execute()
+            return response.data
+        except Exception:
+            return []
+
+    return local_cache.get_or_fetch(f"user_history:{username}", _fetch, ttl=local_cache.TTL_SHORT)
 
 def get_all_history(limit: int = 200):
     """Busca o histórico global de atividades (para relatórios)."""
@@ -219,28 +227,41 @@ def get_user_forum_lessons_by_subject(user_name: str):
     Retorna um dicionário {subject_id: count_de_aulas_unicas_com_post}.
     """
     if not is_db_connected(): return {}
-    try:
-        # 1. Pega todos os posts do usuário que estão em um fórum de aula
-        res = supabase.table("forum_posts").select("lesson_id").eq("user_name", user_name).not_.is_("lesson_id", "null").execute()
-        if not res.data: return {}
-        
-        # 2. Pega os IDs únicos das aulas onde o usuário postou
-        lesson_ids = list({r['lesson_id'] for r in res.data})
-        
-        # 3. Busca a qual disciplina cada uma dessas aulas pertence
-        lessons_res = supabase.table("lessons").select("id, subject_id").in_("id", lesson_ids).execute()
-        if not lessons_res.data: return {}
-        
-        # 4. Conta quantas aulas únicas por disciplina
-        subject_counts = {}
-        for lesson in lessons_res.data:
-            sid = lesson['subject_id']
-            subject_counts[sid] = subject_counts.get(sid, 0) + 1
-        return subject_counts
-    except Exception:
-        return {}
+
+    def _fetch():
+        try:
+            # 1. Pega todos os posts do usuário que estão em um fórum de aula
+            res = supabase.table("forum_posts").select("lesson_id").eq("user_name", user_name).not_.is_("lesson_id", "null").execute()
+            if not res.data: return {}
+
+            # 2. Pega os IDs únicos das aulas onde o usuário postou
+            lesson_ids = list({r['lesson_id'] for r in res.data})
+
+            # 3. Busca a qual disciplina cada uma dessas aulas pertence
+            lessons_res = supabase.table("lessons").select("id, subject_id").in_("id", lesson_ids).execute()
+            if not lessons_res.data: return {}
+
+            # 4. Conta quantas aulas únicas por disciplina
+            subject_counts = {}
+            for lesson in lessons_res.data:
+                sid = lesson['subject_id']
+                subject_counts[sid] = subject_counts.get(sid, 0) + 1
+            return subject_counts
+        except Exception:
+            return {}
+
+    return local_cache.get_or_fetch(f"forum_lessons:{user_name}", _fetch, ttl=local_cache.TTL_FORUM)
 
 def get_student_score(username: str, filter_subject_id: int = None):
+    """Calcula o score detalhado do aluno (cacheado por TTL curto)."""
+    if not is_db_connected(): return {"quiz": 0, "lesson": 0, "forum": 0, "total": 0}
+    key = f"student_score:{username}:{filter_subject_id if filter_subject_id is not None else 'all'}"
+    return local_cache.get_or_fetch(
+        key, lambda: _compute_student_score(username, filter_subject_id), ttl=local_cache.TTL_SHORT
+    )
+
+
+def _compute_student_score(username: str, filter_subject_id: int = None):
     """Calcula o score detalhado do aluno, considerando apenas a melhor tentativa de cada quiz."""
     if not is_db_connected(): return {"quiz": 0, "lesson": 0, "forum": 0, "total": 0}
 
@@ -254,7 +275,7 @@ def get_student_score(username: str, filter_subject_id: int = None):
     all_lessons = get_lessons()
     lesson_title_map = {l['title']: l['subject_id'] for l in all_lessons}
     try:
-        all_quizzes = supabase.table("quizzes").select("id, title, lesson_id").execute().data or []
+        all_quizzes = get_all_quizzes_summary()
         lesson_id_map = {l['id']: l['subject_id'] for l in all_lessons}
         quiz_title_map = {q['title']: lesson_id_map.get(q['lesson_id']) for q in all_quizzes if q.get('lesson_id') in lesson_id_map}
         quiz_id_map = {q['id']: lesson_id_map.get(q['lesson_id']) for q in all_quizzes if q.get('lesson_id') in lesson_id_map}
@@ -328,6 +349,11 @@ def get_student_score(username: str, filter_subject_id: int = None):
     forum_points_by_subject = {}
     if user_data and user_data.get('name'):
         forum_points_by_subject = get_user_forum_lessons_by_subject(user_data['name'])
+        # Chaves vindas do cache JSON podem estar como string; normaliza para int
+        forum_points_by_subject = {
+            (int(k) if str(k).lstrip('-').isdigit() else k): v
+            for k, v in (forum_points_by_subject or {}).items()
+        }
 
     # 3. Consolida e calcula o score final
     enrollment = get_user_enrollment(username)
@@ -411,6 +437,7 @@ def add_forum_post(user_name: str, message: str, lesson_id: int = None):
             get_forum_posts.clear()
         except Exception:
             pass
+        local_cache.invalidate(f"forum_lessons:{user_name}")
         return response.data, None
     except Exception as e:
         return None, str(e)
@@ -422,17 +449,23 @@ def delete_forum_post(post_id: int):
         get_forum_posts.clear()
     except Exception:
         pass
+    # Operação rara: invalida o cache de participação no fórum de todos
+    local_cache.invalidate_prefix("forum_lessons:")
     return response, error
 
 # --- Funções da Estrutura Acadêmica ---
 
 def get_school():
     if not is_db_connected(): return None
-    try:
-        response = supabase.table("schools").select("*").limit(1).execute()
-        return response.data[0] if response.data else None
-    except Exception:
-        return None
+
+    def _fetch():
+        try:
+            response = supabase.table("schools").select("id, name, gre").limit(1).execute()
+            return response.data[0] if response.data else None
+        except Exception:
+            return None
+
+    return local_cache.get_or_fetch("school", _fetch, ttl=local_cache.TTL_BASE)
 
 def upsert_school(name: str, gre: str):
     """Insere ou atualiza uma escola. Retorna o ID da escola."""
@@ -442,6 +475,7 @@ def upsert_school(name: str, gre: str):
         if res.data:
             return res.data[0]['id']
         res = supabase.table("schools").insert({"name": name, "gre": gre}).execute()
+        local_cache.invalidate("school")
         return res.data[0]['id']
     except Exception as e:
         print(f"Erro ao acessar tabela 'schools': {e}")
@@ -618,14 +652,18 @@ def get_subject_by_id(subject_id: int):
         return None
 
 def get_user_enrollment(username: str):
-    """Busca a matrícula (turma) de um usuário."""
+    """Busca a matrícula (turma) de um usuário (cacheada)."""
     if not is_db_connected(): return None
-    try:
-        response = supabase.table("student_enrollments").select("class_id").eq("user_username", username).limit(1).execute()
-        return response.data[0] if response.data else None
-    except Exception as e:
-        print(f"Erro ao buscar matrícula do usuário '{username}': {e}")
-        return None
+
+    def _fetch():
+        try:
+            response = supabase.table("student_enrollments").select("class_id").eq("user_username", username).limit(1).execute()
+            return response.data[0] if response.data else None
+        except Exception as e:
+            print(f"Erro ao buscar matrícula do usuário '{username}': {e}")
+            return None
+
+    return local_cache.get_or_fetch(f"enrollment:{username}", _fetch, ttl=local_cache.TTL_MEDIUM)
 
 def get_subjects_for_class(class_id: int):
     """Busca todas as disciplinas associadas a uma turma."""
@@ -660,6 +698,7 @@ def enroll_student_in_class(username: str, class_id: int):
         supabase.table("student_enrollments").delete().eq("user_username", username).execute()
         response = supabase.table("student_enrollments").insert({"user_username": username, "class_id": class_id}).execute()
         local_cache.invalidate_prefix("students_by_class:")
+        local_cache.invalidate(f"enrollment:{username}")
         return response.data, None
     except Exception as e:
         return None, str(e)
@@ -750,50 +789,82 @@ def get_lessons_for_subject_full(subject_id: int):
 
 def get_lesson_by_id(lesson_id: int):
     if not is_db_connected(): return None
-    res = safe_execute(lambda sb: sb.table("lessons").select(_LESSON_FULL_COLUMNS).eq("id", lesson_id).execute())
-    return res.data[0] if res and res.data else None
+
+    def _fetch():
+        res = safe_execute(lambda sb: sb.table("lessons").select(_LESSON_FULL_COLUMNS).eq("id", lesson_id).execute())
+        return res.data[0] if res and res.data else None
+
+    return local_cache.get_or_fetch(f"lesson_full:{lesson_id}", _fetch, ttl=local_cache.TTL_MEDIUM)
 
 def get_quiz_for_lesson(lesson_id: int):
     if not is_db_connected(): return None
-    res = safe_execute(lambda sb: sb.table("quizzes").select("id, title").eq("lesson_id", lesson_id).order("id").limit(1).execute())
-    return res.data[0] if res and res.data else None
+
+    def _fetch():
+        res = safe_execute(lambda sb: sb.table("quizzes").select("id, title").eq("lesson_id", lesson_id).order("id").limit(1).execute())
+        return res.data[0] if res and res.data else None
+
+    return local_cache.get_or_fetch(f"quiz_for_lesson:{lesson_id}", _fetch, ttl=local_cache.TTL_MEDIUM)
+
+def _invalidate_quizzes_cache():
+    """Limpa os caches de quizzes (listas, quiz individual e questões)."""
+    local_cache.invalidate("quizzes_summary")
+    local_cache.invalidate_prefix("quizzes_subject:")
+    local_cache.invalidate_prefix("quiz_by_id:")
+    local_cache.invalidate_prefix("quiz_questions:")
+    local_cache.invalidate_prefix("quiz_for_lesson:")
 
 def get_all_quizzes_summary():
     """Busca a lista de todos os quizzes para contagem rápida em lote sem N+1 queries."""
     if not is_db_connected(): return []
-    res = safe_execute(lambda sb: sb.table("quizzes").select("id, lesson_id, title").execute())
-    return res.data if res and res.data else []
+
+    def _fetch():
+        res = safe_execute(lambda sb: sb.table("quizzes").select("id, lesson_id, title").execute())
+        return res.data if res and res.data else []
+
+    return local_cache.get_or_fetch("quizzes_summary", _fetch, ttl=local_cache.TTL_MEDIUM)
 
 def get_quizzes_for_subject(subject_id: int):
     if not is_db_connected(): return []
-    try:
-        lessons_res = safe_execute(lambda sb: sb.table("lessons").select("id").eq("subject_id", subject_id).execute())
-        if not lessons_res or not lessons_res.data: return []
-        lesson_ids = [l['id'] for l in lessons_res.data]
-        if not lesson_ids: return []
-        quizzes_res = safe_execute(lambda sb: sb.table("quizzes").select("id, title, lesson_id").in_("lesson_id", lesson_ids).execute())
-        return quizzes_res.data if quizzes_res and quizzes_res.data else []
-    except Exception as e:
-        print(f"Erro ao buscar quizzes da disciplina {subject_id}: {e}")
-        return []
+
+    def _fetch():
+        try:
+            lessons_res = safe_execute(lambda sb: sb.table("lessons").select("id").eq("subject_id", subject_id).execute())
+            if not lessons_res or not lessons_res.data: return []
+            lesson_ids = [l['id'] for l in lessons_res.data]
+            if not lesson_ids: return []
+            quizzes_res = safe_execute(lambda sb: sb.table("quizzes").select("id, title, lesson_id").in_("lesson_id", lesson_ids).execute())
+            return quizzes_res.data if quizzes_res and quizzes_res.data else []
+        except Exception as e:
+            print(f"Erro ao buscar quizzes da disciplina {subject_id}: {e}")
+            return []
+
+    return local_cache.get_or_fetch(f"quizzes_subject:{subject_id}", _fetch, ttl=local_cache.TTL_MEDIUM)
 
 def get_quiz_by_id(quiz_id: int):
     if not is_db_connected(): return None
-    try:
-        response = supabase.table("quizzes").select("*").eq("id", quiz_id).limit(1).execute()
-        return response.data[0] if response.data else None
-    except Exception as e:
-        print(f"Erro ao buscar quiz por ID {quiz_id}: {e}")
-        return None
+
+    def _fetch():
+        try:
+            response = supabase.table("quizzes").select("id, lesson_id, title").eq("id", quiz_id).limit(1).execute()
+            return response.data[0] if response.data else None
+        except Exception as e:
+            print(f"Erro ao buscar quiz por ID {quiz_id}: {e}")
+            return None
+
+    return local_cache.get_or_fetch(f"quiz_by_id:{quiz_id}", _fetch, ttl=local_cache.TTL_MEDIUM)
 
 def get_quiz_questions(quiz_id: int):
     if not is_db_connected(): return []
-    try:
-        response = supabase.table("quiz_questions").select("*").eq("quiz_id", quiz_id).execute()
-        return response.data
-    except Exception as e:
-        print(f"Erro ao buscar questões do quiz {quiz_id}: {e}")
-        return []
+
+    def _fetch():
+        try:
+            response = supabase.table("quiz_questions").select("id, quiz_id, question_text, options, correct_option_index").eq("quiz_id", quiz_id).execute()
+            return response.data
+        except Exception as e:
+            print(f"Erro ao buscar questões do quiz {quiz_id}: {e}")
+            return []
+
+    return local_cache.get_or_fetch(f"quiz_questions:{quiz_id}", _fetch, ttl=local_cache.TTL_MEDIUM)
 
 def create_lesson(title: str, subject_id: int, description: str, video_url: str, week: str = None, full_content: str = None, objective: str = None, resources: str = None):
     """Cria uma nova aula no banco."""
@@ -811,6 +882,7 @@ def create_lesson(title: str, subject_id: int, description: str, video_url: str,
         local_cache.invalidate("lessons_light")
         local_cache.invalidate_prefix("lessons_subject:")
         local_cache.invalidate_prefix("lessons_full:")
+        local_cache.invalidate_prefix("lesson_full:")
         return response.data if response else None, None
     except Exception as e:
         return None, str(e)
@@ -835,6 +907,7 @@ def upsert_lesson(title: str, subject_id: int, description: str, video_url: str,
         local_cache.invalidate("lessons_light")
         local_cache.invalidate_prefix("lessons_subject:")
         local_cache.invalidate_prefix("lessons_full:")
+        local_cache.invalidate_prefix("lesson_full:")
         return response.data[0]['id'] if response and response.data else None
     except Exception as e:
         print(f"Erro ao fazer upsert da aula '{title}': {e}")
@@ -857,6 +930,7 @@ def update_lesson_plan_fields(lesson_id: int, objective: str = None, resources: 
         local_cache.invalidate("lessons_light")
         local_cache.invalidate_prefix("lessons_subject:")
         local_cache.invalidate_prefix("lessons_full:")
+        local_cache.invalidate_prefix("lesson_full:")
         return True, None
     except Exception as e:
         return None, str(e)
@@ -878,6 +952,8 @@ def delete_lesson(lesson_id: int):
         local_cache.invalidate("lessons_light")
         local_cache.invalidate_prefix("lessons_subject:")
         local_cache.invalidate_prefix("lessons_full:")
+        local_cache.invalidate_prefix("lesson_full:")
+        _invalidate_quizzes_cache()
         return response.data, None
     except Exception as e:
         return None, str(e)
@@ -911,6 +987,7 @@ def delete_quizzes_for_lesson(lesson_id: int):
         if quiz_ids:
             supabase.table("quiz_questions").delete().in_("quiz_id", quiz_ids).execute()
             supabase.table("quizzes").delete().in_("id", quiz_ids).execute()
+            _invalidate_quizzes_cache()
         return quiz_ids, None
     except Exception as e:
         return None, str(e)
@@ -920,6 +997,7 @@ def update_quiz_title(quiz_id: int, title: str):
     if not is_db_connected(): return None, "Banco de dados não conectado"
     try:
         response = supabase.table("quizzes").update({"title": title}).eq("id", quiz_id).execute()
+        _invalidate_quizzes_cache()
         return response.data, None
     except Exception as e:
         return None, str(e)
@@ -929,6 +1007,7 @@ def create_quiz(lesson_id: int, title: str):
     if not is_db_connected(): return None, "Banco de dados não conectado"
     try:
         response = supabase.table("quizzes").insert({"lesson_id": lesson_id, "title": title}).execute()
+        _invalidate_quizzes_cache()
         return response.data, None
     except Exception as e:
         return None, str(e)
@@ -940,6 +1019,7 @@ def create_quiz_question(quiz_id: int, question_text: str, options: list, correc
         response = supabase.table("quiz_questions").insert({
             "quiz_id": quiz_id, "question_text": question_text, "options": options, "correct_option_index": correct_index
         }).execute()
+        _invalidate_quizzes_cache()
         return response.data, None
     except Exception as e:
         return None, str(e)
@@ -949,6 +1029,7 @@ def delete_quiz_question(question_id: int):
     if not is_db_connected(): return None, "Banco de dados não conectado"
     try:
         response = supabase.table("quiz_questions").delete().eq("id", question_id).execute()
+        _invalidate_quizzes_cache()
         return response.data, None
     except Exception as e:
         return None, str(e)
@@ -966,6 +1047,7 @@ def update_quiz_question_options(question_id: int, new_options: list):
     if not is_db_connected(): return None, "Banco de dados não conectado"
     try:
         response = supabase.table("quiz_questions").update({"options": new_options}).eq("id", question_id).execute()
+        _invalidate_quizzes_cache()
         return response.data, None
     except Exception as e:
         return None, str(e)
@@ -974,6 +1056,7 @@ def update_quiz_question_correct_index(question_id: int, correct_index: int):
     if not is_db_connected(): return None, "Banco de dados não conectado"
     try:
         response = supabase.table("quiz_questions").update({"correct_option_index": correct_index}).eq("id", question_id).execute()
+        _invalidate_quizzes_cache()
         return response.data, None
     except Exception as e:
         return None, str(e)
@@ -1234,6 +1317,8 @@ def simulate_student_activities(username: str):
             history_entries.append({"username": username, "activity": "Enviou mensagem no fórum"})
 
         supabase.table("user_history").insert(history_entries).execute()
+        local_cache.invalidate(f"user_history:{username}")
+        local_cache.invalidate_prefix(f"student_score:{username}:")
         return True, None
     except Exception as e:
         return None, str(e)
@@ -1243,6 +1328,8 @@ def reset_student_data(username: str):
     if not is_db_connected(): return None, "Offline"
     try:
         supabase.table("user_history").delete().eq("username", username).execute()
+        local_cache.invalidate(f"user_history:{username}")
+        local_cache.invalidate_prefix(f"student_score:{username}:")
 
         submissions_res = supabase.table("student_assessments").select("id").eq("user_username", username).execute()
         if submissions_res.data:
