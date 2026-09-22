@@ -271,6 +271,10 @@ Tratamentos aplicados na preparação (`scripts/prepare_restore.py`):
 - **Pós-migração:** o Supabase devolve `timestamptz` misturando com e sem
   microssegundos; `pd.to_datetime` estourava em `views/home.py` e `views/quiz.py`.
   Corrigido com `format='ISO8601', errors='coerce'`.
+- **Pós-migração:** `get_user` deixou de estourar quando o banco falha (ex.: cota
+  ou secret incorreta no Cloud): o fallback agora é protegido, registra o erro no
+  log e retorna `None` (login mostra "usuário ou senha incorretos" em vez de
+  traceback).
 
 **Observação:** o `historico_aulas` local tinha 566 linhas contra 1.234 no
 Supabase antigo (inacessível durante o bloqueio) — a diferença não pôde ser

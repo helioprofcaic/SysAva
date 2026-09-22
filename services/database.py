@@ -127,12 +127,17 @@ def get_user(username: str):
         response = supabase.table("app_users").select("username, password, name, role, is_active").eq("username", username).execute()
         return response.data[0] if response.data else None
     except Exception:
-        # Fallback para bancos sem a coluna is_active
-        response = supabase.table("app_users").select("username, password, name, role").eq("username", username).execute()
-        data = response.data[0] if response.data else None
-        if data:
-            data['is_active'] = True
-        return data
+        # Fallback para bancos sem a coluna is_active. Nunca deixa o erro
+        # de banco derrubar o login (ex.: cota/instabilidade do Supabase).
+        try:
+            response = supabase.table("app_users").select("username, password, name, role").eq("username", username).execute()
+            data = response.data[0] if response.data else None
+            if data:
+                data['is_active'] = True
+            return data
+        except Exception as e2:
+            print(f"[get_user] falha ao consultar app_users: {e2}")
+            return None
 
 def get_all_users():
     if not is_db_connected(): return []
