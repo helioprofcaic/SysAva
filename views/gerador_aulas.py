@@ -102,6 +102,14 @@ def show_page():
         )
 
         st.divider()
+        st.header("💬 Fórum")
+        publicar_edubot = st.checkbox(
+            "🤖 Publicar desafio do EduBot no fórum",
+            value=True,
+            help="Desmarque para gerar a aula SEM criar o post do EduBot no fórum da aula."
+        )
+
+        st.divider()
         st.header("🎨 Estilo e Metodologia")
         with st.expander("Customizar Geração", expanded=False):
             disc_label = f" em {disciplina_selecionada}" if disciplina_selecionada != "Selecione..." else ""
@@ -393,7 +401,9 @@ def show_page():
                                     quiz_parser.process_quiz_content(lesson_id, quiz_content, lesson_title_clean)
                                 
                                 if lesson_id and challenge_text:
-                                    if db.has_bot_post(lesson_id, "EduBot"):
+                                    if not publicar_edubot:
+                                        st.info("🤖 **EduBot:** Publicação no fórum desativada para esta geração.")
+                                    elif db.has_bot_post(lesson_id, "EduBot"):
                                         st.info("🤖 **EduBot:** Esta aula já tem um desafio no Fórum (não repostado).")
                                     else:
                                         # Prepara a mensagem do fórum enviada pelo EduBot
@@ -522,7 +532,7 @@ def show_page():
                                                     
                                                     challenge_pattern = r'(?si)(#+.*?(?:Desafio|Atividade|Exemplo)\s+(?:Prático|Prática|de Código).*?)(?=\n#+\s*(?:Quiz|Gabarito|Conclusão|Recursos|Referências)|$)'
                                                     challenge_match = re.search(challenge_pattern, l_content)
-                                                    if challenge_match and not db.has_bot_post(rep_lesson_id, "EduBot"):
+                                                    if challenge_match and publicar_edubot and not db.has_bot_post(rep_lesson_id, "EduBot"):
                                                         forum_msg = (
                                                             f"🚀 **DESAFIO PRÁTICO — {lesson_title_clean}**\n\n"
                                                             f"{challenge_match.group(1).strip()}\n\n"

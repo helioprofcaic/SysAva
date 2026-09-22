@@ -311,6 +311,9 @@ aumentando o fluxo de dados.
 - `scripts/seed_lessons.py`: pula o post do SysAva Bot se já existir.
 - `scripts/cleanup_forum_duplicates.py`: remove duplicatas (dry-run por padrão;
   `--apply` para remover). Só mexe em posts de bot.
+- `views/gerador_aulas.py`: nova opção na sidebar **💬 Fórum → "Publicar desafio
+  do EduBot no fórum"** (marcada por padrão). Desmarcada, gera/salva a aula sem
+  criar o post do EduBot (geração e replicação).
 
 **Resultado:** 29 posts removidos; 243 → 214 posts de bot, 0 duplicatas.
 
