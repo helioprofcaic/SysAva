@@ -18,11 +18,12 @@ def clean_svg_content(text):
             text = re.sub(r'^```(?:markdown|md)?\s*\n?', '', text, flags=re.IGNORECASE)
             text = re.sub(r'\n?```\s*$', '', text)
 
-    # 2. Converte tags de imagem Markdown (![alt](path)) em SVGs autocontidos com base64
-    if "![" in text:
+    # 2. Remove imagens embutidas em Base64 (preserva SVG vetorial e links locais).
+    #    Nunca re-embutimos Base64 aqui: o conteúdo do banco deve permanecer leve.
+    if "base64" in text.lower():
         try:
-            from services.pdf_extractor import convert_markdown_images_to_svg
-            text = convert_markdown_images_to_svg(text)
+            from services.pdf_extractor import strip_base64_images
+            text = strip_base64_images(text)
         except Exception:
             pass
 

@@ -4,6 +4,7 @@ from services import database as db
 from services import auth
 from services import ai_generation as ai
 from views.aulas import clean_svg_content
+from services.pdf_extractor import strip_base64_images
 from services import quiz_parser
 import re
 import json
@@ -850,7 +851,7 @@ def show_page():
                                     # 3. Clonar Aulas, Quizzes e Questões
                                     lessons = db.get_lessons_for_subject_full(matrix_id)
                                     for l in lessons:
-                                        new_l_data, err = db.create_lesson(l['title'], new_sub_id, l.get('description', ''), l.get('video_url', ''))
+                                        new_l_data, err = db.create_lesson(l['title'], new_sub_id, strip_base64_images(l.get('description', '')), l.get('video_url', ''))
                                         if not err and new_l_data:
                                             new_lesson_id = new_l_data[0]['id']
                                             old_quiz = db.get_quiz_for_lesson(l['id'])
@@ -930,7 +931,7 @@ def show_page():
                         submitted = st.form_submit_button("Salvar Aula", key=f"training_lesson_submit_{training_id}")
 
                         if submitted and title:
-                            _, error = db.create_lesson(title, training_id, description, video_url)
+                            _, error = db.create_lesson(title, training_id, strip_base64_images(description), video_url)
                             if error:
                                 st.error(f"Erro ao criar aula: {error}")
                             else:

@@ -8,7 +8,7 @@ from services.ai_generation import generate_content_with_fallback, generate_cont
 from services import database as db
 from services import quiz_parser
 from services.contexto_aulas import resolver_pasta_turma, resolver_pasta_disciplina, normalizar_para_matching
-from services.pdf_extractor import convert_markdown_images_to_svg
+from services.pdf_extractor import convert_markdown_images_to_svg, strip_base64_images
 from views.aulas import clean_svg_content
 
 def show_page():
@@ -242,18 +242,7 @@ def show_page():
                         # Função utilitária para remover imagens em Base64
                         def remover_base64_do_texto(text):
                             if not text: return ""
-                            # 1. Remove blocos SVG contendo base64
-                            def _svg_repl(match):
-                                block = match.group(0)
-                                if "base64" in block.lower():
-                                    return ""
-                                return block
-                            text = re.sub(r'<svg\b[^>]*?>.*?</svg>', _svg_repl, text, flags=re.DOTALL | re.IGNORECASE)
-                            # 2. Remove tags HTML <img> contendo base64
-                            text = re.sub(r'<img\s+[^>]*?src=["\']data:image/.*?;base64,.*?["\'][^>]*?>', '', text, flags=re.DOTALL | re.IGNORECASE)
-                            # 3. Remove tags de imagem markdown contendo base64
-                            text = re.sub(r'!\[.*?\]\(data:image/.*?;base64,.*?\)', '', text, flags=re.DOTALL | re.IGNORECASE)
-                            return text
+                            return strip_base64_images(text)
 
                         contexto_para_ia = st.session_state.gerador_contexto
                         if remover_ilustracoes:
@@ -325,7 +314,10 @@ def show_page():
                                 texto_convertido = remover_base64_do_texto(raw_resp)
                             else:
                                 texto_convertido = convert_markdown_images_to_svg(raw_resp, assets_dir=assets_dir_semana)
-                                
+
+                            # Barreira final: nunca deixa Base64 chegar ao banco (ver AGENTS.md)
+                            texto_convertido = strip_base64_images(texto_convertido)
+
                             st.session_state['aula_gerada'] = texto_convertido
                             st.session_state['generated_subject_id'] = subject_id
                             st.success("Aula gerada com sucesso!")
@@ -382,6 +374,10 @@ def show_page():
                             with st.spinner("Integrando ao sistema..."):
                                 # Separa conteúdo da aula e do quiz
                                 lesson_content, quiz_content = quiz_parser.split_lesson_and_quiz(conteudo_aula)
+
+                                # Barreira final: nenhum Base64 é persistido no banco (ver AGENTS.md)
+                                lesson_content = strip_base64_images(lesson_content)
+                                quiz_content = strip_base64_images(quiz_content)
                                 
                                 # Tenta extrair o Desafio Prático para postar no fórum
                                 # Padrão flexível: captura seções de atividade/desafio/prática

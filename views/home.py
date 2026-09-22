@@ -233,7 +233,9 @@ def show_teacher_dashboard():
         }
         # Formata timestamp
         if 'timestamp' in df_history.columns:
-            df_history['timestamp'] = pd.to_datetime(df_history['timestamp']).dt.strftime('%d/%m/%Y %H:%M')
+            df_history['timestamp'] = pd.to_datetime(
+                df_history['timestamp'], format='ISO8601', errors='coerce'
+            ).dt.strftime('%d/%m/%Y %H:%M')
         st.dataframe(df_history, column_config=col_config, hide_index=True, width="stretch")
     else:
         st.info("Nenhuma atividade registrada recentemente.")

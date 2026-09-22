@@ -692,14 +692,51 @@ class PDFExtractor:
         return "\n".join(lines)
 
 
+_SVG_BLOCK_RE = re.compile(r'<svg\b[^>]*?>.*?</svg>', re.IGNORECASE | re.DOTALL)
+_MD_BASE64_IMG_RE = re.compile(r'!\[[^\]]*\]\(\s*data:[^)]*;base64,[^)]*\)', re.IGNORECASE | re.DOTALL)
+_MD_BASE64_LINK_RE = re.compile(r'\]\(\s*data:[^)]*;base64,[^)]*\)', re.IGNORECASE | re.DOTALL)
+_DATA_URI_RE = re.compile(r'data:image/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=\s]+', re.IGNORECASE)
+_SVG_TITLE_RE = re.compile(r'<title>(.*?)</title>', re.IGNORECASE | re.DOTALL)
+
+
+def strip_base64_images(text: str) -> str:
+    """Remove imagens embutidas em Base64, preservando SVG vetorial puro.
+
+    Barreira final contra o estouro da cota de egress do Supabase (ver AGENTS.md):
+    nenhum conteúdo com `data:image/...;base64,...` deve ser gravado no banco.
+    """
+    if not text or 'base64' not in text.lower():
+        return text
+
+    def _svg_repl(match):
+        block = match.group(0)
+        if 'base64' not in block.lower():
+            return block
+        title = _SVG_TITLE_RE.search(block)
+        label = title.group(1).strip() if title else ""
+        if label:
+            return f"\n\n> 🎨 **Ilustração:** *{label}*\n\n"
+        return "\n"
+
+    text = _SVG_BLOCK_RE.sub(_svg_repl, text)
+    text = _MD_BASE64_IMG_RE.sub("", text)
+    text = _MD_BASE64_LINK_RE.sub("]", text)
+    text = _DATA_URI_RE.sub("", text)
+    return text
+
+
 def convert_markdown_images_to_svg(
     markdown_text: str,
     assets: Optional[List[ExtractedAsset]] = None,
     assets_dir: Optional[str] = None
 ) -> str:
     """
-    Converte referências de imagens Markdown (![alt](caminho)) e arquivos de assets
-    em strings SVG autocontidas, permitindo persistência direta e portabilidade no Supabase.
+    Normaliza referências de imagens Markdown (![alt](caminho)) SEM embutir Base64.
+
+    Regras (ver AGENTS.md):
+    - SVG vetorial puro (sem Base64) é embutido no texto;
+    - Imagens raster (png/jpg) permanecem como LINK para o arquivo local;
+    - SVG que contenha Base64 vira link (o Base64 nunca é propagado).
     """
     if not markdown_text:
         return ""
@@ -710,14 +747,18 @@ def convert_markdown_images_to_svg(
     asset_map = {}
     if assets:
         for a in assets:
-            if a.svg_content:
-                asset_map[a.filename.lower()] = a.svg_content
-                asset_map[a.svg_filename.lower()] = a.svg_content
-                asset_map[a.relative_path.lower()] = a.svg_content
-                asset_map[a.svg_relative_path.lower()] = a.svg_content
-                # Também mapeia apenas o nome do arquivo sem extensão
-                stem = Path(a.filename).stem.lower()
-                asset_map[stem] = a.svg_content
+            rel = (a.relative_path or a.svg_relative_path or a.filename or "").replace('\\', '/')
+            stem = Path(a.filename).stem.lower()
+            # SVG vetorial puro pode ser embutido; qualquer coisa com Base64 vira link.
+            if a.svg_content and 'base64' not in a.svg_content.lower():
+                value = a.svg_content
+            else:
+                value = f'![{stem}]({rel})' if rel else ""
+            if value:
+                for key in (a.filename, a.svg_filename, a.relative_path, a.svg_relative_path):
+                    if key:
+                        asset_map[key.lower()] = value
+                asset_map[stem] = value
 
     # Se foi passado um assets_dir, carrega os SVGs ou converte imagens locais
     if assets_dir and os.path.exists(assets_dir):
@@ -731,33 +772,21 @@ def convert_markdown_images_to_svg(
                     try:
                         with open(f_path, 'r', encoding='utf-8') as f:
                             svg_data = f.read().strip()
+                        if svg_data and 'base64' not in svg_data.lower():
                             asset_map[f_lower] = svg_data
                             asset_map[f_stem] = svg_data
+                        else:
+                            rel_path = os.path.relpath(f_path, os.getcwd()).replace('\\', '/')
+                            asset_map[f_lower] = f'![{f_stem}]({rel_path})'
+                            asset_map[f_stem] = asset_map[f_lower]
                     except Exception:
                         pass
                 elif f_lower.endswith(('.png', '.jpg', '.jpeg')) and f_lower not in asset_map:
-                    try:
-                        with open(f_path, 'rb') as f:
-                            raw = f.read()
-                        im = Image.open(io.BytesIO(raw))
-                        fmt = 'jpeg' if f_lower.endswith(('.jpg', '.jpeg')) else 'png'
-                        b64 = base64.b64encode(raw).decode('utf-8')
-                        w, h = im.size
-                        svg_id = f"clip-{f_stem}"
-                        render_w = min(w, 240)
-                        render_h = int(h * (render_w / w)) if w > 0 else h
-                        svg_data = (
-                            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" '
-                            f'width="{render_w}" height="{render_h}" '
-                            f'style="float: right; margin: 4px 0 16px 24px; max-width: 38%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); clear: right;">'
-                            f'<defs><clipPath id="{svg_id}"><rect width="{w}" height="{h}" rx="8" ry="8"/></clipPath></defs>'
-                            f'<image href="data:image/{fmt};base64,{b64}" width="{w}" height="{h}" clip-path="url(#{svg_id})" />'
-                            f'</svg>'
-                        )
-                        asset_map[f_lower] = svg_data
-                        asset_map[f_stem] = svg_data
-                    except Exception:
-                        pass
+                    # Nunca embute Base64: mantém a imagem como link para o arquivo local.
+                    rel_path = os.path.relpath(f_path, os.getcwd()).replace('\\', '/')
+                    link = f'![{f_stem}]({rel_path})'
+                    asset_map[f_lower] = link
+                    asset_map[f_stem] = link
 
     # Substitui tags de imagem Markdown (![alt](path))
     def _repl_img(match):
@@ -777,29 +806,16 @@ def convert_markdown_images_to_svg(
 
         # 2. Se o caminho direto existe no disco
         if os.path.exists(src) and os.path.isfile(src):
-            try:
-                if src_lower.endswith('.svg'):
+            if src_lower.endswith('.svg'):
+                try:
                     with open(src, 'r', encoding='utf-8') as f:
-                        return f"\n{f.read().strip()}\n"
-                with open(src, 'rb') as f:
-                    raw = f.read()
-                im = Image.open(io.BytesIO(raw))
-                fmt = 'jpeg' if src_lower.endswith(('.jpg', '.jpeg')) else 'png'
-                b64 = base64.b64encode(raw).decode('utf-8')
-                w, h = im.size
-                render_w = min(w, 240)
-                render_h = int(h * (render_w / w)) if w > 0 else h
-                svg_id = f"clip-{src_stem}"
-                return (
-                    f'\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" '
-                    f'width="{render_w}" height="{render_h}" '
-                    f'style="float: right; margin: 4px 0 16px 24px; max-width: 38%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); clear: right;">'
-                    f'<defs><clipPath id="{svg_id}"><rect width="{w}" height="{h}" rx="8" ry="8"/></clipPath></defs>'
-                    f'<image href="data:image/{fmt};base64,{b64}" width="{w}" height="{h}" clip-path="url(#{svg_id})" />'
-                    f'</svg>\n'
-                )
-            except Exception:
-                pass
+                        svg_data = f.read().strip()
+                    if svg_data and 'base64' not in svg_data.lower():
+                        return f"\n{svg_data}\n"
+                except Exception:
+                    pass
+            # Raster (ou SVG com Base64): mantém como link local, sem embutir Base64
+            return f"\n\n![{alt}]({src.replace(os.sep, '/')})\n\n"
 
         # 3. Busca recursiva na pasta data/Turmas por nome de arquivo correspondente
         data_dir = os.path.join(os.getcwd(), "data")
@@ -808,30 +824,16 @@ def convert_markdown_images_to_svg(
                 for f in files:
                     if f.lower() == src_filename or Path(f).stem.lower() == src_stem:
                         candidate_path = os.path.join(root, f)
-                        try:
-                            if candidate_path.lower().endswith('.svg'):
+                        if candidate_path.lower().endswith('.svg'):
+                            try:
                                 with open(candidate_path, 'r', encoding='utf-8') as f_svg:
-                                    return f"\n{f_svg.read().strip()}\n"
-                            elif candidate_path.lower().endswith(('.jpg', '.jpeg', '.png')):
-                                with open(candidate_path, 'rb') as f_img:
-                                    raw = f_img.read()
-                                im = Image.open(io.BytesIO(raw))
-                                fmt = 'jpeg' if candidate_path.lower().endswith(('.jpg', '.jpeg')) else 'png'
-                                b64 = base64.b64encode(raw).decode('utf-8')
-                                w, h = im.size
-                                render_w = min(w, 240)
-                                render_h = int(h * (render_w / w)) if w > 0 else h
-                                svg_id = f"clip-{src_stem}"
-                                return (
-                                    f'\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" '
-                                    f'width="{render_w}" height="{render_h}" '
-                                    f'style="float: right; margin: 4px 0 16px 24px; max-width: 38%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); clear: right;">'
-                                    f'<defs><clipPath id="{svg_id}"><rect width="{w}" height="{h}" rx="8" ry="8"/></clipPath></defs>'
-                                    f'<image href="data:image/{fmt};base64,{b64}" width="{w}" height="{h}" clip-path="url(#{svg_id})" />'
-                                    f'</svg>\n'
-                                )
-                        except Exception:
-                            pass
+                                    svg_data = f_svg.read().strip()
+                                if svg_data and 'base64' not in svg_data.lower():
+                                    return f"\n{svg_data}\n"
+                            except Exception:
+                                pass
+                        rel_path = os.path.relpath(candidate_path, os.getcwd()).replace('\\', '/')
+                        return f"\n\n![{alt}]({rel_path})\n\n"
 
         # 4. Se não encontrar o arquivo de imagem, não deixa o link quebrado que gera o ícone de imagem quebrada no navegador
         if alt:
@@ -839,7 +841,8 @@ def convert_markdown_images_to_svg(
         return ""
 
     result = re.sub(r'!\[(.*?)\]\((.*?)\)', _repl_img, result)
-    return result
+    # Barreira final: garante que nenhum Base64 seja propagado (ver AGENTS.md)
+    return strip_base64_images(result)
 
 
 def extract_pdf_text(

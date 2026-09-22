@@ -9,6 +9,7 @@ import streamlit as st
 import json
 import os
 import sys
+import unicodedata
 import pandas as pd
 from datetime import datetime
 
@@ -20,6 +21,8 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 BACKUP_DIR = os.path.join(project_root, "data", "frequencia")
+# Lista negra de faltosos (RAs/nomes) usada para iniciar a chamada como "Falta"
+BLACKLIST_FILE = os.path.join(project_root, "data", "excecoes_alunos.json")
 
 try:
     from services import database as db
@@ -41,6 +44,18 @@ def save_json(file_path, data):
             json.dump(data, f, indent=4, ensure_ascii=False)
     except Exception as e:
         st.error(f"Erro ao salvar: {e}")
+
+def _normalize_name(name):
+    """Remove acentos e caixa para comparar nomes de forma resiliente."""
+    n = unicodedata.normalize('NFKD', str(name or '')).encode('ascii', 'ignore').decode('ascii')
+    return n.strip().upper()
+
+def load_blacklist():
+    """Lê a lista negra de faltosos (RAs e nomes) do arquivo local."""
+    data = load_json(BLACKLIST_FILE)
+    ras = {str(x).strip() for x in data.get("blacklist", []) if str(x).strip()}
+    names = {_normalize_name(x) for x in data.get("blacklist_names", []) if str(x).strip()}
+    return ras, names
 
 def show_attendance_plugin():
     st.title("📅 Diário de Frequência")
@@ -98,6 +113,13 @@ def show_attendance_plugin():
 
     # Ordenar alunos por nome para definir o número na lista (Nº)
     students = sorted(students, key=lambda x: x['name'])
+
+    # Lista negra de faltosos: quem estiver nela inicia a chamada como "Falta"
+    blacklist_ras, blacklist_names = load_blacklist()
+
+    def is_blacklisted(student):
+        return (str(student['username']).strip() in blacklist_ras
+                or _normalize_name(student['name']) in blacklist_names)
 
     # 2. Carregar Dados de Frequência
     attendance_data = load_json(ATTENDANCE_FILE)
@@ -176,10 +198,19 @@ def show_attendance_plugin():
             "Nº": i + 1,
             "Username": s['username'], 
             "Nome": s['name'], 
-            "Status": day_attendance.get(s['username'], "Presente")
+            "Status": day_attendance.get(
+                s['username'],
+                "Falta" if is_blacklisted(s) else "Presente"
+            )
         }
         for i, s in enumerate(students)
     ])
+
+    # Aviso dos alunos da lista negra presentes nesta turma
+    bl_in_class = [s for s in students if is_blacklisted(s)]
+    if bl_in_class:
+        nomes = ", ".join(s['name'] for s in bl_in_class)
+        st.caption(f"⚠️ **Lista negra de faltosos** ({len(bl_in_class)}): iniciados como **Falta** — {nomes}")
 
     # O data_editor permite editar o status como um dropdown em uma tabela compacta
     edited_df = st.data_editor(

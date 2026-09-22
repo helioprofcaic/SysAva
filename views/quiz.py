@@ -86,7 +86,9 @@ def show_page():
         st.markdown("### 📊 Suas Tentativas Anteriores")
         df_attempts = pd.DataFrame(quiz_attempts)
         try:
-            df_attempts['Data'] = pd.to_datetime(df_attempts['Data']).dt.strftime('%d/%m/%Y %H:%M')
+            df_attempts['Data'] = pd.to_datetime(
+                df_attempts['Data'], format='ISO8601', errors='coerce'
+            ).dt.strftime('%d/%m/%Y %H:%M')
         except:
             pass
         st.table(df_attempts)

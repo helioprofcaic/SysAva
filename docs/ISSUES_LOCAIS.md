@@ -30,6 +30,9 @@ Formato de ID: `IS-NNN`.
 | IS-004 | Lentidão no dataframe do plugin de qualitativo | 🟢 | 2026-09-17 |
 | IS-005 | Configurar cache no Streamlit Cloud | ⚪ | 2026-09-17 |
 | IS-006 | Cachear avaliações/submissões (admin) | ⚪ | 2026-09-17 |
+| IS-007 | Quizzes feitos não contabilizados no score (regressão do IS-002) | 🟢 | 2026-09-17 |
+| IS-008 | Lista negra de faltosos inicia a chamada como "Falta" (Frequência) | 🟢 | 2026-09-17 |
+| IS-009 | Base64/SVG inflando aulas — backup limpo e migração para novo banco | 🟢 | 2026-09-22 |
 
 ---
 
@@ -157,6 +160,131 @@ principalmente em telas de admin/avaliação. Avaliar custo/benefício.
 
 ---
 
+## IS-007 — Quizzes feitos não contabilizados no score 🟢
+
+**Sintoma:** aluna com vários quizzes respondidos aparecia com **Quizzes = 0**
+no painel do professor (ex.: `MARIA CRYSTHIELY DA SILVA`, disciplina 8).
+
+**Causa:** o app em execução ainda usava o código antigo (sem `| quiz_id:`).
+As tentativas foram gravadas com o **título novo** (já renomeado pela migração),
+mas **sem `quiz_id`**. Como o IS-002 passou a exigir `quiz_id` no
+`get_student_score`, esses pontos zeraram.
+
+**Solução:** em `_compute_student_score` e `get_user_progress_stats`, quando o
+log não tem `quiz_id`, resolve-se o quiz pelo **título** (que agora é único por
+aula) via mapa `quiz_title_to_id`. Assim a tentativa antiga e a nova caem na
+mesma chave `id:X` — não perde ponto nem conta em dobro.
+
+**Arquivos:** `services/database.py`
+
+**Validar:**
+```powershell
+python -c "from services import database as db; print(db.get_student_score('73166069283', filter_subject_id=8))"
+```
+Deve retornar `quiz` > 0 (no caso, 41).
+
+---
+
+## IS-008 — Lista negra de faltosos inicia a chamada como "Falta" 🟢
+
+**Pedido:** no plugin **Frequência**, os alunos da lista negra de faltosos devem
+já aparecer com status **Falta** (em vez do padrão "Presente").
+
+**Solução:** `student_attendance.py` lê `data/excecoes_alunos.json`
+(`blacklist` de RAs + `blacklist_names`, com nomes normalizados) e usa "Falta"
+como status inicial desses alunos. Mostra um aviso com os nomes encontrados na
+turma. Valores já salvos **não** são sobrescritos.
+
+**Arquivos:** `data/repo/plugins/student_attendance.py`
+
+**Validar:** Plugins → Frequência → turma `2ª SÉRIE - Turma I-B (Técnico DS)`:
+`GUSTAVO RAFAEL FRIGERI`, `ISADORA FERNANDA DA SILVA`, `LÁZARO DE SOUSA SILVA`
+e `JANAYRA SOARES BRANDÃO` devem iniciar como **Falta**.
+
+**Observação:** `data/excecoes_alunos.json` está no `.gitignore` (é local). Se o
+arquivo não existir, a lista fica vazia e o comportamento volta ao padrão
+(todos "Presente").
+
+---
+
+## IS-009 — Base64/SVG inflando aulas — backup limpo e migração para novo banco 🟢
+
+**Sintoma:** o Supabase restringiu o serviço (`Services restricted` — organização
+estourou a cota). O app quebrava com `pydantic ValidationError` do `postgrest`
+(que mascara a mensagem real `{"message": ...}`).
+
+**Causa raiz:** `services/pdf_extractor.py::convert_markdown_images_to_svg`
+embutia imagens em **Base64** (`<image href="data:image/...;base64,...">`) dentro
+de `lessons.description`, e `views/aulas.py::clean_svg_content` re-embutia Base64
+tanto na renderização quanto **antes de gravar** (`views/admin.py`,
+`views/gerador_aulas.py`). O cache do Supabase confirmou: 37 blocos Base64 em
+`lessons`, ~1 MB de texto inflado (linha de descrição chegava a 237 KB).
+
+**Solução:**
+- `services/pdf_extractor.py`: nova barreira `strip_base64_images()` (remove só o
+  Base64, **preserva SVG vetorial puro** e links locais). O
+  `convert_markdown_images_to_svg` deixou de codificar raster em Base64 — imagens
+  viram link para o arquivo local (padrão do AGENTS.md).
+- `views/aulas.py`: `clean_svg_content` agora remove Base64 em vez de re-embutir.
+- `views/gerador_aulas.py` / `views/admin.py`: barreira final antes de salvar.
+- `services/database.py`: `_sanitize_text()` aplicado em `create_lesson`,
+  `upsert_lesson`, `update_lesson_plan_fields` e `add_forum_post` (choke point).
+- `scripts/backup_clean.py`: backup limpo a partir de `data/escola_ativa.db`
+  (SQLite + JSONL + manifesto), removendo Base64.
+- `docs/NOVO_BANCO_SCHEMA.sql`: DDL idempotente do novo projeto Supabase
+  (modelo canônico + tabelas de automação + funções de resolução de disciplinas).
+- `scripts/restore_new_supabase.py`: restaura o backup limpo no novo projeto.
+
+**Evidência:** backup gerado em `data/backup_clean_2026-09-22_0757/` — 37 blocos
+Base64 removidos, ~1,01 MB de Base64 eliminados; `description` máxima caiu de
+237 KB para 20,7 KB; 60 linhas com SVG vetorial preservadas; 0 Base64 restante.
+
+**Auditoria e redução (ver `docs/AUDITORIA_BANCO.md`):** o portal usa o Supabase
+(21 tabelas) e a automação usa o SQLite `escola_ativa.db` (34 tabelas). As 13
+tabelas de automação **não** vão para o novo Supabase; as vazias/abandonadas
+(`qualitative_points`, `grade_milestones`, `user_reminders`, `user_profiles`) e a
+inexistente `student_scores` não serão recriadas. O novo projeto nasce com 21
+tabelas (25.228 linhas no restore). Consolidações de config/plugins ficam para
+depois da migração.
+
+**Arquivos:** `services/pdf_extractor.py`, `services/database.py`,
+`views/aulas.py`, `views/gerador_aulas.py`, `views/admin.py`,
+`views/home.py`, `views/quiz.py`,
+`scripts/backup_clean.py`, `scripts/prepare_restore.py`,
+`scripts/restore_new_supabase.py`,
+`docs/NOVO_BANCO_SCHEMA.sql`, `docs/AUDITORIA_BANCO.md`
+
+**Migração concluída (2026-09-22):** novo projeto Supabase com as 21 tabelas
+essenciais; 24.087 linhas restauradas e sequências reajustadas. Verificação
+origem × Supabase: **21/21 tabelas com contagem idêntica**. Cache local limpo e
+smoke test do portal OK (2 turmas, 16 disciplinas, 364 aulas, sem Base64).
+
+Tratamentos aplicados na preparação (`scripts/prepare_restore.py`):
+- `historico_aulas.data_aula` mantido em `dd/mm/aaaa` (o Supabase guarda como
+  TEXTO, igual ao bot do iSeduc). No projeto novo, ajustar o tipo com
+  `ALTER TABLE public.historico_aulas ALTER COLUMN data_aula TYPE text USING to_char(data_aula,'DD/MM/YYYY');`
+- `attendance`: 107 linhas de teste corrompidas removidas + 835 duplicatas
+  idênticas; 1 `student_number` fora do INTEGER normalizado.
+- Duplicatas removidas respeitando as UNIQUE: `historico_aulas` 167,
+  `weekly_schedule` 20, `assessments` 11 (PK).
+- 1 aula de teste com `id` UUID removida; 214 ids nulos preenchidos.
+- **Pós-migração:** o Supabase devolve `timestamptz` misturando com e sem
+  microssegundos; `pd.to_datetime` estourava em `views/home.py` e `views/quiz.py`.
+  Corrigido com `format='ISO8601', errors='coerce'`.
+
+**Observação:** o `historico_aulas` local tinha 566 linhas contra 1.234 no
+Supabase antigo (inacessível durante o bloqueio) — a diferença não pôde ser
+recuperada.
+
+**Validar:**
+```powershell
+python scripts/backup_clean.py
+python scripts/prepare_restore.py
+python scripts/restore_new_supabase.py --dry-run
+```
+
+---
+
 ## Comandos úteis
 
 ```powershell
@@ -170,6 +298,16 @@ python scripts/reset_quiz_attempts.py --apply
 
 # Verificar se o cache local está ligado
 python -c "from services import local_cache as lc; print(lc.cache_enabled())"
+
+# Backup limpo (sem Base64) a partir de data/escola_ativa.db
+python scripts/backup_clean.py
+
+# Preparar o backup para restauração (normaliza datas e remove duplicatas)
+python scripts/prepare_restore.py
+
+# Simular / executar a restauração no novo Supabase
+python scripts/restore_new_supabase.py --dry-run
+python scripts/restore_new_supabase.py --url <nova-url> --key <nova-anon-key>
 ```
 
 ## Histórico de commits relacionados

@@ -95,6 +95,21 @@ def is_db_connected():
     return client is not None
 
 
+def _sanitize_text(value):
+    """Remove imagens Base64 antes de persistir qualquer texto (ver AGENTS.md).
+
+    Barreira única: nenhum conteúdo com `data:image/...;base64,...` deve chegar
+    ao banco, sob pena de estourar a cota de egress do Supabase.
+    """
+    if not isinstance(value, str) or "base64" not in value.lower():
+        return value
+    try:
+        from services.pdf_extractor import strip_base64_images
+        return strip_base64_images(value)
+    except Exception:
+        return value
+
+
 def check_db_structure():
     """Verifica se a estrutura básica do banco (tabela app_users) existe."""
     if not is_db_connected():
@@ -279,9 +294,15 @@ def _compute_student_score(username: str, filter_subject_id: int = None):
         lesson_id_map = {l['id']: l['subject_id'] for l in all_lessons}
         quiz_title_map = {q['title']: lesson_id_map.get(q['lesson_id']) for q in all_quizzes if q.get('lesson_id') in lesson_id_map}
         quiz_id_map = {q['id']: lesson_id_map.get(q['lesson_id']) for q in all_quizzes if q.get('lesson_id') in lesson_id_map}
+        # Título -> id, apenas quando o título identifica um único quiz (títulos são únicos por aula)
+        _title_count = {}
+        for q in all_quizzes:
+            _title_count[q['title']] = _title_count.get(q['title'], 0) + 1
+        quiz_title_to_id = {q['title']: q['id'] for q in all_quizzes if _title_count.get(q['title']) == 1}
     except Exception:
         quiz_title_map = {}
         quiz_id_map = {}
+        quiz_title_to_id = {}
 
     for h in history:
         act = h.get('activity', '')
@@ -322,27 +343,34 @@ def _compute_student_score(username: str, filter_subject_id: int = None):
         # Contabiliza Quizzes (apenas a melhor nota de cada quiz)
         elif clean_act.startswith("Concluiu Quiz:"):
             try:
-                # Só conta tentativas identificadas por quiz_id. Logs antigos sem
-                # quiz_id não podem ser atribuídos com segurança a uma aula
-                # (títulos genéricos colidiam) e por isso são ignorados aqui.
-                match_qid = re.search(r'\| quiz_id:(\d+)', act)
-                if not match_qid:
-                    continue
-
                 title_part = clean_act.replace("Concluiu Quiz:", "").strip()
                 score_part = title_part.rsplit('(', 1)[-1].split(')')[0]
+                if '/' not in score_part:
+                    continue
 
-                if '/' in score_part:
-                    points = int(score_part.split('/')[0])
+                # Identifica o quiz preferencialmente pelo quiz_id gravado no log.
+                # Logs sem quiz_id (ex.: tentativas feitas com o app antigo) usam o
+                # título — agora único por aula — para achar o mesmo quiz, evitando
+                # perder pontos ou contar em dobro.
+                match_qid = re.search(r'\| quiz_id:(\d+)', act)
+                if match_qid:
                     quiz_key = f"id:{match_qid.group(1)}"
+                else:
+                    quiz_name = title_part.rsplit('(', 1)[0].strip()
+                    mapped_id = quiz_title_to_id.get(quiz_name)
+                    if mapped_id is None:
+                        continue
+                    quiz_key = f"id:{mapped_id}"
 
-                    if subject_id not in best_quiz_scores_by_subject:
-                        best_quiz_scores_by_subject[subject_id] = {}
+                points = int(score_part.split('/')[0])
 
-                    # Guarda apenas a maior pontuação para este quiz específico
-                    current_best = best_quiz_scores_by_subject[subject_id].get(quiz_key, 0)
-                    if points > current_best:
-                        best_quiz_scores_by_subject[subject_id][quiz_key] = points
+                if subject_id not in best_quiz_scores_by_subject:
+                    best_quiz_scores_by_subject[subject_id] = {}
+
+                # Guarda apenas a maior pontuação para este quiz específico
+                current_best = best_quiz_scores_by_subject[subject_id].get(quiz_key, 0)
+                if points > current_best:
+                    best_quiz_scores_by_subject[subject_id][quiz_key] = points
             except:
                 pass
     user_data = get_user(username)
@@ -429,7 +457,7 @@ def get_forum_posts(lesson_id: int = None):
 def add_forum_post(user_name: str, message: str, lesson_id: int = None):
     if not is_db_connected(): return None, "Banco de dados não conectado"
     try:
-        post_data = {"user_name": user_name, "message": message}
+        post_data = {"user_name": user_name, "message": _sanitize_text(message)}
         if lesson_id:
             post_data['lesson_id'] = lesson_id
         response = supabase.table("forum_posts").insert(post_data).execute()
@@ -871,12 +899,13 @@ def create_lesson(title: str, subject_id: int, description: str, video_url: str,
     if not is_db_connected(): return None, "Banco de dados não conectado"
     try:
         data = {
-            "title": title, "subject_id": subject_id, "description": description, "video_url": video_url
+            "title": title, "subject_id": subject_id,
+            "description": _sanitize_text(description), "video_url": video_url
         }
         if week: data["week"] = week
-        if full_content: data["full_content"] = full_content
-        if objective: data["objective"] = objective
-        if resources: data["resources"] = resources
+        if full_content: data["full_content"] = _sanitize_text(full_content)
+        if objective: data["objective"] = _sanitize_text(objective)
+        if resources: data["resources"] = _sanitize_text(resources)
         
         response = safe_execute(lambda sb: sb.table("lessons").insert(data).execute())
         local_cache.invalidate("lessons_light")
@@ -894,13 +923,13 @@ def upsert_lesson(title: str, subject_id: int, description: str, video_url: str,
         lesson_data = {
             "title": title,
             "subject_id": subject_id,
-            "description": description,
+            "description": _sanitize_text(description),
             "video_url": video_url
         }
         if week: lesson_data["week"] = week
-        if full_content: lesson_data["full_content"] = full_content
-        if objective: lesson_data["objective"] = objective
-        if resources: lesson_data["resources"] = resources
+        if full_content: lesson_data["full_content"] = _sanitize_text(full_content)
+        if objective: lesson_data["objective"] = _sanitize_text(objective)
+        if resources: lesson_data["resources"] = _sanitize_text(resources)
 
         # on_conflict usa as colunas com a constraint UNIQUE para fazer o upsert
         response = safe_execute(lambda sb: sb.table("lessons").upsert(lesson_data, on_conflict="subject_id,title").execute())
@@ -918,9 +947,9 @@ def update_lesson_plan_fields(lesson_id: int, objective: str = None, resources: 
     if not is_db_connected(): return None, "Offline"
     try:
         update_data = {}
-        if objective is not None: update_data["objective"] = objective
-        if resources is not None: update_data["resources"] = resources
-        if full_content is not None: update_data["full_content"] = full_content
+        if objective is not None: update_data["objective"] = _sanitize_text(objective)
+        if resources is not None: update_data["resources"] = _sanitize_text(resources)
+        if full_content is not None: update_data["full_content"] = _sanitize_text(full_content)
         if week is not None: update_data["week"] = week
 
         if not update_data:
@@ -1197,6 +1226,17 @@ def get_all_quiz_questions_for_subject(subject_id: int, assessment_type: str = N
 def get_user_progress_stats(username: str):
     if not is_db_connected(): return {"lessons": 0, "quizzes": 0, "forum": 0}
     history = get_user_history(username)
+
+    # Título -> id, para logs de quiz sem quiz_id (títulos são únicos por aula)
+    try:
+        all_quizzes = get_all_quizzes_summary()
+        _counts = {}
+        for q in all_quizzes:
+            _counts[q['title']] = _counts.get(q['title'], 0) + 1
+        title_to_id = {q['title']: q['id'] for q in all_quizzes if _counts.get(q['title']) == 1}
+    except Exception:
+        title_to_id = {}
+
     unique_lessons = set()
     unique_quizzes = set()
     forum_posts = 0
@@ -1205,10 +1245,14 @@ def get_user_progress_stats(username: str):
         if act.startswith("Acessou a aula:"):
             unique_lessons.add(act)
         elif act.startswith("Concluiu Quiz:"):
-            # Conta apenas quizzes identificados por ID (logs antigos são ambíguos).
             match_qid = re.search(r'\| quiz_id:(\d+)', act)
             if match_qid:
                 unique_quizzes.add(f"id:{match_qid.group(1)}")
+            else:
+                title = act.split('|')[0].replace("Concluiu Quiz:", "").rsplit('(', 1)[0].strip()
+                mapped = title_to_id.get(title)
+                if mapped is not None:
+                    unique_quizzes.add(f"id:{mapped}")
         elif "mensagem no fórum" in act:
             forum_posts += 1
     return {"lessons": len(unique_lessons), "quizzes": len(unique_quizzes), "forum": forum_posts}

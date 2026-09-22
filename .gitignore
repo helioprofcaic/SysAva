@@ -15,6 +15,9 @@ data/*.log
 # Cache local (SQLite) - nunca versionar
 data/cache/
 
+# Backups limpos gerados pelos scripts de migração - nunca versionar
+data/backup_clean_*/
+
 # Automação (PostarAulas migrado) - dados operacionais locais
 aulas/
 data/escola_ativa.db
@@ -59,6 +62,9 @@ scripts/*
 !scripts/migrate_quiz_titles.py
 !scripts/reset_quiz_attempts.py
 !scripts\quiz_parser.py
+!scripts/backup_clean.py
+!scripts/prepare_restore.py
+!scripts/restore_new_supabase.py
 # Arquivos de IDEs e Editores
 .vscode/
 .idea/
