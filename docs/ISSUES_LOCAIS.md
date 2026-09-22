@@ -33,6 +33,7 @@ Formato de ID: `IS-NNN`.
 | IS-007 | Quizzes feitos não contabilizados no score (regressão do IS-002) | 🟢 | 2026-09-17 |
 | IS-008 | Lista negra de faltosos inicia a chamada como "Falta" (Frequência) | 🟢 | 2026-09-17 |
 | IS-009 | Base64/SVG inflando aulas — backup limpo e migração para novo banco | 🟢 | 2026-09-22 |
+| IS-010 | Auditoria e limpeza de duplicatas de bot no fórum | 🟢 | 2026-09-22 |
 
 ---
 
@@ -289,6 +290,44 @@ python scripts/restore_new_supabase.py --dry-run
 
 ---
 
+## IS-010 — Auditoria e limpeza de duplicatas de bot no fórum 🟢
+
+**Sintoma:** o EduBot/SysAva Bot aparecia com mensagens repetidas nos fóruns,
+aumentando o fluxo de dados.
+
+**Diagnóstico:** posts de bot eram republicados a cada ação:
+- `views/gerador_aulas.py` postava o desafio do EduBot **toda vez** que a aula era
+  salva/gerada/replicada (sem checar se já existia).
+- `scripts/seed_lessons.py` postava o SysAva Bot a cada execução (não idempotente).
+
+**Evidência:** 243 posts de bot; 27 grupos duplicados (mesmo texto na mesma aula),
+29 cópias extras (~14,5 KB). Ex.: `SysAva Bot` 3× na aula 273; `EduBot 🤖` 2–3× em
+27 aulas.
+
+**Solução:**
+- `services/database.py`: novo `has_bot_post(lesson_id, bot_name)`.
+- `views/gerador_aulas.py`: só posta o desafio se a aula ainda não tiver post do
+  EduBot (2 pontos: geração e replicação).
+- `scripts/seed_lessons.py`: pula o post do SysAva Bot se já existir.
+- `scripts/cleanup_forum_duplicates.py`: remove duplicatas (dry-run por padrão;
+  `--apply` para remover). Só mexe em posts de bot.
+
+**Resultado:** 29 posts removidos; 243 → 214 posts de bot, 0 duplicatas.
+
+**Arquivos:** `services/database.py`, `views/gerador_aulas.py`,
+`scripts/seed_lessons.py`, `scripts/cleanup_forum_duplicates.py`
+
+**Validar:**
+```powershell
+python scripts/cleanup_forum_duplicates.py          # deve mostrar 0 a remover
+```
+
+**Nota (backlog):** o Fórum Geral (`get_forum_posts()` sem aula) ainda baixa
+**todos** os posts (~1 MB) com cache só de `st.cache_data` (120 s), sem o
+`local_cache` SQLite. É o maior ofensor de egress restante no fórum.
+
+---
+
 ## Comandos úteis
 
 ```powershell
@@ -312,6 +351,10 @@ python scripts/prepare_restore.py
 # Simular / executar a restauração no novo Supabase
 python scripts/restore_new_supabase.py --dry-run
 python scripts/restore_new_supabase.py --url <nova-url> --key <nova-anon-key>
+
+# Auditar/limpar duplicatas de bot no fórum (dry-run / aplicar)
+python scripts/cleanup_forum_duplicates.py
+python scripts/cleanup_forum_duplicates.py --apply
 ```
 
 ## Histórico de commits relacionados

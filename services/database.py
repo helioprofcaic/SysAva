@@ -475,6 +475,24 @@ def add_forum_post(user_name: str, message: str, lesson_id: int = None):
     except Exception as e:
         return None, str(e)
 
+def has_bot_post(lesson_id: int, bot_name: str = "EduBot") -> bool:
+    """True se a aula já tem um post do bot (evita repostar a cada save/seed)."""
+    if not is_db_connected() or not lesson_id:
+        return False
+    try:
+        res = (
+            supabase.table("forum_posts")
+            .select("id")
+            .eq("lesson_id", lesson_id)
+            .ilike("user_name", f"{bot_name}%")
+            .limit(1)
+            .execute()
+        )
+        return bool(res.data)
+    except Exception:
+        return False
+
+
 def delete_forum_post(post_id: int):
     if not is_db_connected(): return None, "Banco de dados não conectado"
     response, error = supabase.table("forum_posts").delete().eq("id", post_id).execute()

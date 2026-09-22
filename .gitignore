@@ -65,6 +65,7 @@ scripts/*
 !scripts/backup_clean.py
 !scripts/prepare_restore.py
 !scripts/restore_new_supabase.py
+!scripts/cleanup_forum_duplicates.py
 # Arquivos de IDEs e Editores
 .vscode/
 .idea/

@@ -399,11 +399,14 @@ def run_lesson_seeder():
                         else:
                             forum_message = f"Qual foi o seu maior aprendizado nesta aula? Compartilhe suas dúvidas e reflexões sobre o tema '{lesson_title}'!"
                         
-                        _, error = db.add_forum_post(user_name="SysAva Bot", message=forum_message, lesson_id=lesson_id)
-                        if not error:
-                            print(f"      -> 💬 Post de fórum criado.")
+                        if db.has_bot_post(lesson_id, "SysAva Bot"):
+                            print(f"      -> 💬 Post de fórum já existe (pulado).")
                         else:
-                            print(f"      -> ⚠️  Não foi possível criar post no fórum: {error}")
+                            _, error = db.add_forum_post(user_name="SysAva Bot", message=forum_message, lesson_id=lesson_id)
+                            if not error:
+                                print(f"      -> 💬 Post de fórum criado.")
+                            else:
+                                print(f"      -> ⚠️  Não foi possível criar post no fórum: {error}")
 
                         # 2. Processar e popular o quiz, se existir
                         if quiz_content:

@@ -393,25 +393,28 @@ def show_page():
                                     quiz_parser.process_quiz_content(lesson_id, quiz_content, lesson_title_clean)
                                 
                                 if lesson_id and challenge_text:
-                                    # Prepara a mensagem do fórum enviada pelo EduBot
-                                    forum_msg = (
-                                        f"🚀 **DESAFIO PRÁTICO — {lesson_title_clean}**\n\n"
-                                        f"{challenge_text}\n\n"
-                                        "---\n\n"
-                                        "### 💡 Como resolver:\n"
-                                        "1. **Copie o código** acima\n"
-                                        "2. **Cole em um IDE** e execute:\n"
-                                        "   - 🖥️ **VS Code** (local)\n"
-                                        "   - 🌐 [Replit](https://replit.com) (online)\n"
-                                        "   - 🌐 [OnlineGDB](https://www.onlinegdb.com) (online)\n"
-                                        "   - 🌐 [Programiz](https://www.programiz.com/python-programming/online-compiler/) (online)\n"
-                                        "3. **Teste e explore** — mude variáveis, adicione funcionalidades\n"
-                                        "4. **Poste sua solução** ou dúvida aqui no fórum!\n\n"
-                                        "🎯 **Bônus:** Quem resolver o desafio e postar a solução ganha pontos extras!"
-                                    )
-                                    db.add_forum_post("EduBot 🤖", forum_msg, lesson_id=lesson_id)
-                                    db.add_user_history("EduBot 🤖", f"Publicou desafio prático na aula: {lesson_title_clean}")
-                                    st.info("🤖 **EduBot:** Desafio prático publicado no Fórum da aula!")
+                                    if db.has_bot_post(lesson_id, "EduBot"):
+                                        st.info("🤖 **EduBot:** Esta aula já tem um desafio no Fórum (não repostado).")
+                                    else:
+                                        # Prepara a mensagem do fórum enviada pelo EduBot
+                                        forum_msg = (
+                                            f"🚀 **DESAFIO PRÁTICO — {lesson_title_clean}**\n\n"
+                                            f"{challenge_text}\n\n"
+                                            "---\n\n"
+                                            "### 💡 Como resolver:\n"
+                                            "1. **Copie o código** acima\n"
+                                            "2. **Cole em um IDE** e execute:\n"
+                                            "   - 🖥️ **VS Code** (local)\n"
+                                            "   - 🌐 [Replit](https://replit.com) (online)\n"
+                                            "   - 🌐 [OnlineGDB](https://www.onlinegdb.com) (online)\n"
+                                            "   - 🌐 [Programiz](https://www.programiz.com/python-programming/online-compiler/) (online)\n"
+                                            "3. **Teste e explore** — mude variáveis, adicione funcionalidades\n"
+                                            "4. **Poste sua solução** ou dúvida aqui no fórum!\n\n"
+                                            "🎯 **Bônus:** Quem resolver o desafio e postar a solução ganha pontos extras!"
+                                        )
+                                        db.add_forum_post("EduBot 🤖", forum_msg, lesson_id=lesson_id)
+                                        db.add_user_history("EduBot 🤖", f"Publicou desafio prático na aula: {lesson_title_clean}")
+                                        st.info("🤖 **EduBot:** Desafio prático publicado no Fórum da aula!")
                                 
                                 st.success(f"Aula '{lesson_title_clean}' salva com sucesso no banco de dados!")
                         else:
@@ -519,7 +522,7 @@ def show_page():
                                                     
                                                     challenge_pattern = r'(?si)(#+.*?(?:Desafio|Atividade|Exemplo)\s+(?:Prático|Prática|de Código).*?)(?=\n#+\s*(?:Quiz|Gabarito|Conclusão|Recursos|Referências)|$)'
                                                     challenge_match = re.search(challenge_pattern, l_content)
-                                                    if challenge_match:
+                                                    if challenge_match and not db.has_bot_post(rep_lesson_id, "EduBot"):
                                                         forum_msg = (
                                                             f"🚀 **DESAFIO PRÁTICO — {lesson_title_clean}**\n\n"
                                                             f"{challenge_match.group(1).strip()}\n\n"
