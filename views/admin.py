@@ -1599,13 +1599,17 @@ def show_page():
                         mime="text/csv",
                         width="stretch"
                     )
+                do_print_key = False
                 with col_exp2:
                     if st.button("🖨️ PDF para Impressão", width="stretch", key="reviewer_print_btn"):
-                        school_info = db.get_school()
-                        school_name = school_info['name'] if school_info else "Escola Técnica"
-                        html_print = generate_printable_answer_key_html(school_name, sel_subject, st.session_state.rev_type.upper(), export_data)
-                        components.html(html_print, height=600, scrolling=True)
-                        st.stop()
+                        do_print_key = True
+
+                if do_print_key:
+                    school_info = db.get_school()
+                    school_name = school_info['name'] if school_info else "Escola Técnica"
+                    html_print = generate_printable_answer_key_html(school_name, sel_subject, st.session_state.rev_type.upper(), export_data)
+                    components.html(html_print, height=600, scrolling=True)
+                    st.stop()
                 
                 for i, q in enumerate(st.session_state.rev_questions):
                     q_id = q['id']

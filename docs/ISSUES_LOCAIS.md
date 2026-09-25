@@ -51,6 +51,7 @@ Formato de ID: `IS-NNN`.
 | IS-025 | Plugin Atividades: últimas 8 aulas da disciplina fora do teto de 6 pts (40h→33-40, 80h→73-80) + aulas de apresentação criadas | 🟢 | 2026-09-25 |
 | IS-026 | Prova impressa/salva: separar lista de integrantes e lista de aulas do seminário (quebras de linha e listas) | 🟢 | 2026-09-25 |
 | IS-027 | Visualizar/Imprimir Prova: prova cortada à direita (overflow do container 800px) | 🟢 | 2026-09-25 |
+| IS-028 | Imprimir Prova/Visualizar Prova exibiam a prova dentro de coluna estreita (1/3 da largura), cortada à direita | 🟢 | 2026-09-25 |
 
 ---
 
@@ -946,6 +947,31 @@ bloco, cortando o lado direito.
 
 **Validar:** Visualizar Prova / Imprimir Prova de uma avaliação (ex. Seminário)
 em janela estreita e larga — a prova fica centralizada e sem corte à direita.
+
+---
+
+## IS-028 — Prova exibida dentro de coluna estreita, cortada à direita 🟢
+
+**Causa raiz (a do IS-027 não era o overflow):** o `components.html(prova)` era
+chamado **dentro** de `with st.columns(...)`, então o iframe ficava com apenas
+1/3 (ou 1/2) da largura da tela e a prova de 800px era cortada no lado direito
+("prova no lado esquerdo, layout cortado ao meio"). O `st.stop()` logo em
+seguida congelava a página.
+
+**Implementação:** o `components.html` foi movido para **fora** da coluna (largura
+total), usando uma flag setada pelo botão dentro da coluna:
+- `views/avaliacoes.py`: botão "Imprimir Prova" (aba Avaliações do admin, estava
+  na 1ª de 3 colunas); "Visualizar Prova Corrigida" e "Visualizar Prova"
+  (aluno, estavam na 1ª de 2 colunas).
+- `views/admin.py`: botão "🖨️ PDF para Impressão" (estava na 2ª de 2 colunas).
+
+Os botões continuam nas colunas; o iframe da prova é renderizado em largura
+total abaixo delas, seguido de `st.stop()`.
+
+**Arquivos:** `views/avaliacoes.py`, `views/admin.py`
+
+**Validar:** aba Avaliações (admin) / área do aluno → "Imprimir Prova" e
+"Visualizar Prova" → a prova ocupa a largura total e não é mais cortada.
 
 ---
 

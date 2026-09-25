@@ -441,10 +441,14 @@ def show_admin_view():
                     assessment['type']
                 )
 
+                show_print_prova = False
                 with col_print:
                     if st.button("Imprimir Prova", width="stretch", key="btn_print_assessment"):
-                        components.html(blank_html, height=600, scrolling=True)
-                        st.stop()
+                        show_print_prova = True
+
+                if show_print_prova:
+                    components.html(blank_html, height=600, scrolling=True)
+                    st.stop()
 
                 with col_save:
                     st.download_button(
@@ -789,11 +793,11 @@ def show_student_view():
                                 answers_map
                             )
 
+                            preview_corrected = False
                             col_prev, col_dl = st.columns(2)
                             with col_prev:
                                 if st.button("Visualizar Prova Corrigida", key=f"preview_corrected_{assessment['id']}"):
-                                    components.html(corrected_html, height=700, scrolling=True)
-                                    st.stop()
+                                    preview_corrected = True
                             with col_dl:
                                 st.download_button(
                                     label="Salvar Prova Corrigida (HTML)",
@@ -802,6 +806,10 @@ def show_student_view():
                                     mime="text/html",
                                     key=f"dl_corrected_{assessment['id']}"
                                 )
+
+                            if preview_corrected:
+                                components.html(corrected_html, height=700, scrolling=True)
+                                st.stop()
 
                 if attempts < 2:
                     st.caption("Você ainda não realizou esta avaliação.")
@@ -881,11 +889,11 @@ def show_student_view():
                                 questions_print
                             )
 
+                            preview_std = False
                             col_prev, col_dl = st.columns(2)
                             with col_prev:
                                 if st.button("Visualizar Prova", key=f"preview_std_{assessment['id']}"):
-                                    components.html(blank_html, height=700, scrolling=True)
-                                    st.stop()
+                                    preview_std = True
                             with col_dl:
                                 st.download_button(
                                     label="Salvar Prova (HTML)",
@@ -894,6 +902,10 @@ def show_student_view():
                                     mime="text/html",
                                     key=f"dl_std_{assessment['id']}"
                                 )
+
+                            if preview_std:
+                                components.html(blank_html, height=700, scrolling=True)
+                                st.stop()
                 else: # attempts >= 2
                     with col2:
                         st.success("✅ Concluído")
