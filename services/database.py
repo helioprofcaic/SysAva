@@ -1171,6 +1171,23 @@ def delete_assessment_question(question_id: int):
     except Exception as e:
         return None, str(e)
 
+def delete_assessment(assessment_id: int):
+    """Remove uma avaliação e tudo que depende dela (questões, respostas e notas dos alunos).
+    Sem ON DELETE CASCADE em student_assessments/answers, a exclusão é feita na ordem:
+    respostas -> submissões -> questões -> avaliação."""
+    if not is_db_connected(): return None, "Banco de dados não conectado"
+    try:
+        submissions = supabase.table("student_assessments").select("id").eq("assessment_id", assessment_id).execute()
+        sub_ids = [s['id'] for s in submissions.data] if submissions.data else []
+        if sub_ids:
+            supabase.table("student_assessment_answers").delete().in_("submission_id", sub_ids).execute()
+            supabase.table("student_assessments").delete().in_("id", sub_ids).execute()
+        supabase.table("assessment_questions").delete().eq("assessment_id", assessment_id).execute()
+        response = supabase.table("assessments").delete().eq("id", assessment_id).execute()
+        return response.data, None
+    except Exception as e:
+        return None, str(e)
+
 def get_all_assessments():
     if not is_db_connected(): return []
     try:

@@ -63,6 +63,36 @@ def markdown_to_html(text):
     text = re.sub(r'`(.*?)`', r'<code>\1</code>', text)
     return text
 
+def text_block_to_html(text):
+    """Igual ao markdown_to_html, porém preserva quebras de linha e monta listas
+    para itens iniciados com '- ' ou '• '. Separa visualmente seções (ex.: integrantes
+    do seminário e lista de aulas), que antes eram impressas em uma única linha."""
+    if not text: return ""
+    lines = markdown_to_html(text).split('\n')
+    out = []
+    i = 0
+    while i < len(lines):
+        s = lines[i].strip()
+        if s.startswith('- ') or s.startswith('• '):
+            itens = []
+            while i < len(lines):
+                li = lines[i].strip()
+                if li.startswith('- ') or li.startswith('• '):
+                    itens.append(li[2:].strip())
+                    i += 1
+                else:
+                    break
+            out.append('<ul style="margin:4px 0 8px 22px;padding:0;">' +
+                       ''.join(f'<li style="margin:3px 0;line-height:1.5;">{it}</li>' for it in itens) +
+                       '</ul>')
+        elif s == '':
+            out.append('<span style="display:block;height:8px;"></span>')
+            i += 1
+        else:
+            out.append(f'<span>{lines[i]}</span><br>')
+            i += 1
+    return ''.join(out)
+
 def generate_printable_view(school_name, subject_name, class_name, student_name, ra, score, questions, answers_map):
     date_str = datetime.now().strftime("%d/%m/%Y")
     
@@ -100,7 +130,7 @@ def generate_printable_view(school_name, subject_name, class_name, student_name,
     <div class="no-print" style="text-align: right; margin-bottom: 10px;">
         <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">🖨️ Imprimir Agora</button>
     </div>
-    <div class="print-container" style="font-family: Arial, sans-serif; padding: 40px; border: 1px solid #ccc; background-color: white; color: black; max-width: 800px; margin: 0 auto;">
+    <div class="print-container" style="font-family: Arial, sans-serif; padding: 40px; border: 1px solid #ccc; background-color: white; color: black; max-width: min(800px, 100%); margin: 0 auto; box-sizing: border-box; overflow-wrap: break-word;">
         <div style="text-align: center; margin-bottom: 20px;">
             <h2 style="margin: 0;">{school_name}</h2>
             <p style="margin: 5px 0;"><strong>Disciplina:</strong> {subject_name} | <strong>Turma:</strong> {class_name}</p>
@@ -108,7 +138,7 @@ def generate_printable_view(school_name, subject_name, class_name, student_name,
         </div>
         
         <div style="border: 1px solid #000; padding: 10px; margin-bottom: 15px;">
-            <div style="display: flex; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
                 <span><strong>Aluno(a):</strong> {student_name}</span>
                 <span><strong>Nota Final:</strong> {score if score is not None else 'Pendente'}</span>
             </div>
@@ -121,7 +151,7 @@ def generate_printable_view(school_name, subject_name, class_name, student_name,
     for i, q in enumerate(questions):
         ans = answers_map.get(q['id'])
         
-        q_text = markdown_to_html(q['question_text'])
+        q_text = text_block_to_html(q['question_text'])
         user_resp = "Não respondeu"
         correct_resp = ""
         is_correct = False
@@ -208,7 +238,7 @@ def generate_blank_printable_view(school_name, subject_name, class_name, assessm
     <div class="no-print" style="text-align: right; margin-bottom: 10px;">
         <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">🖨️ Imprimir Agora</button>
     </div>
-    <div class="print-container" style="font-family: Arial, sans-serif; padding: 40px; border: 1px solid #ccc; background-color: white; color: black; max-width: 800px; margin: 0 auto;">
+    <div class="print-container" style="font-family: Arial, sans-serif; padding: 40px; border: 1px solid #ccc; background-color: white; color: black; max-width: min(800px, 100%); margin: 0 auto; box-sizing: border-box; overflow-wrap: break-word;">
         <div style="text-align: center; margin-bottom: 20px;">
             <h2 style="margin: 0;">{school_name}</h2>
             <p style="margin: 5px 0;"><strong>Disciplina:</strong> {subject_name} | <strong>Turma:</strong> {class_name}</p>
@@ -216,7 +246,7 @@ def generate_blank_printable_view(school_name, subject_name, class_name, assessm
             <p style="margin: 5px 0;"><strong>Data:</strong> ___/___/______ | <strong>Cidade:</strong> Teresina - PI</p>
         </div>
         
-        <div style="border: 1px solid #000; padding: 10px; margin-bottom: 15px; display: flex; justify-content: space-between;">
+        <div style="border: 1px solid #000; padding: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; flex-wrap: wrap;">
             <span><strong>Aluno(a):</strong> ___________________________________________________</span>
             <span><strong>Nota Final:</strong> _________</span>
         </div>
@@ -225,7 +255,7 @@ def generate_blank_printable_view(school_name, subject_name, class_name, assessm
     """
     
     for i, q in enumerate(questions):
-        q_text = markdown_to_html(q['question_text'])
+        q_text = text_block_to_html(q['question_text'])
         q_type = q.get('question_type', 'objective')
         html += f"""
         <div style="margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px dotted #ccc;">
@@ -269,7 +299,7 @@ def generate_assessment_print_html(school_name, subject_name, class_name, assess
 
     rows_html = ""
     for i, q in enumerate(questions):
-        q_text = markdown_to_html(q['question_text'])
+        q_text = text_block_to_html(q['question_text'])
         options_html = ""
         q_type = q.get('question_type', 'objective')
         if q_type == 'objective':
@@ -304,11 +334,11 @@ def generate_assessment_print_html(school_name, subject_name, class_name, assess
         <meta charset="UTF-8">
         <title>Avaliação - {assessment_title}</title>
         <style>
-            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }}
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: min(800px, 100%); margin: 0 auto; padding: 20px; box-sizing: border-box; overflow-wrap: break-word; }}
             .header {{ text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }}
             .header h1 {{ margin: 0; font-size: 20px; }}
             .header p {{ margin: 5px 0; color: #666; }}
-            .student-info {{ border: 1px solid #000; padding: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; }}
+            .student-info {{ border: 1px solid #000; padding: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0 12px; }}
             @media print {{
                 .no-print {{ display: none !important; }}
                 body {{ margin: 0; padding: 15mm; }}

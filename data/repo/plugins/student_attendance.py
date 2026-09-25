@@ -45,6 +45,52 @@ def save_json(file_path, data):
     except Exception as e:
         st.error(f"Erro ao salvar: {e}")
 
+def _write_local_attendance(db_records):
+    """Grava a chamada também na tabela `attendance` do banco local (escola_ativa.db).
+
+    Terceira fonte de persistência: JSON + Supabase + banco local.
+    A tabela local (restaurada do Supabase) não tem UNIQUE, então o upsert é
+    manual: casa por (student_name, class_name, subject_id, date).
+    """
+    try:
+        import sqlite3
+        local_path = os.path.join(project_root, "data", "escola_ativa.db")
+        os.makedirs(os.path.dirname(local_path), exist_ok=True)
+        conn = sqlite3.connect(local_path, timeout=10)
+        conn.execute("""CREATE TABLE IF NOT EXISTS attendance (
+            id TEXT,
+            student_name TEXT NOT NULL,
+            student_number TEXT,
+            is_present TEXT,
+            class_name TEXT NOT NULL,
+            subject_id TEXT,
+            date TEXT NOT NULL,
+            professor_name TEXT,
+            created_at TEXT DEFAULT (datetime('now')))""")
+        for r in db_records:
+            sid = str(r["subject_id"]) if r["subject_id"] is not None else None
+            existing = conn.execute(
+                "SELECT id FROM attendance WHERE student_name=? AND class_name=? AND subject_id=? AND date=?",
+                (r["student_name"], r["class_name"], sid, r["date"]),
+            ).fetchone()
+            if existing:
+                conn.execute(
+                    "UPDATE attendance SET is_present=? WHERE id=?",
+                    (1 if r["is_present"] else 0, existing[0]),
+                )
+            else:
+                conn.execute(
+                    "INSERT INTO attendance (student_name, student_number, is_present, class_name, subject_id, date, professor_name) VALUES (?,?,?,?,?,?,?)",
+                    (r["student_name"], str(r["student_number"]), 1 if r["is_present"] else 0,
+                     r["class_name"], sid, r["date"], r.get("professor_name", "Professor")),
+                )
+        conn.commit()
+        conn.close()
+        return len(db_records)
+    except Exception as e:
+        st.warning(f"Não foi possível gravar a chamada no banco local (escola_ativa.db): {e}")
+        return 0
+
 def _normalize_name(name):
     """Remove acentos e caixa para comparar nomes de forma resiliente."""
     n = unicodedata.normalize('NFKD', str(name or '')).encode('ascii', 'ignore').decode('ascii')
@@ -239,34 +285,38 @@ def show_attendance_plugin():
         # 1. Atualiza o JSON de origem (student_attendance.json) com todos os dados mesclados
         save_json(ATTENDANCE_FILE, attendance_data)
 
-        # 2. Popula tudo no banco de dados (Sincronização completa da turma)
-        if db and hasattr(db, 'supabase'):
-            professor = st.session_state.get('usuario', 'Professor')
-            db_records = []
-            
-            # Mapeamento auxiliar para recuperar nome e número rapidamente
-            user_info_map = {s['username']: {"name": s['name'], "n": i+1} for i, s in enumerate(students)}
-            
-            # Percorre todas as datas desta turma e disciplina
-            for d_key, entries in attendance_data[class_key][subject_key].items():
-                for u_name, status in entries.items():
-                    if u_name in user_info_map:
-                        db_records.append({
-                            "student_name": user_info_map[u_name]["name"],
-                            "student_number": user_info_map[u_name]["n"],
-                            "is_present": status in ["Presente", "Atraso"],
-                            "class_name": selected_class_name,
-                            "subject_id": selected_subject_id,
-                            "subject_name": selected_subject_name,
-                            "date": d_key,
-                            "professor_name": professor
-                        })
-            
-            if db_records:
+        # 2. Popula as TRÊS fontes: JSON (feito acima), banco local e Supabase
+        professor = st.session_state.get('usuario', 'Professor')
+        db_records = []
+
+        # Mapeamento auxiliar para recuperar nome e número rapidamente
+        user_info_map = {s['username']: {"name": s['name'], "n": i+1} for i, s in enumerate(students)}
+
+        # Percorre todas as datas desta turma e disciplina
+        for d_key, entries in attendance_data[class_key][subject_key].items():
+            for u_name, status in entries.items():
+                if u_name in user_info_map:
+                    db_records.append({
+                        "student_name": user_info_map[u_name]["name"],
+                        "student_number": user_info_map[u_name]["n"],
+                        "is_present": status in ["Presente", "Atraso"],
+                        "class_name": selected_class_name,
+                        "subject_id": selected_subject_id,
+                        "subject_name": selected_subject_name,
+                        "date": d_key,
+                        "professor_name": professor
+                    })
+
+        if db_records:
+            # 2a. Banco local (escola_ativa.db) — redundância local p/ o gerador de planos
+            _write_local_attendance(db_records)
+
+            # 2b. Supabase (nuvem) — se disponível
+            if db and hasattr(db, 'supabase'):
                 try:
                     # O parâmetro on_conflict usa subject_id conforme constraint do banco
                     db.supabase.table("attendance").upsert(
-                        db_records, 
+                        db_records,
                         on_conflict="student_name, class_name, subject_id, date"
                     ).execute()
                     st.info(f"Sincronizados {len(db_records)} registros (incluindo backups) com o servidor.")

@@ -1099,6 +1099,29 @@ def show_page():
                             assessment_map = {f"{a['type']} - {a['title']}": a for a in assessments}
                             selected_assessment_key = st.selectbox("Selecione para editar questões:", options=["-- Selecione --"] + list(assessment_map.keys()), key="sel_edit_av")
 
+                            # --- Exclusão de Avaliação ---
+                            if selected_assessment_key != "-- Selecione --":
+                                target_assessment = assessment_map[selected_assessment_key]
+                                target_id = target_assessment['id']
+                                if st.button(f"🗑️ Excluir '{target_assessment['title']}' ({target_assessment['type']})", key=f"btn_del_av_{target_id}"):
+                                    st.session_state[f"confirm_del_av_{target_id}"] = True
+                                if st.session_state.get(f"confirm_del_av_{target_id}"):
+                                    st.warning("A exclusão remove a avaliação, suas questões, respostas e notas dos alunos. Confirmar?")
+                                    c_yes_del, c_no_del = st.columns(2)
+                                    with c_yes_del:
+                                        if st.button("✅ Excluir Avaliação", type="primary", key=f"btn_confirm_del_av_{target_id}", use_container_width=True):
+                                            _, err = db.delete_assessment(target_id)
+                                            if err:
+                                                st.error(f"Erro ao excluir: {err}")
+                                            else:
+                                                st.success("Avaliação excluída.")
+                                                st.session_state.pop(f"confirm_del_av_{target_id}", None)
+                                                st.rerun()
+                                    with c_no_del:
+                                        if st.button("Cancelar", key=f"btn_cancel_del_av_{target_id}", use_container_width=True):
+                                            st.session_state.pop(f"confirm_del_av_{target_id}", None)
+                                            st.rerun()
+
                         # --- Gerenciamento de Questões da Avaliação Selecionada ---
                         if selected_assessment_key != "-- Selecione --":
                             assessment = assessment_map[selected_assessment_key]

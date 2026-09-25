@@ -362,6 +362,10 @@ def get_student_qualitative_points(student_json, selected_subject_id, selected_s
     matching_ids.add(selected_subject_id)
     matching_str_ids = {str(i) for i in matching_ids if i is not None}
 
+    # Nome da disciplina atual normalizado para cotejar com o campo `notes`
+    norm_subject_name = (normalizar_para_matching(selected_subject_name)
+                         if selected_subject_name else "")
+
     total_pts = 0.0
     for p in all_points:
         p_sid = p.get('subject_id')
@@ -375,8 +379,10 @@ def get_student_qualitative_points(student_json, selected_subject_id, selected_s
         # 1. Bate direto com a disciplina atual ou equivalentes
         if p_sid is not None and (p_sid in matching_ids or str(p_sid) in matching_str_ids):
             total_pts += pts
-        # 2. Ponto sem disciplina vinculada (atribuído de forma geral)
-        elif p_sid is None:
+        # 2. Ponto sem subject_id (ex: lançado pela "Visão Geral"): só atribui
+        #    à disciplina atual se o nome dela aparecer no campo `notes`.
+        #    Sem isso, pontos de uma disciplina vazavam para TODAS as outras.
+        elif p_sid is None and norm_subject_name and p.get('notes') and norm_subject_name in normalizar_para_matching(str(p.get('notes'))):
             total_pts += pts
 
     return min(6.0, round(total_pts, 2))

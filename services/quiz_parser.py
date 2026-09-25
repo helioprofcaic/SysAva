@@ -42,8 +42,13 @@ def process_quiz_content(lesson_id: int, quiz_content: str, lesson_title: str):
 
     # Pre-processamento agressivo para quebrar tudo corretamente
 
+    # 0. Normaliza marcadores em negrito para o parser reconhecê-los:
+    #    "**[x]**" -> "[x]", "**a)**" -> "a)", "**(x)**" -> "(x)"
+    content = re.sub(r'\*{2}\s*([\[\(])\s*([xX]?)\s*([\]\)])\s*\*{2}', r'\1\2\3', quiz_content, flags=re.IGNORECASE)
+    content = re.sub(r'\*{2}([a-eA-E][\.\)])\*{2}', r'\1', content)
+
     # 1. Substitui Pergunta/Questão por "1." de forma resiliente e remove zeros à esquerda
-    content = re.sub(r'(?:Pergunta|Quest[aã]o|Question)\s+0*(\d+)', r'\1.', quiz_content, flags=re.IGNORECASE)
+    content = re.sub(r'(?:Pergunta|Quest[aã]o|Question)\s+0*(\d+)', r'\1.', content, flags=re.IGNORECASE)
     content = re.sub(r'(\d+)\.', r'\1.', content) # normaliza o número da pergunta
 
     # 2. Quebra antes de numeros de questao (1. 2. 3.)
@@ -138,13 +143,15 @@ def process_quiz_content(lesson_id: int, quiz_content: str, lesson_title: str):
             continue
 
         # Opcao checkbox [x]
-        checkbox_match = re.match(r'^[-*+]?\s*[\[\(]\s*([xX\s]?)\s*[\]\)]\s*(.*)', clean_line)
+        checkbox_match = re.match(r'^[-+*]{0,3}\s*\*{0,2}\s*[\[\(]\s*([xX\s]?)\s*[\]\)]\s*(.*)', clean_line)
         if checkbox_match:
             is_correct = checkbox_match.group(1).strip().lower() == 'x'
             opt_text = checkbox_match.group(2).strip()
             
             # Limpa prefixos de letras residuais (ex: "[ ] a) Opção" -> "Opção")
             opt_text = re.sub(r'^(?:\*\*)?[a-eA-E][\.\)]\s*(?:\*\*)?', '', opt_text).strip()
+            # Remove marcadores residuais "[x]", "[ ]", "(x)" e asteriscos que vazaram para o texto
+            opt_text = re.sub(r'\s*[\[\(][xX\s]?[\]\)]\s*', ' ', opt_text).strip('*').strip()
             
             if is_correct:
                 current_correct_index = len(current_options)
@@ -159,6 +166,11 @@ def process_quiz_content(lesson_id: int, quiz_content: str, lesson_title: str):
             if re.search(r'\(RESPOSTA\)', opt_text, re.IGNORECASE):
                 opt_text = re.sub(r'\s*\(RESPOSTA\)', '', opt_text, flags=re.IGNORECASE).strip()
                 current_correct_index = len(current_options)
+            # Detecta marcador [x]/[X]/(x) embutido (ex: "a) [x] Opção") e marca como correta
+            if re.search(r'[\[\(][xX][\]\)]', opt_text):
+                current_correct_index = len(current_options)
+            # Remove marcadores residuais "[x]", "[ ]", "(x)" e asteriscos que vazaram para o texto
+            opt_text = re.sub(r'\s*[\[\(][xX\s]?[\]\)]\s*', ' ', opt_text).strip('*').strip()
             current_options.append(opt_text)
             continue
 

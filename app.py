@@ -10,7 +10,7 @@ if project_root not in sys.path:
 
 # Importa as funções que renderizam cada página
 
-from views import home, aulas, forum, quiz, avaliacoes, admin, login, register, gerador_aulas, plugins
+from views import home, aulas, forum, quiz, avaliacoes, admin, login, register, gerador_aulas, plugins, portal
 from services import database, auth
 import config
 
@@ -100,6 +100,7 @@ def main():
             opcoes_menu.append("Avaliações")
 
             if st.session_state.get('role') in ['admin', 'teacher']:
+                opcoes_menu.append("Portal")
                 opcoes_menu.append("Admin")
                 opcoes_menu.append("Plugins")
                 opcoes_menu.append("Gerador de Aulas")
@@ -174,6 +175,8 @@ def main():
             plugins.show_page()
         elif page_to_show == "Gerador de Aulas":
             gerador_aulas.show_page()
+        elif page_to_show == "Portal":
+            portal.show_page()
 
 
 if __name__ == "__main__":
