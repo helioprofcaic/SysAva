@@ -7,8 +7,8 @@
 -- sincronizadores (audit_backup / class_registry / grade_semanal /
 -- student_attendance / sync_lessons / duplicate_checker / supabase_monitor).
 --
--- NAO inclui as 13 tabelas de automacao (ficam no SQLite escola_ativa.db):
---   student_grades, blocked_dates, aula_sequence_map, planejamento_config,
+-- NAO inclui as 12 tabelas de automacao (ficam no SQLite escola_ativa.db):
+--   student_grades, blocked_dates, aula_sequence_map,
 --   turma_disciplina_config, discipline_aliases, registration_queue, settings,
 --   qualitative_points, grade_milestones, user_reminders, user_profiles,
 --   student_scores.

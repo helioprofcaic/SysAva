@@ -45,7 +45,7 @@ Só locais (automação via SQLite). **Mantidas no `escola_ativa.db`.**
 | `student_grades` | 207 | Notas da automação (não usada pelo portal) |
 | `blocked_dates` | 3 | Calendário da automação |
 | `aula_sequence_map` | 8 | Mapeamento de sequência da automação |
-| `planejamento_config` | 2 | Config (ver §5) |
+| `planejamento_config` | — | **Removida** (2026-09-29, IS-037): chaves migradas para `master_config` |
 | `turma_disciplina_config` | 8 | Config de vínculo turma/disciplina |
 | `discipline_aliases` | 2 | Aliases da automação |
 | `registration_queue` | 26 | Fila do robô de registro |
@@ -70,11 +70,14 @@ Só locais (automação via SQLite). **Mantidas no `escola_ativa.db`.**
 
 ---
 
-## 5. Redundância de configuração (3 tabelas de config)
+## 5. Redundância de configuração (2 tabelas de config)
 
-`master_config` (Supabase, `key/value`) · `planejamento_config` (SQLite, `chave/valor`) ·
-`settings` (SQLite, `chave/valor`). Fazem a mesma coisa em bancos diferentes.
-Consolidação é possível, mas é **local e de risco médio** — recomenda-se depois.
+`master_config` (SQLite local `key/value`, replicada no Supabase) ·
+`settings` (SQLite, `chave/valor`). Fazem coisas parecidas em bancos
+diferentes. A antiga `planejamento_config` foi **removida** em 2026-09-29
+(IS-037): `data_corte_planejamento`, `ferias` e `estrategias_disponiveis`
+vivem agora na `master_config` (JSON). Consolidação de `settings` ainda é
+possível, mas é **local e de risco médio** — recomenda-se depois.
 
 ---
 

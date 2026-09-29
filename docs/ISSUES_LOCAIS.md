@@ -60,6 +60,7 @@ Formato de ID: `IS-NNN`.
 | IS-034 | Planos: lista negra misturava alunos de turmas diferentes | 🟢 | 2026-09-29 |
 | IS-035 | Planos: associar abreviações de disciplina ao rótulo da grade | 🟢 | 2026-09-29 |
 | IS-036 | Repo syava-apps aninhado em `apps/` + app Down SeducTec (8504) + menu do `run.bat` | 🟢 | 2026-09-29 |
+| IS-037 | Planejamento: feriados bloqueiam geração/registro; configs migram para `master_config`; frequência ao vivo | 🟢 | 2026-09-29 |
 
 ---
 
@@ -1190,6 +1191,51 @@ apps/down_seductec/down_seductec_streamlit.py --server.port 8504` renderiza
 (sidebar com turma, log ao vivo, botão Conectar); `git -C apps status` sem
 dados sensíveis; `push` em `hiseg10/syava-apps` OK. Downloads reais dependem
 de login manual no portal (validação manual).
+
+---
+
+## IS-037 — Planejamento: feriados bloqueiam geração/registro; configs migram para `master_config`; frequência ao vivo 🟢
+
+**Sintoma:** o app `planejamento_registro` gerava/registrava aulas em feriados
+(07/09, 12/10, 01/05...), sem nenhum sinal na UI; as configurações viviam na
+tabela local `planejamento_config` (espelho sem sync, ausente do Supabase); e
+a frequência do `.txt` caía em `Presente` silencioso quando não havia registro.
+
+**Correções:**
+1. **Feriados (AP-005):** `core/gerador.py` pula datas de
+   `master_config` → `feriados.json` no loop de geração (log em
+   `slots_pulados`); UI ganha helpers `_feriados_config()`/`feriado_na_data()`,
+   bloqueio no 🤖 Registrar (multiselect e "Registrar TODOS" filtrados),
+   badges `⚠️ Feriado/recesso` em 📄 Planos e 👁️ Plano Individual, coluna
+   `Feriado` + aviso na fila do Painel, e seção 📅 de verificação na aba
+   ⚙️ Config (tabela por categoria + verificador de data).
+2. **Migração (AP-006):** chaves `data_corte_planejamento`, `ferias` e
+   `estrategias_disponiveis` migraram para `master_config` (JSON);
+   `database_model.set_config()` novo (UPDATE→INSERT, schemas `key/value` e
+   legado); consumidores redirecionados (`banco.get/set_config`,
+   `gerador.py`, `html_routes`, `bot_raspagem`, UI "Outros parâmetros");
+   `DROP TABLE planejamento_config` após verificação (backup
+   `data/escola_ativa_backup_antes_migracao_20260929_171123.db`).
+3. **Frequência (AP-007):** `load_attendance_map_for` retorna
+   `(mapa, fonte, diagnostico)` com `{encontrou, quantidade, fontes,
+   outra_disciplina}`; fallback para a disciplina com mais registros da mesma
+   turma/data (sinalizado); exceções manuais em `attendance_exceptions.json`
+   (chave `{turma}|{data}|{disc}`, ações `ignorar` / `usar_disciplina`);
+   aba 👁️ com banners ✅/⚠️ + tabela de frequência ao vivo + comparação
+   `.txt` × banco; gerador reporta `freq_outra_disciplina`.
+4. **Limpeza:** 3 linhas de `planejamento` e 4 `.txt` em feriado movidos para
+   `data/backup_clean_feriados_20260929_172617/` (`historico_aulas` intocada).
+
+**Arquivos:** `apps/planejamento_registro/{planejamento_registro_streamlit.py,
+core/{banco,gerador,datas}.py}`, `apps/api/tools/{database_model,bot_raspagem}.py`,
+`apps/api/html_routes.py`, `apps/ISSUES.md`, `docs/{ISSUES_LOCAIS.md,
+AUDITORIA_BANCO.md,NOVO_BANCO_SCHEMA.sql}`.
+
+**Validar:** QA Playwright no app 8510 (0 erros de console): badges/bloqueio,
+aba Config com `Atual: 2026-04-01` e verificador ✅, banners da 👁️ (exata
+22 alunos, feriado sem frequência, outra disciplina 22); geração de teste com
+rollback pulou `2026-09-07` e `2026-10-12` (`RESULT: PASS`); fila do Painel
+sem planos em feriado.
 
 ---
 
