@@ -152,6 +152,10 @@ def show_attendance_plugin():
     subject_key = str(selected_subject_id)
     class_id = class_options[selected_class_name]
     students = db.get_students_by_class(class_id)
+    students = [
+        student for student in students
+        if str(student.get('is_portal', True)).strip().lower() not in {'false', '0', 'nao', 'não', 'no'}
+    ]
     
     if not students:
         st.warning(f"Nenhum aluno encontrado na turma {selected_class_name}.")

@@ -145,20 +145,28 @@ def get_all_users():
     def _fetch():
         try:
             # Nunca baixa o hash de senha para listagens
-            response = supabase.table("app_users").select("username, name, ra, role, is_active").execute()
+            response = supabase.table("app_users").select("username, name, ra, role, is_active, is_portal").execute()
             return response.data
         except Exception:
             try:
-                # Fallback para bancos sem a coluna is_active
-                response = supabase.table("app_users").select("username, name, ra, role").execute()
+                # Compatibilidade com bancos que ainda não têm is_portal.
+                response = supabase.table("app_users").select("username, name, ra, role, is_active").execute()
                 for u in response.data:
-                    u['is_active'] = True
+                    u['is_portal'] = True
                 return response.data
-            except Exception as e:
-                print(f"DEBUG: Erro em get_all_users: {e}")
-                return []
+            except Exception:
+                try:
+                    # Fallback para bancos antigos sem as colunas novas de status.
+                    response = supabase.table("app_users").select("username, name, ra, role").execute()
+                    for u in response.data:
+                        u['is_active'] = True
+                        u['is_portal'] = True
+                    return response.data
+                except Exception as e:
+                    print(f"DEBUG: Erro em get_all_users: {e}")
+                    return []
 
-    return local_cache.get_or_fetch("app_users", _fetch, ttl=local_cache.TTL_MEDIUM)
+    return local_cache.get_or_fetch("app_users:v2", _fetch, ttl=local_cache.TTL_MEDIUM)
 
 def create_user(username: str, hashed_password: str, name: str, ra: str, role: str = 'student'):
     if not is_db_connected(): return None, "Banco de dados não conectado"
@@ -769,7 +777,7 @@ def get_students_by_class(class_id: int):
             print(f"Erro ao buscar alunos da turma {class_id}: {e}")
             return []
 
-    return local_cache.get_or_fetch(f"students_by_class:{class_id}", _fetch, ttl=local_cache.TTL_MEDIUM)
+    return local_cache.get_or_fetch(f"students_by_class:v2:{class_id}", _fetch, ttl=local_cache.TTL_MEDIUM)
 
 def get_classes_for_subject(subject_id: int):
     if not is_db_connected(): return []

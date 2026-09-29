@@ -18,6 +18,7 @@ import os
 import sys
 import re
 import json
+import sqlite3
 from datetime import datetime, date, timedelta
 import streamlit as st
 import pandas as pd
@@ -264,7 +265,34 @@ def buscar_historico_aulas(disciplina_id: int, turma_nome: str, turma_id=None) -
         )
         if match_id or match_nome:
             filtrados.append(r)
-    return filtrados
+
+    # historico_aulas pode manter linhas residuais do rótulo/horário antigo.
+    # Para o diagnóstico, cada data representa uma aula da disciplina/turma.
+    por_data = {}
+    for indice, registro in enumerate(filtrados):
+        status_norm = normalizar_para_matching(registro.get("status", ""))
+        if "AULA EXCLUIDA" in status_norm or "AULA CANCELADA" in status_norm:
+            continue
+
+        data_registro = _parse_data(registro.get("data_aula"))
+        chave = ("data", data_registro.isoformat()) if data_registro else ("sem_data", registro.get("id") or indice)
+        prioridade_status = (
+            3 if "CONFIRMADA" in status_norm else
+            2 if "REGISTRADA" in status_norm else
+            1 if "AGUARDANDO" in status_norm else 0
+        )
+        turma_atual = normalizar_para_matching(turma_nome or "")
+        prioridade = (
+            prioridade_status,
+            int(normalizar_para_matching(registro.get("turma", "")) == turma_atual),
+            str(registro.get("created_at", "")),
+        )
+        anterior = por_data.get(chave)
+        if anterior is None or prioridade > anterior[0]:
+            por_data[chave] = (prioridade, registro)
+
+    unicos = [item[1] for item in por_data.values()]
+    return sorted(unicos, key=lambda registro: (_parse_data(registro.get("data_aula")) or date.min, str(registro.get("id", ""))))
 
 
 @st.cache_data(ttl=300, show_spinner=False)
@@ -631,9 +659,42 @@ def calcular_datas_sequenciais(turma_nome: str, disciplina_nome: str, data_inici
     return datas
 
 
-def buscar_alunos_presenca(class_id: int, class_name: str, subject_id: int, subject_name: str, data_str: str) -> list:
+@st.cache_data(ttl=3600, show_spinner=False)
+def _carregar_config_feriados() -> dict:
+    """Carrega o calendário compartilhado salvo em master_config/feriados.json."""
+    try:
+        if not db or not db.is_db_connected():
+            return {}
+        res = db.supabase.table("master_config").select("value").eq("key", "feriados.json").limit(1).execute()
+        if not res.data:
+            return {}
+        valor = res.data[0].get("value") or {}
+        return json.loads(valor) if isinstance(valor, str) else valor
+    except Exception:
+        return {}
+
+
+def _feriado_na_data(data_str: str) -> str:
+    """Retorna a descrição de um feriado cadastrado para a data, se houver."""
+    config = _carregar_config_feriados()
+    for item in config.get("feriados_e_datas_importantes", []):
+        if str(item.get("data", "")) == str(data_str):
+            return str(item.get("descricao") or "Feriado")
+    return ""
+
+
+def buscar_alunos_presenca(class_id: int, class_name: str, subject_id: int, subject_name: str, data_str: str, diagnostico: dict = None) -> list:
     """Busca os alunos matriculados e o status de presença na tabela attendance ou arquivo local."""
     attendance_map = {}
+    fontes_encontradas = []
+
+    def normalizar_status(valor):
+        if isinstance(valor, bool):
+            return "Presente" if valor else "Falta"
+        if valor is None:
+            return "Presente"
+        valor = str(valor or "").strip().lower()
+        return "Presente" if valor in {"1", "true", "presente", "atraso", "p"} else "Falta"
 
     # 1. Tenta carregar do Supabase (tabela attendance)
     if db and db.is_db_connected():
@@ -651,9 +712,43 @@ def buscar_alunos_presenca(class_id: int, class_name: str, subject_id: int, subj
                     name_match = (s_name and subject_name.upper() in s_name.upper())
                     sem_id = (s_id is None and name_match)
                     if id_match or name_match or sem_id:
-                        st_name = item['student_name'].strip().upper()
-                        is_pres = item.get('is_present', True)
-                        attendance_map[st_name] = "Presente" if is_pres else "Falta"
+                        st_name = normalizar_para_matching(item['student_name'])
+                        attendance_map[st_name] = normalizar_status(item.get('is_present'))
+                if attendance_map:
+                    fontes_encontradas.append(f"tabela `attendance` (Supabase; turma {class_name}, disciplina {subject_id}, data {data_str})")
+        except Exception:
+            pass
+
+    # 1b. Banco local usado pelo plugin Frequência quando o Supabase não tem o registro.
+    local_db_path = os.path.join(PROJECT_ROOT, "data", "escola_ativa.db")
+    if os.path.exists(local_db_path):
+        try:
+            with sqlite3.connect(local_db_path, timeout=3) as conn:
+                rows = conn.execute(
+                    "SELECT student_name, is_present, subject_id, class_name "
+                    "FROM attendance WHERE date = ?",
+                    (data_str,),
+                ).fetchall()
+            local_matches = 0
+            local_legados = []
+            turma_normalizada = normalizar_para_matching(class_name)
+            for student_name, is_present, s_id, nome_turma in rows:
+                if normalizar_para_matching(nome_turma) != turma_normalizada:
+                    continue
+                id_match = s_id is not None and str(s_id) == str(subject_id)
+                if id_match:
+                    attendance_map[normalizar_para_matching(student_name)] = normalizar_status(is_present)
+                    local_matches += 1
+                elif s_id is None:
+                    local_legados.append((student_name, is_present))
+            if not local_matches:
+                for student_name, is_present in local_legados:
+                    attendance_map[normalizar_para_matching(student_name)] = normalizar_status(is_present)
+                    local_matches += 1
+            if local_matches:
+                fontes_encontradas.append(
+                    f"tabela `attendance` (`{local_db_path}`; turma {class_name}, disciplina {subject_id}, data {data_str})"
+                )
         except Exception:
             pass
 
@@ -663,17 +758,58 @@ def buscar_alunos_presenca(class_id: int, class_name: str, subject_id: int, subj
         if os.path.exists(att_json_path):
             with open(att_json_path, 'r', encoding='utf-8') as f:
                 att_data = json.load(f)
-            for c_k, subj_dict in att_data.items():
-                if class_name.upper() in c_k.upper() or c_k.upper() in class_name.upper():
-                    for s_k, date_dict in subj_dict.items():
-                        if str(subject_id) in s_k or subject_name.upper() in s_k.upper():
-                            if data_str in date_dict:
-                                students_map_local = {s['username']: s['name'].upper() for s in (db.get_students_by_class(class_id) if db else [])}
-                                for uname, status_val in date_dict.items():
-                                    if uname in students_map_local:
-                                        attendance_map[students_map_local[uname]] = status_val
+            students_map_local = {
+                str(s.get('username', '')).strip().casefold(): str(s.get('name', '')).strip().upper()
+                for s in (db.get_students_by_class(class_id) if db else [])
+                if s.get('username') and s.get('name')
+            }
+            class_keys = {str(class_id).strip(), str(class_name).strip().upper()}
+            subject_keys = {str(subject_id).strip(), str(subject_name).strip().upper()}
+
+            def chave_corresponde(chave, candidatas):
+                chave = str(chave).strip()
+                return any(chave == c or (not c.isdigit() and c in chave.upper()) for c in candidatas)
+
+            registros_json_encontrados = 0
+
+            def aplicar_registros(registros):
+                nonlocal registros_json_encontrados
+                if not isinstance(registros, dict):
+                    return
+                for uname, status_val in registros.items():
+                    nome_local = students_map_local.get(str(uname).strip().casefold())
+                    if nome_local:
+                        attendance_map[normalizar_para_matching(nome_local)] = normalizar_status(status_val)
+                        registros_json_encontrados += 1
+
+            if isinstance(att_data, dict):
+                # Formato canônico: turma → disciplina → data → aluno → status.
+                for c_k, subj_dict in att_data.items():
+                    if chave_corresponde(c_k, class_keys) and isinstance(subj_dict, dict):
+                        for s_k, date_dict in subj_dict.items():
+                            if chave_corresponde(s_k, subject_keys) and isinstance(date_dict, dict):
+                                aplicar_registros(date_dict.get(data_str))
+
+                # Formato usado por alguns backups: data → turma → disciplina → aluno → status.
+                dia_dict = att_data.get(data_str)
+                if isinstance(dia_dict, dict):
+                    for c_k, subj_dict in dia_dict.items():
+                        if chave_corresponde(c_k, class_keys) and isinstance(subj_dict, dict):
+                            for s_k, registros in subj_dict.items():
+                                if chave_corresponde(s_k, subject_keys):
+                                    aplicar_registros(registros)
+            if registros_json_encontrados:
+                fontes_encontradas.append(f"JSON `{att_json_path}`")
     except Exception:
         pass
+
+    if diagnostico is not None:
+        diagnostico.clear()
+        diagnostico.update({
+            "encontrou": bool(attendance_map),
+            "quantidade": len(attendance_map),
+            "fontes": fontes_encontradas,
+        })
 
     # Carrega exceções/regras do arquivo attendance_exceptions.json (<turma>, <ra>, <nome_aluno>, <status>)
     excecoes_ra = {}
@@ -702,15 +838,41 @@ def buscar_alunos_presenca(class_id: int, class_name: str, subject_id: int, subj
     except Exception:
         pass
 
-    # Busca alunos da turma
-    students = db.get_students_by_class(class_id) if db else []
-    if not students and db:
-        all_users = db.get_all_users()
-        students = [u for u in all_users if u.get('role', 'student') == 'student']
-        if not students:
-            students = all_users
+    # A mesma lista negra utilizada pelo plugin Diário de Frequência.
+    blacklist_path = os.path.join(PROJECT_ROOT, "data", "excecoes_alunos.json")
+    blacklist_ras = set()
+    blacklist_names = set()
+    try:
+        if os.path.exists(blacklist_path):
+            with open(blacklist_path, 'r', encoding='utf-8') as f:
+                blacklist_data = json.load(f)
+            blacklist_ras = {str(x).strip() for x in blacklist_data.get("blacklist", []) if str(x).strip()}
+            blacklist_names = {
+                normalizar_para_matching(x) for x in blacklist_data.get("blacklist_names", []) if str(x).strip()
+            }
+    except Exception:
+        pass
 
-    students = [s for s in students if s.get('is_active', True)]
+    def aluno_na_lista_negra(aluno):
+        username = str(aluno.get('username', '')).strip()
+        ra = str(aluno.get('ra', '')).strip()
+        nome = normalizar_para_matching(aluno.get('name', ''))
+        return username in blacklist_ras or ra in blacklist_ras or nome in blacklist_names
+
+    def aluno_no_portal(aluno):
+        valor = aluno.get('is_portal', True)
+        return str(valor).strip().lower() not in {'false', '0', 'nao', 'não', 'no'}
+
+    # A chamada deve usar somente a matrícula da turma selecionada. A lista
+    # negra altera o status, mas nunca adiciona alunos de outras turmas.
+    students = db.get_students_by_class(class_id) if db else []
+    # `is_portal` controla se o cadastro ainda pertence ao portal. `is_active`
+    # indica frequência na sala; alunos inativos na lista negra permanecem na
+    # própria turma e recebem Falta quando não há frequência salva.
+    students = [
+        s for s in students
+        if aluno_no_portal(s) and (s.get('is_active', True) or aluno_na_lista_negra(s))
+    ]
 
     lista_final = []
     for std in sorted(students, key=lambda x: x.get('name', '')):
@@ -739,8 +901,10 @@ def buscar_alunos_presenca(class_id: int, class_name: str, subject_id: int, subj
 
         if forced_status:
             status = forced_status
+        elif aluno_na_lista_negra(std) and normalizar_para_matching(nome) not in attendance_map:
+            status = "Falta"
         else:
-            status = attendance_map.get(nome_upper, "Presente")
+            status = attendance_map.get(normalizar_para_matching(nome), "Presente")
 
         lista_final.append({"name": nome_upper, "status": status})
 
@@ -935,6 +1099,17 @@ def gerar_lote_planos(turma_nome: str, turma_id, nome_filha: str, id_filha: int,
 # RENDER
 # =============================================================================
 
+def _normalizar_rotulo_disciplina_grade(nome: str) -> str:
+    """Resolve abreviações usadas na grade para o nome cadastrado da disciplina."""
+    nome_normalizado = normalizar_para_matching(nome)
+    aliases = {
+        "MENTTECII": "MENTORIASTECII",  # Ment.Tec.II → MENTORIAS TEC II
+        "PCII": "PENSAMENTOCOMPUTACIONALII",  # P.C.II → Pensamento Computacional II
+        "IA": "INTELIGENCIAARTIFICIAL",  # I.A. → Inteligência Artificial
+    }
+    return aliases.get(nome_normalizado, nome_normalizado)
+
+
 def _render_horario_selector(selected_class_name: str, dia_semana_nome: str) -> tuple:
     """Seleciona o horário da grade semanal e devolve a disciplina sugerida."""
     horarios_grade = []
@@ -996,7 +1171,8 @@ def calcular_datas_aulas(turma_nome: str, disciplina_nome: str, subject: dict,
 
 
 def sugerir_proxima_data(turma_nome: str, disciplina_nome: str, ultima_data,
-                         subject: dict = None, data_base: date = None) -> date:
+                         subject: dict = None, data_base: date = None,
+                         feriados_pulados: list = None) -> date:
     """Sugere a data da próxima aula com base no histórico + cadência da disciplina.
 
     - Anual (1 aula/semana): última data + 7 dias (mesmo dia da semana).
@@ -1005,25 +1181,37 @@ def sugerir_proxima_data(turma_nome: str, disciplina_nome: str, ultima_data,
     """
     base = data_base or date.today()
 
+    candidatas = []
     if _cadencia_semanal(subject):
         if ultima_data:
             # Continua a partir dela MESMO no passado (permite planos retroativos).
-            return ultima_data + timedelta(days=7)
+            candidata = ultima_data + timedelta(days=7)
+            candidatas = [candidata + timedelta(days=7 * i) for i in range(370)]
+        else:
+            try:
+                candidata = calcular_datas_sequenciais(turma_nome, disciplina_nome, base, 1)
+                primeira = candidata[0] if candidata else base
+            except Exception:
+                primeira = base
+            candidatas = [primeira + timedelta(days=7 * i) for i in range(370)]
+    else:
+        # Modular/mensal: várias aulas por semana.
+        start = ultima_data + timedelta(days=1) if ultima_data else base
         try:
-            datas = calcular_datas_sequenciais(turma_nome, disciplina_nome, base, 1)
-            return datas[0] if datas else base
+            candidatas = calcular_datas_sequenciais(turma_nome, disciplina_nome, start, 370)
         except Exception:
-            return base
+            candidatas = [start]
 
-    # Modular/mensal: várias aulas por semana.
-    start = ultima_data + timedelta(days=1) if ultima_data else base
-    try:
-        datas = calcular_datas_sequenciais(turma_nome, disciplina_nome, start, 1)
-        if datas:
-            return datas[0]
-    except Exception:
-        pass
-    return start
+    if feriados_pulados is not None:
+        feriados_pulados.clear()
+    for candidata in candidatas:
+        descricao = _feriado_na_data(candidata.isoformat())
+        if descricao:
+            if feriados_pulados is not None:
+                feriados_pulados.append({"data": candidata, "descricao": descricao})
+            continue
+        return candidata
+    return candidatas[-1] if candidatas else base
 
 
 def _render_aba_diagnostico(classes_map: dict) -> dict:
@@ -1091,9 +1279,19 @@ def _render_aba_diagnostico(classes_map: dict) -> dict:
         referencia = ultima_data_turma(selected_class_name, turma_id)
         ref_da_turma = referencia is not None
 
-    data_sugerida = sugerir_proxima_data(selected_class_name, nome_mae, referencia, subject=selected_subject)
+    feriados_pulados = []
+    data_sugerida = sugerir_proxima_data(
+        selected_class_name, nome_mae, referencia, subject=selected_subject,
+        feriados_pulados=feriados_pulados,
+    )
 
     cadencia = "semanal (1/semana)" if _cadencia_semanal(selected_subject) else "modular/mensal"
+    if feriados_pulados:
+        feriados_texto = ", ".join(
+            f"{item['data'].strftime('%d/%m/%Y')} ({item['descricao']})"
+            for item in feriados_pulados
+        )
+        st.info(f"📅 Feriado(s) ignorado(s) na sugestão: {feriados_texto}.")
 
     if ultima_data:
         st.caption(
@@ -1117,6 +1315,12 @@ def _render_aba_diagnostico(classes_map: dict) -> dict:
     if st.session_state.get("plan_data_sugestao_key") != sugestao_key:
         st.session_state["plan_data_sugestao_key"] = sugestao_key
         st.session_state["plan_data"] = data_sugerida
+    else:
+        # Migra uma sugestão automática antiga que podia cair em feriado.
+        data_atual = st.session_state.get("plan_data")
+        datas_feriado_puladas = {item["data"] for item in feriados_pulados}
+        if data_atual in datas_feriado_puladas:
+            st.session_state["plan_data"] = data_sugerida
 
     # 3) Data e horário (o horário depende do dia da semana da data escolhida).
     col_d1, col_d2 = st.columns(2)
@@ -1128,8 +1332,8 @@ def _render_aba_diagnostico(classes_map: dict) -> dict:
     with col_d2:
         horario_str, disciplina_sugerida_grade = _render_horario_selector(selected_class_name, dia_semana_nome)
         if disciplina_sugerida_grade:
-            norm_sug = normalizar_para_matching(disciplina_sugerida_grade)
-            norm_sel = normalizar_para_matching(selected_subject_name)
+            norm_sug = _normalizar_rotulo_disciplina_grade(disciplina_sugerida_grade)
+            norm_sel = _normalizar_rotulo_disciplina_grade(selected_subject_name)
             if norm_sug in norm_sel or norm_sel in norm_sug:
                 st.success(f"📌 **Grade Semanal:** {dia_semana_nome} às {horario_str} → **{disciplina_sugerida_grade}**.")
             else:
@@ -1376,6 +1580,37 @@ def _render_aba_operacoes(ctx: dict, planejamento: dict) -> None:
             f"{'✅ aula encontrada em `lessons`' if tem_lesson else '⚠️ aula não encontrada em `lessons`'}"
         )
 
+        # O diagnóstico fica fora das abas internas para aparecer de imediato
+        # no fluxo individual, mesmo antes de abrir "Lista de Presença".
+        diagnostico_frequencia = {}
+        descricao_feriado = _feriado_na_data(ctx['data_str'])
+        if descricao_feriado:
+            st.info(
+                f"📅 {ctx['data_str']} consta como **{descricao_feriado}** no calendário "
+                "`master_config` → `feriados.json`."
+            )
+        alunos_lista = buscar_alunos_presenca(
+            ctx['class']['id'], ctx['class_name'], id_filha, ctx['subject_name'], ctx['data_str'],
+            diagnostico=diagnostico_frequencia
+        )
+        if diagnostico_frequencia.get("encontrou"):
+            st.success(
+                f"✅ Frequência encontrada ({diagnostico_frequencia['quantidade']} registro(s)): "
+                + "; ".join(diagnostico_frequencia["fontes"])
+            )
+        else:
+            json_path = os.path.join(os.path.dirname(__file__), "student_attendance.json")
+            contexto_data = (
+                f"A data está cadastrada como **{descricao_feriado}** em `master_config` → `feriados.json`. "
+                if descricao_feriado else ""
+            )
+            st.warning(
+                f"⚠️ Nenhuma frequência salva encontrada para {ctx['class_name']} / "
+                f"{ctx['subject_name']} em {ctx['data_str']}. {contexto_data}Consultados: tabela `attendance` "
+                f"(Supabase, quando conectado), tabela `attendance` em "
+                f"`{os.path.join(PROJECT_ROOT, 'data', 'escola_ativa.db')}` e JSON `{json_path}`. "
+                "Sem registro salvo, o status inicial é `Presente`; alunos da lista negra aplicável iniciam como `Falta`."
+            )
         existente = verificar_plano_existente(turma_id, id_mae, int(aula_num), destino)
         if existente.get('existe'):
             st.warning(
@@ -1390,7 +1625,6 @@ def _render_aba_operacoes(ctx: dict, planejamento: dict) -> None:
             st.session_state["plan_objs"] = dados_auto['objetivos']
             st.session_state["plan_act"] = dados_auto['atividade']
             st.session_state["plan_rec"] = dados_auto['recursos']
-            st.session_state.pop("plan_alunos_table", None)
 
         titulo_aula = st.text_input("Título / Conteúdo da Aula:", key="plan_titulo")
         estrategia_selecionada = st.selectbox("Estratégia Pedagógica:", ESTRATEGIAS_OPCOES, key="plan_estrategia")
@@ -1401,22 +1635,31 @@ def _render_aba_operacoes(ctx: dict, planejamento: dict) -> None:
         with tab2:
             atividade_edit = st.text_area("Atividade Prática / Cenário:", height=120, key="plan_act")
         with tab3:
-            alunos_lista = buscar_alunos_presenca(
-                ctx['class']['id'], ctx['class_name'], id_filha, ctx['subject_name'], ctx['data_str']
-            )
             st.caption(f"Total de {len(alunos_lista)} alunos carregados para a frequência.")
 
             df_alunos = pd.DataFrame(alunos_lista)
             if not df_alunos.empty:
+                # Evita reutilizar o estado antigo do data_editor quando muda
+                # a turma, a data ou a composição da matrícula.
+                alunos_key = tuple(sorted(
+                    normalizar_para_matching(aluno.get("name", ""))
+                    for aluno in alunos_lista
+                ))
+                attendance_table_key = (
+                    f"plan_alunos_table_{ctx['class']['id']}_{id_filha}_"
+                    f"{ctx['data_str']}_{hash(alunos_key)}"
+                )
                 edited_alunos = st.data_editor(
                     df_alunos,
                     column_config={
                         "name": st.column_config.TextColumn("Nome do Aluno", disabled=True),
-                        "status": st.column_config.SelectboxColumn("Presença", options=["Presente", "Falta"])
+                        "status": st.column_config.SelectboxColumn(
+                            "Presença", options=["Presente", "Falta"]
+                        )
                     },
                     hide_index=True,
-                    height=220,
-                    key="plan_alunos_table"
+                    height=680,
+                    key=attendance_table_key
                 )
 
                 exc_overrides_ra = {}
@@ -1446,8 +1689,6 @@ def _render_aba_operacoes(ctx: dict, planejamento: dict) -> None:
                     pass
 
                 students_tab = db.get_students_by_class(ctx['class']['id']) if db else []
-                if not students_tab and db:
-                    students_tab = db.get_all_students()
                 student_ra_lookup = {s['name'].strip().upper(): str(s.get('username', '')).strip() for s in students_tab}
 
                 alunos_final = []
