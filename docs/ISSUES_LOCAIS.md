@@ -61,6 +61,7 @@ Formato de ID: `IS-NNN`.
 | IS-035 | Planos: associar abreviações de disciplina ao rótulo da grade | 🟢 | 2026-09-29 |
 | IS-036 | Repo syava-apps aninhado em `apps/` + app Down SeducTec (8504) + menu do `run.bat` | 🟢 | 2026-09-29 |
 | IS-037 | Planejamento: feriados bloqueiam geração/registro; configs migram para `master_config`; frequência ao vivo | 🟢 | 2026-09-29 |
+| IS-038 | Planejamento: aba Consolidadas no app 8510 + `disciplina_ids` em `restricoes_planejamento` (calendário) | 🟢 | 2026-09-29 |
 
 ---
 
@@ -1236,6 +1237,44 @@ aba Config com `Atual: 2026-04-01` e verificador ✅, banners da 👁️ (exata
 22 alunos, feriado sem frequência, outra disciplina 22); geração de teste com
 rollback pulou `2026-09-07` e `2026-10-12` (`RESULT: PASS`); fila do Painel
 sem planos em feriado.
+
+---
+
+## IS-038 — Planejamento: aba Consolidadas + `disciplina_ids` no calendário 🟢
+
+**Pedido:** visão anual (carga × fluxo por turma/disciplina) com filtro, e
+expor o **fluxo letivo anual** para situar cada disciplina no seu escopo — o
+fluxo por turma sozinho ficava "relativo".
+
+**Correções:**
+1. **Aba 📈 Consolidadas (AP-008):** `consolidadas_data()` + KPIs + gráficos
+   (fluxo empilhado; carga × registradas por turma) + tabela Detalhamento,
+   com seletor "Todas as turmas". Definições: registradas = `historico_aulas`
+   (turma_id + nome canônico, status ≠ `Aula Exclu%`); prontas/pendentes =
+   `.txt` em `aulas/prontas|pendentes`; faltantes = `carga − reg − prontas −
+   pendentes`; carga = `subjects.max_hours` (padrão 40); aliases via
+   `_disc_ids()`; base = `is_active=1`.
+2. **`disciplina_ids` no calendário:** cada entrada de
+   `restricoes_planejamento` ganhou a lista de `subjects.id` correspondentes
+   (arquivo `data/calendario_letivo.json` **e** espelho
+   `master_config['calendario_letivo.json']`, mantidos idênticos; typo
+   histórico `INTRODUCAOAECOSSISTEMADEVOPS` → id 9). Backup
+   `data/escola_ativa_backup_calendario_20260929_200449.db`.
+3. **Gantt na aba:** `load_janelas_disciplinas()` lê o calendário (mesma
+   fonte do gerador: `master_config` → fallback do arquivo), indexa
+   `disciplina_id → {inicio, fim}` e desenha a janela de cada disciplina no
+   ano (Altair, cor = Anual/Mensal, régua = hoje) + coluna **Janela** na
+   tabela. Observação (fora de escopo): janela do DEVOPS diverge entre as 2
+   fontes (`19/08–19/09` no `master_config` × `22/08–25/09` no arquivo).
+
+**Arquivos:** `apps/planejamento_registro/planejamento_registro_streamlit.py`
+(`secao_consolidadas`, `consolidadas_data`, `load_janelas_disciplinas`,
+`_SECOES`), `apps/ISSUES.md`, `docs/ISSUES_LOCAIS.md`, dados
+`data/calendario_letivo.json` + `master_config` (não versionados).
+
+**Validar:** abrir `http://localhost:8510` → 📈 Consolidadas → 10 disc / 400
+carga / 218 registradas / 158 faltantes; Gantt com 10 barras e régua em
+hoje; filtro I-A → 5 / 200 / 124 e 5 barras; coluna Janela na tabela.
 
 ---
 
