@@ -111,16 +111,22 @@ echo [1] Iniciar o %school_name% (Aplicação Principal)
 echo [2] Iniciar o Verificador de Duplicatas (historico_aulas)
 echo [3] Iniciar o Monitor de Consumo do Supabase (Egress)
 echo [4] Iniciar o Acompanhamento de Planejamento e Registro
-echo [5] Sair do Painel
+echo [5] Iniciar o Down SeducTec (PDFs e videos do portal - porta 8504)
+echo [6] Abrir a documentacao dos Apps (README)
+echo [7] Abrir o repositorio dos Apps no GitHub
+echo [8] Sair do Painel
 echo.
 echo ========================================================
-set /p escolha="Digite a opção desejada (1-5): "
+set /p escolha="Digite a opção desejada (1-8): "
 
 if "%escolha%"=="1" goto start_app
 if "%escolha%"=="2" goto start_dup
 if "%escolha%"=="3" goto start_mon
 if "%escolha%"=="4" goto start_plan
-if "%escolha%"=="5" exit /b 0
+if "%escolha%"=="5" goto start_sed
+if "%escolha%"=="6" goto start_docs
+if "%escolha%"=="7" goto start_repo
+if "%escolha%"=="8" exit /b 0
 goto menu
 
 :start_app
@@ -149,4 +155,23 @@ echo.
 echo Iniciando o Acompanhamento de Planejamento e Registro (porta 8510)...
 call "%VENV_PATH%\Scripts\streamlit.exe" run apps/planejamento_registro/planejamento_registro_streamlit.py --server.port 8510
 pause
+goto menu
+
+:start_sed
+echo.
+echo Iniciando o Down SeducTec (porta 8504)...
+call "%VENV_PATH%\Scripts\streamlit.exe" run apps/down_seductec/down_seductec_streamlit.py --server.port 8504
+pause
+goto menu
+
+:start_docs
+if exist "apps\README.md" (
+    start "" "apps\README.md"
+) else (
+    echo [ERRO] apps\README.md nao encontrado.
+)
+goto menu
+
+:start_repo
+start "" "https://github.com/hiseg10/syava-apps"
 goto menu

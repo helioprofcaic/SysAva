@@ -12,9 +12,17 @@ O SysAva é um portal de apoio educacional construído em **Streamlit** integrad
 * **`app.py`**: Plataforma principal do portal (Aulas, Fóruns, Quizzes, Boletim).
 * **`apps/duplicate_checker/duplicate_checker_streamlit.py`**: Utilitário seguro para auditar e limpar registros duplicados exatos na tabela `historico_aulas`.
 * **`apps/supabase_monitor/supabase_monitor_streamlit.py`**: Diagnóstico de tamanho de tabelas, auditoria de código e simulador de tráfego/egress.
+* **`apps/planejamento_registro/planejamento_registro_streamlit.py`**: Acompanhamento de planejamento e registro de aulas (porta 8510).
+* **`apps/down_seductec/down_seductec_streamlit.py`**: Download de PDFs e links de vídeo do portal SeducTec para `data/repo/<turma>/<disciplina>/S0X/seductec/` (porta 8504).
+
+### 📦 Repositório aninhado `syava-apps`:
+* A pasta **`apps/`** é um **repositório Git próprio** (<https://github.com/hiseg10/syava-apps>), versionando só os apps Streamlit + docs (`README.md`, `ISSUES.md` com IDs `AP-NNN`, `AGENTS.md`, `run_apps.bat`).
+* O `.gitignore` do SysAva ignora `apps/` por completo — os dois repositórios não conflitam. **Nunca** tente versionar `apps/` a partir da raiz do SysAva.
+* Fora de escopo do repo novo (e bloqueados pelo `.gitignore` dele): `apps/api/`, `apps/apis_gemini_key/`, `apps/data/`, backups `.db`, `.csv`, `html/`, logs. Detalhes em `apps/AGENTS.md`.
 
 ### 🔌 Inicialização:
-* **Atalho Unificado (`run.bat`):** Sempre execute este arquivo bat na raiz. Ele abre um menu interativo que gerencia o ambiente virtual, atualiza dependências e permite escolher qual dos 3 apps Streamlit iniciar.
+* **Atalho Unificado (`run.bat`):** Sempre execute este arquivo bat na raiz. Ele abre um menu interativo que gerencia o ambiente virtual, atualiza dependências e permite escolher qual dos apps Streamlit iniciar (portas: 8501 principal, 8502 duplicatas, 8503 monitor, 8504 Down SeducTec, 8510 planejamento).
+* **Bootloader dos apps (`apps/run_apps.bat`):** menu próprio do repositório syava-apps, que detecta/cria o mesmo venv `.sysenv`.
 
 ---
 

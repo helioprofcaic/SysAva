@@ -52,6 +52,14 @@ Formato de ID: `IS-NNN`.
 | IS-026 | Prova impressa/salva: separar lista de integrantes e lista de aulas do seminário (quebras de linha e listas) | 🟢 | 2026-09-25 |
 | IS-027 | Visualizar/Imprimir Prova: prova cortada à direita (overflow do container 800px) | 🟢 | 2026-09-25 |
 | IS-028 | Imprimir Prova/Visualizar Prova exibiam a prova dentro de coluna estreita (1/3 da largura), cortada à direita | 🟢 | 2026-09-25 |
+| IS-029 | Planos individual: feedback explícito da origem da frequência | 🟢 | 2026-09-28 |
+| IS-030 | Gerar planos: ampliar lista de presença para visualizar 15 alunos | 🟢 | 2026-09-28 |
+| IS-031 | Frequência: incluir alunos inativos da lista negra | 🟢 | 2026-09-29 |
+| IS-032 | Planos: não sugerir datas cadastradas como feriado | 🟢 | 2026-09-29 |
+| IS-033 | Planos: diagnóstico contava linhas duplicadas de `historico_aulas` | 🟢 | 2026-09-29 |
+| IS-034 | Planos: lista negra misturava alunos de turmas diferentes | 🟢 | 2026-09-29 |
+| IS-035 | Planos: associar abreviações de disciplina ao rótulo da grade | 🟢 | 2026-09-29 |
+| IS-036 | Repo syava-apps aninhado em `apps/` + app Down SeducTec (8504) + menu do `run.bat` | 🟢 | 2026-09-29 |
 
 ---
 
@@ -972,6 +980,216 @@ total abaixo delas, seguido de `st.stop()`.
 
 **Validar:** aba Avaliações (admin) / área do aluno → "Imprimir Prova" e
 "Visualizar Prova" → a prova ocupa a largura total e não é mais cortada.
+
+---
+
+## IS-029 — Planos individual: feedback explícito da origem da frequência 🟢
+
+**Sintoma:** no Gerar Individual, a chamada aparentava conter apenas as faltas
+da lista negra, sem deixar claro se uma frequência salva havia sido encontrada.
+
+**Causa:** o gerador consultava Supabase e JSON, mas a consulta SQLite pedia a
+coluna `subject_name`, inexistente na tabela local `attendance`; a exceção era
+silenciada e nenhum registro local era carregado. A lista negra também era lida
+de um caminho diferente do usado pelo Diário de Frequência (`data/excecoes_alunos.json`).
+Além disso, o JSON podia estar no formato `data → turma → disciplina`, enquanto
+a leitura não reconhecia todos os formatos legados e havia diferença potencial
+de acentos/caixa nos nomes da turma e dos alunos.
+
+**Correção:** `buscar_alunos_presenca` lê o schema real da tabela local
+(`student_name`, `is_present`, `class_name`, `date`, `subject_id`), converte os
+valores SQLite `0/1`, e reconhece os dois formatos JSON, respeitando turma,
+disciplina e data. A turma e os nomes são comparados sem depender de acentos ou
+caixa; registros legados sem `subject_id` só são usados quando não há registros
+da disciplina exata. Sem chamada salva para a data selecionada, a interface
+mantém apenas os status aceitos pelo portal (`Presente` e `Falta`): Presente é o
+padrão, enquanto alunos da lista negra iniciam como Falta. O aviso informa que
+nenhuma chamada foi encontrada. A lista negra passa a ser carregada de
+`data/excecoes_alunos.json` e aplicada como falta inicial somente quando não há
+chamada salva para o aluno. O painel mostra feedback de frequência encontrada
+com o nome da tabela/arquivo; sem registros, informa as fontes consultadas e
+esclarece que a lista começa como Presente, podendo faltas vir das exceções. O
+feedback mostra também a quantidade de registros encontrados e é renderizado no
+painel principal do Gerar Individual, acima das abas internas, sem exigir que o
+usuário abra "Lista de Presença". O calendário em `master_config` (`key =
+feriados.json`) é consultado com cache de 1 hora; para datas cadastradas, o
+painel também exibe a descrição do feriado.
+
+**Arquivos:** `data/repo/plugins/gerar_planos_txt.py`, `docs/ISSUES_LOCAIS.md`
+
+**Validar:** em Planos → Operações → Gerar Individual → Lista de Presença,
+selecionar uma data com chamada salva e conferir o feedback com a fonte. Em data
+sem chamada, conferir o aviso com os caminhos consultados. Confirmar que chamada
+de outra disciplina não altera os status.
+
+---
+
+## IS-030 — Gerar planos: lista de presença com 15 linhas 🟢
+
+**Pedido:** aumentar a quantidade de alunos visíveis na tabela de presença
+durante a geração individual do plano.
+
+**Correção:** altura do editor da lista de presença ampliada para 680 px,
+permitindo visualizar aproximadamente 15 linhas sem rolagem interna.
+
+**Arquivos:** `data/repo/plugins/gerar_planos_txt.py`, `docs/ISSUES_LOCAIS.md`
+
+**Validar:** Gerar Individual → Lista de Presença → conferir cerca de 15 alunos
+visíveis simultaneamente.
+
+---
+
+## IS-031 — Frequência: incluir alunos inativos da lista negra 🟢
+
+**Sintoma:** Luara e Guilherme constavam na lista negra, mas não apareciam na
+frequência do plano.
+
+**Causa:** para recuperar alunos inativos da lista negra, o gerador acrescentava
+à turma selecionada todos os usuários globais que estivessem na lista. Isso
+misturava alunos matriculados em outras turmas. Os cadastros de Luara e
+Guilherme existem em `app_users`, com `is_active = false` e `is_portal = true`.
+
+**Correção:** `app_users.is_portal` controla se o usuário ainda pertence ao
+portal; `is_active` não é usado como sinal de transferência. A frequência agora
+parte exclusivamente das matrículas da turma selecionada; a lista negra apenas
+mantém nessa turma alunos `is_active = false` e define `Falta` quando não há
+presença salva. Alunos de outras turmas não são adicionados globalmente e
+transferidos marcados com `is_portal = false` são excluídos.
+
+**Arquivos:** `services/database.py`, `data/repo/plugins/gerar_planos_txt.py`,
+`data/repo/plugins/student_attendance.py`, `docs/ISSUES_LOCAIS.md`
+
+**Validar:** em uma turma com alunos de outras turmas na lista negra, confirmar
+que só aparecem alunos matriculados na turma selecionada. Luara e Guilherme,
+matriculados na 2ª Série Turma I-A com `is_portal = true`, devem aparecer nela
+com `Falta` se não houver frequência salva. Marcar um transferido com
+`is_portal = false` e confirmar que não aparece.
+
+---
+
+## IS-032 — Planos: não sugerir datas cadastradas como feriado 🟢
+
+**Sintoma:** a cadência semanal sugeria 07/09/2026 para Inteligência Artificial,
+apesar da data estar cadastrada como feriado.
+
+**Correção:** o cálculo da próxima aula agora pula datas presentes em
+`master_config` → `feriados.json`. Para aulas semanais avança uma semana; para
+disciplinas modulares busca o próximo dia previsto na grade que não seja feriado.
+Feriados pulados são mostrados na tela. A sessão também troca uma sugestão
+automática antiga que tenha ficado selecionada em feriado.
+
+**Arquivos:** `data/repo/plugins/gerar_planos_txt.py`, `docs/ISSUES_LOCAIS.md`
+
+**Validar:** com última aula em 31/08/2026 e cadência semanal, a sugestão pula
+07/09/2026 (Independência do Brasil) e avança para 14/09/2026.
+
+---
+
+## IS-033 — Planos: diagnóstico contava linhas duplicadas de `historico_aulas` 🟢
+
+**Sintoma:** IA da 2ª Série Turma I-A mostrava 38 aulas no diagnóstico, embora
+o portal tenha 28.
+
+**Diagnóstico:** para `turma_id = 309197` e `disciplina_id = 11`, a consulta
+encontrou 38 linhas em `historico_aulas`, mas apenas 28 datas distintas. As
+linhas extras repetiam datas usando rótulos/horários antigos.
+
+**Correção:** `buscar_historico_aulas` mantém uma linha por data, prefere status
+confirmado/registrado e ignora aulas excluídas/canceladas. Métricas, numeração e
+data mais recente passam a usar as aulas distintas.
+
+**Arquivos:** `data/repo/plugins/gerar_planos_txt.py`, `docs/ISSUES_LOCAIS.md`
+
+**Validar:** selecionar IA na Turma I-A (ID 309197); o diagnóstico deve indicar
+28 aulas registradas e a próxima aula como 29.
+
+---
+
+## IS-034 — Planos: lista negra misturava alunos de turmas diferentes 🟢
+
+**Sintoma:** a lista de presença de uma turma mostrava alunos de outras turmas.
+
+**Causa:** além da matrícula da turma selecionada, o gerador acrescentava
+alunos da lista negra encontrados na consulta global de usuários.
+
+**Correção:** a frequência usa exclusivamente `get_students_by_class(class_id)`.
+A lista negra mantém como `Falta` alunos inativos que já pertencem àquela
+matrícula, mas não importa usuários de outras turmas. `is_portal = false`
+continua excluindo transferidos. A chave de estado da tabela acompanha turma,
+disciplina, data e composição dos alunos, impedindo que o `data_editor` preserve
+uma lista antiga após atualização da matrícula.
+
+**Arquivos:** `data/repo/plugins/gerar_planos_txt.py`, `docs/ISSUES_LOCAIS.md`
+
+**Validar:** selecionar uma turma e confirmar que a frequência contém apenas
+seus matriculados, mesmo quando a lista negra contém alunos de outras turmas.
+Na Turma I-A (ID 1), Luara e Guilherme devem aparecer com `Falta` se não houver
+frequência salva; alternar turma/data deve atualizar as linhas da tabela.
+
+---
+
+## IS-035 — Planos: associar abreviações de disciplina ao rótulo da grade 🟢
+
+**Sintoma:** em Planos, a disciplina `MENTORIAS TEC II` selecionada exibia um
+aviso de divergência quando a grade mostrava `Ment.Tec.II` no horário de terça
+às 13:30.
+
+**Causa:** a verificação comparava o rótulo abreviado da grade diretamente com
+o nome completo cadastrado da disciplina.
+
+**Correção:** a comparação normaliza os dois nomes e resolve aliases conhecidos
+da grade, incluindo `Ment.Tec.II` → `MENTORIAS TEC II`, `P.C.II` →
+`PENSAMENTO COMPUTACIONAL II` e `I.A.` → `INTELIGÊNCIA ARTIFICIAL`. Divergências
+reais continuam exibindo aviso.
+
+**Arquivos:** `data/repo/plugins/gerar_planos_txt.py`, `docs/ISSUES_LOCAIS.md`
+
+**Validar:** selecionar `MENTORIAS TEC II` na Turma I-A em uma terça às 13:30;
+deve aparecer o feedback de disciplina associada à grade, sem aviso de
+divergência.
+
+---
+
+## IS-036 — Repo syava-apps aninhado em `apps/` + Down SeducTec 🟢
+
+**Pedido:** separar os apps Streamlit em um repositório GitHub próprio
+(<https://github.com/hiseg10/syava-apps>) com README, ISSUES, AGENTS e
+bootloader próprios, mantendo o `run.bat` do SysAva lançando-os por links;
+e criar o app de download do portal SeducTec.
+
+**Solução:**
+- **Repo aninhado:** `git init` em `apps/` com remote `hiseg10/syava-apps`
+  (histórias unificadas via merge `--allow-unrelated-histories -X ours`,
+  mantendo o LICENSE MIT). O SysAva continua ignorando `apps/`
+  (`.gitignore:34`) — os dois repositórios não conflitam.
+- **Escopo versionado:** `duplicate_checker`, `supabase_monitor`,
+  `planejamento_registro`, `analise_notas`, `down_seductec` + docs
+  (`README.md`, `ISSUES.md` com IDs `AP-NNN`, `AGENTS.md`,
+  `requirements.txt`, `run_apps.bat`, `.gitignore`).
+  Excluído: `api/`, `apis_gemini_key/`, `data/`, backups `.db`, `.csv`,
+  `html/`, logs e `__pycache__/`. Outputs do `analise_notas.ipynb` limpos
+  (8 outputs com nomes de alunos removidos); scan de chaves limpo.
+- **Bootloader `apps/run_apps.bat`:** detecta/cria o venv `.sysenv` do SysAva
+  e oferece menu com portas fixas (8502/8503/8504/8510).
+- **Novo app `apps/down_seductec/`** (porta **8504**): núcleo portado do
+  script legado `Aulas_selenium/tools/utils/seductec_scraper.py` — login
+  manual detectado por polling (sem `input()`), extração de tiles
+  `S(\d+)-AULA\s*(\d+)`, download de PDFs resolvendo redirects do Moodle,
+  coleta de links YouTube e `links_aulas.md` reescrito por execução
+  (idempotente). Destino `data/repo/<turma>/<disciplina>/S0X/seductec/`,
+  compatível com o `generate_lessons_gemini`.
+- **`run.bat`:** menu ampliado para **1-8** — `[5] Down SeducTec`,
+  `[6] README dos Apps`, `[7] Repo no GitHub`, `[8] Sair`.
+
+**Arquivos:** `apps/down_seductec/*`, `apps/{README,ISSUES,AGENTS}.md`,
+`apps/.gitignore`, `apps/requirements.txt`, `apps/run_apps.bat`, `run.bat`,
+`apps/analise_notas/analise_notas.ipynb`, `docs/ISSUES_LOCAIS.md`.
+
+**Validar:** `py_compile` dos arquivos novos; `streamlit run
+apps/down_seductec/down_seductec_streamlit.py --server.port 8504` renderiza
+(sidebar com turma, log ao vivo, botão Conectar); `git -C apps status` sem
+dados sensíveis; `push` em `hiseg10/syava-apps` OK. Downloads reais dependem
+de login manual no portal (validação manual).
 
 ---
 
