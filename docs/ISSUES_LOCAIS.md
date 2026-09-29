@@ -1311,6 +1311,7 @@ python scripts/cleanup_forum_duplicates.py --apply
 
 | Commit | Descrição |
 | ------ | --------- |
+| `c72046a` | Registra IS-038: aba Consolidadas no app 8510 e disciplina_ids no calendario |
 | `39ad23d` | Planejamento: feriados bloqueiam geração/registro, configs migram p/ master_config e frequência ao vivo (IS-037) |
 | `55e94f1` | Corrige quizzes com títulos duplicados e conclusão cruzada |
 | `3e365c5` | Cache SQLite de scores no plugin de atividades diárias |
