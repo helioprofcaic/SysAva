@@ -22,6 +22,7 @@ data/backup_clean_*/
 aulas/
 data/escola_ativa.db
 data/escola_ativa_backup_*.db
+data/backup_master_calendario_*.json
 data/excecoes_alunos.json
 data/mappings.json
 data/calendario_letivo.json

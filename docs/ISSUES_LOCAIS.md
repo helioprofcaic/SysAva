@@ -61,7 +61,7 @@ Formato de ID: `IS-NNN`.
 | IS-035 | Planos: associar abreviações de disciplina ao rótulo da grade | 🟢 | 2026-09-29 |
 | IS-036 | Repo syava-apps aninhado em `apps/` + app Down SeducTec (8504) + menu do `run.bat` | 🟢 | 2026-09-29 |
 | IS-037 | Planejamento: feriados bloqueiam geração/registro; configs migram para `master_config`; frequência ao vivo | 🟢 | 2026-09-29 |
-| IS-038 | Planejamento: aba Consolidadas no app 8510 + `disciplina_ids` em `restricoes_planejamento` (calendário) | 🟢 | 2026-09-29 |
+| IS-038 | Planejamento: aba Consolidadas no app 8510 + `disciplina_ids`/sync do calendário (`data/calendario_letivo.json` → `master_config`) | 🟢 | 2026-09-29 |
 
 ---
 
@@ -1270,15 +1270,24 @@ fluxo por turma sozinho ficava "relativo".
    `disciplina_id → {inicio, fim}` e desenha a janela de cada disciplina no
    ano (Altair, cor = Anual/Mensal, régua = hoje, altura dinâmica
    `max(420, 26n+90)`) + coluna **Janela** na tabela.
-   **Observação (fora de escopo):** 10 das 11 janelas divergem entre as 2
-   fontes do SysAva. O **`master_config` é o autoritativo**
-   (`database_model.get_config` lê o SQLite 1º e a rotina de export em
-   `database_model.py:1396` grava `data/calendario_letivo.json` **a partir**
-   dele); o JSON é exportação desatualizada — consumidores que leem o arquivo
-   direto (`apps/api/html_routes.py:935`) ficam com datas velhas. Ex.:
-   anuais `19/02–17/12` (arq.) × `19/02–27/11` (master); MANUTENÇÃO
-   `09/11–14/12` × `24/10–27/11`. A divergência **já existia antes** desta
-   edição (comprovado pelo backup) — só foi adicionado `disciplina_ids`.
+4. **Sync `data/calendario_letivo.json` → `master_config`** (fecha a
+   divergência das 10 janelas): investigação mostrou que a direção correta é
+   **a inversa** da inicialmente imaginada. O `master_config` foi escrito por
+   um import de **14/06/2026** (`updated_at` em formato ISO, distinto do
+   `datetime('now')` do `set_config`) e saiu **degradado**: `sabados_letivos`,
+   `trimestres` e `ferias_e_recessos` ficaram `{}`. O arquivo é que tinha os
+   dados vivos (18 sábados letivos, trimestres com `data_limite_iseduc`,
+   `carga_horaria` por restrição, `disciplinas_config.mensais` 340B vs 124B).
+   Consequência do bug: **`core/gerador.py:431` lia `sabados_letivos` do
+   master e recebia `{}` → geração de sábados letivos quebrada**. Sincronizado
+   com `database_model.set_config` (arquivo → master, `updated_at` renovado);
+   cópia cega na direção contrária teria **destruído** os 18 sábados + 3
+   trimestres. Backup do valor antigo do master:
+   `data/backup_master_calendario_20260930_043908.json`. Datas resultantes
+   (agora idênticas nas 2 fontes): anuais `19/02–17/12` = fim do 3º trimestre
+   (antes `27/11` no master, sem respaldo). Evidência de decisão: o arquivo é
+   superconjunto (`chaves só no master = ∅`) e interno consistente
+   (`data_fim 17/12` = fim do 3º trimestre).
 
 **Arquivos:** `apps/planejamento_registro/planejamento_registro_streamlit.py`
 (`secao_consolidadas`, `consolidadas_data`, `load_janelas_disciplinas`,
@@ -1288,7 +1297,10 @@ fluxo por turma sozinho ficava "relativo".
 **Validar:** abrir `http://localhost:8510` → 📈 Consolidadas → **22 disc /
 880 carga / 378 registradas / 25 prontas+pendentes / 478 faltantes / 43%**;
 filtro I-A → 11 / 440 / 204 / 2 / 235; Gantt com **22 barras**, régua em
-hoje e rótulos sem truncar; coluna Janela na tabela; sem "Caderno".
+hoje e rótulos sem truncar; coluna Janela na tabela; sem "Caderno"; ⚠️
+esperado de `PROGRAMAÇÃO WEB FRONT-END (I-A)` (41 registros > 40 de carga).
+Sync: `cmp_fontes.py` → 11/11 `OK` e `chaves só no arquivo/master = ∅`;
+`get_config(...)['sabados_letivos']` → 18 entradas.
 
 ---
 
