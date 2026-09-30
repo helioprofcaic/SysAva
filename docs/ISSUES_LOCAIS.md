@@ -1343,6 +1343,7 @@ python scripts/cleanup_forum_duplicates.py --apply
 
 | Commit | Descrição |
 | ------ | --------- |
+| `c413d8f` | Sync `data/calendario_letivo.json` → `master_config` (datas + 18 sábados) e gitignore do backup |
 | `704a1ae` | Registra IS-038 revisado: carga de 880h, Gantt de 22 barras e divergência das fontes do calendário |
 | `c72046a` | Registra IS-038: aba Consolidadas no app 8510 e disciplina_ids no calendario |
 | `39ad23d` | Planejamento: feriados bloqueiam geração/registro, configs migram p/ master_config e frequência ao vivo (IS-037) |
