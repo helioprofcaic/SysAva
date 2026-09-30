@@ -1252,8 +1252,13 @@ fluxo por turma sozinho ficava "relativo".
    com seletor "Todas as turmas". Definições: registradas = `historico_aulas`
    (turma_id + nome canônico, status ≠ `Aula Exclu%`); prontas/pendentes =
    `.txt` em `aulas/prontas|pendentes`; faltantes = `carga − reg − prontas −
-   pendentes`; carga = `subjects.max_hours` (padrão 40); aliases via
-   `_disc_ids()`; base = `is_active=1`.
+   pendentes`; carga = `subjects.max_hours`.
+   **Carga corrigida para 880h** (11 × 40h × 2 turmas, base
+   `data/Turmas/Escola.txt`): `_chave_disc()` agrupa aliases pelo nome
+   canônico (remove `(…)`, `2026A/B`, acento, caixa) — POO `4+30` e WEB
+   FRONT-END `6+31+33+34` viram 1 linha de 40h; **Caderno de Atividades**
+   (subject 35) fora da carga; base = todas as 22 linhas (sem filtro
+   `is_active`).
 2. **`disciplina_ids` no calendário:** cada entrada de
    `restricoes_planejamento` ganhou a lista de `subjects.id` correspondentes
    (arquivo `data/calendario_letivo.json` **e** espelho
@@ -1263,18 +1268,27 @@ fluxo por turma sozinho ficava "relativo".
 3. **Gantt na aba:** `load_janelas_disciplinas()` lê o calendário (mesma
    fonte do gerador: `master_config` → fallback do arquivo), indexa
    `disciplina_id → {inicio, fim}` e desenha a janela de cada disciplina no
-   ano (Altair, cor = Anual/Mensal, régua = hoje) + coluna **Janela** na
-   tabela. Observação (fora de escopo): janela do DEVOPS diverge entre as 2
-   fontes (`19/08–19/09` no `master_config` × `22/08–25/09` no arquivo).
+   ano (Altair, cor = Anual/Mensal, régua = hoje, altura dinâmica
+   `max(420, 26n+90)`) + coluna **Janela** na tabela.
+   **Observação (fora de escopo):** 10 das 11 janelas divergem entre as 2
+   fontes do SysAva. O **`master_config` é o autoritativo**
+   (`database_model.get_config` lê o SQLite 1º e a rotina de export em
+   `database_model.py:1396` grava `data/calendario_letivo.json` **a partir**
+   dele); o JSON é exportação desatualizada — consumidores que leem o arquivo
+   direto (`apps/api/html_routes.py:935`) ficam com datas velhas. Ex.:
+   anuais `19/02–17/12` (arq.) × `19/02–27/11` (master); MANUTENÇÃO
+   `09/11–14/12` × `24/10–27/11`. A divergência **já existia antes** desta
+   edição (comprovado pelo backup) — só foi adicionado `disciplina_ids`.
 
 **Arquivos:** `apps/planejamento_registro/planejamento_registro_streamlit.py`
 (`secao_consolidadas`, `consolidadas_data`, `load_janelas_disciplinas`,
 `_SECOES`), `apps/ISSUES.md`, `docs/ISSUES_LOCAIS.md`, dados
 `data/calendario_letivo.json` + `master_config` (não versionados).
 
-**Validar:** abrir `http://localhost:8510` → 📈 Consolidadas → 10 disc / 400
-carga / 218 registradas / 158 faltantes; Gantt com 10 barras e régua em
-hoje; filtro I-A → 5 / 200 / 124 e 5 barras; coluna Janela na tabela.
+**Validar:** abrir `http://localhost:8510` → 📈 Consolidadas → **22 disc /
+880 carga / 378 registradas / 25 prontas+pendentes / 478 faltantes / 43%**;
+filtro I-A → 11 / 440 / 204 / 2 / 235; Gantt com **22 barras**, régua em
+hoje e rótulos sem truncar; coluna Janela na tabela; sem "Caderno".
 
 ---
 
