@@ -1295,6 +1295,12 @@ hoje e rótulos sem truncar; coluna Janela na tabela; sem "Caderno".
 ## Comandos úteis
 
 ```powershell
+# Push (o `credential.helper=helper-selector` do gitconfig do sistema trava em
+# GUI e o GCM não está no PATH — git só procura em libexec/git-core, onde só
+# há wincred). Bypass: ignora o config do sistema e aponta o GCM absoluto.
+$env:GIT_CONFIG_NOSYSTEM='1'; $env:GIT_TERMINAL_PROMPT='0'; $env:GCM_INTERACTIVE='never'
+git -c "credential.helper=C:/Users/Helio/AppData/Local/hermes/git/mingw64/bin/git-credential-manager.exe" push origin main
+
 # Migração de títulos de quiz (simulação / aplicar)
 python scripts/migrate_quiz_titles.py
 python scripts/migrate_quiz_titles.py --apply
