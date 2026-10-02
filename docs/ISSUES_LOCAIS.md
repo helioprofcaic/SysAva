@@ -62,6 +62,15 @@ Formato de ID: `IS-NNN`.
 | IS-036 | Repo syava-apps aninhado em `apps/` + app Down SeducTec (8504) + menu do `run.bat` | 🟢 | 2026-09-29 |
 | IS-037 | Planejamento: feriados bloqueiam geração/registro; configs migram para `master_config`; frequência ao vivo | 🟢 | 2026-09-29 |
 | IS-038 | Planejamento: aba Consolidadas no app 8510 + `disciplina_ids`/sync do calendário (`data/calendario_letivo.json` → `master_config`) | 🟢 | 2026-09-29 |
+| IS-039 | Disciplina oculta no local: cache de disciplinas obsoleto, toggle sem invalidação, fetch que cacheava lista vazia e `.env` em projeto Supabase antigo | 🟢 | 2026-09-30 |
+| IS-040 | Lista negra não funcionava no Cloud: fonte única em JSON não versionado → mecanismo de inativos via `app_users`/`user_profiles` | 🟢 | 2026-09-30 |
+| IS-041 | `historico_aulas` não refletia o portal: 189 órfãs com rótulo antigo de turma (local 601 × portal 418) + sync do Supabase | 🟢 | 2026-10-01 |
+| IS-042 | Gerador de planos: geração "Sobrescrever"+intervalo pulou 24/09 (P.C.II I-B) e duplicou o nº 30 (17/09 × 01/10) — base hist+pend instável e descartes invisíveis na UI | 🟡 | 2026-10-01 |
+| IS-043 | Fila Disc.Tec.: plano modular (Fundamentos UI I-A) gerado antes da última aula modular registrada no portal (18/05 × Front-End até 03/06) — piso do portal agora precede o calendário | 🟢 | 2026-10-01 |
+| IS-044 | Grade horária: slot fantasma 09:10 (I-A segundas × I-B quintas; portal registra 09:30) — 3 espelhos divergentes e 2 planos gerados em horário inexistente | 🟢 | 2026-10-02 |
+| IS-045 | Aulas especiais via "livro-caixa": estrutura `{01-08}{09-16}{LIVRE}{17-24}{25-32}{LIVRE}` (fechamento por horas), model' de leitura em `master_config`, planos 8510 consultam o livro — fase 1 (model' + fila + aba 8510) implementada e validada | 🟢 | 2026-10-02 |
+| IS-046 | Transição disciplina→disciplina: piso IS-043 (`ult+1 dia`) descartava os slots livres do dia da última aula (03/06 08:10 da I-A ficava ocioso) — piso agora vale o próprio dia; ocupação/feriado/`inicio_disciplina` seguem protegendo | 🟢 | 2026-10-02 |
+| IS-047 | Grade horária na ⚙️ Config do 8510: monitor dos 3 espelhos (SQLite/JSON/Supabase) + edição mover/adicionar/remover — mudança real Sex 11:30/13:30 → Qua (I-A, Disc.Tec.) aplicada e planos disc 8 renumerados | 🟢 | 2026-10-02 |
 
 ---
 
@@ -1304,6 +1313,646 @@ Sync: `cmp_fontes.py` → 11/11 `OK` e `chaves só no arquivo/master = ∅`;
 
 ---
 
+## IS-039 — Disciplina oculta no portal local (cache + `.env` em projeto antigo) 🟢
+
+**Sintoma:** `PROGRAMAÇÃO PARA DISPOSITIVOS MÓVEIS` (subject 5) aparecia na
+versão Cloud mas não no portal local.
+
+**Causas (4, todas verificadas):**
+1. **Cache obsoleto:** `data/cache/sysava_cache.db` tinha
+   `subjects_for_class:1` (05:10) e `:2` (05:14 de 30/09) com
+   `id 5 → is_active=False`, enquanto o Supabase vivo respondia `True` nas 2
+   turmas. TTL de 6h (`local_cache.TTL_BASE`) mantinha a lista velha.
+2. **Toggle sem invalidação:** `views/admin.py` gravava
+   `class_subjects.is_active` direto no Supabase sem
+   `local_cache.invalidate(f"subjects_for_class:{class_id}")` (só
+   `link_subject_to_class` e `update_training_links` invalidavam).
+3. **Fetch envenenava o cache:** `_fetch()` de `get_subjects_for_class`
+   capturava a exceção de rede e devolvia `[]`, que era gravada como fresca
+   por 6h (observado às 11:57 — `WinError 10060`, `row_count=0`).
+4. **Dois projetos Supabase:** `.env` apontava o projeto antigo
+   (`tsbx…`: disciplina inativa, 0 aulas) e `.streamlit/secrets.toml` o novo
+   (`xfudd…`: ativa, 8 aulas). Portal local e Cloud usavam o novo; `apps/api`,
+   plugins e seeds usavam `.env` (antigo).
+
+**Correções:**
+1. Invalidação do cache no toggle de visibilidade (`views/admin.py`).
+2. `_fetch()` de `get_subjects_for_class`/`get_students_by_class` agora
+   **propaga** a exceção: `get_or_fetch` cai no cache antigo em vez de gravar
+   lista vazia (nenhuma lista vazia de erro é mais cacheada).
+3. `get_students_by_class` deixou de usar `select("*")` (regra de egress do
+   `AGENTS.md`) — passou a `username, name, ra, role, status, is_active,
+   is_portal` com fallback para bancos sem as colunas novas; chave de cache
+   `v2` → `v3` (descarta blobs antigos que continham hash de senha).
+4. Bug extra: `create_user`/`delete_user`/`toggle_user_active`/`upsert_user`
+   invalidavam a chave `"app_users"` mas a lista é cacheada como
+   **`"app_users:v2"`** → invalidação era no-op; corrigido para a chave real.
+5. `.env` alinhado ao projeto novo (`SUPABASE_URL`/`SUPABASE_KEY` copiados de
+   `.streamlit/secrets.toml`; backup em
+   `data/logs/env_backup_20260930_115615.env`). Demais chaves (Gemini/OpenAI/
+   DeepSeek) mantidas.
+
+**Arquivos:** `views/admin.py`, `services/database.py`, `.env` (não
+versionado), `data/cache/sysava_cache.db` (chaves `subjects*` removidas).
+
+**Validar:** `python -c "from services import database as db; print([(s['name'], s['is_active']) for s in db.get_subjects_for_class(1) if s['id']==5])"`
+→ `[('PROGRAMAÇÃO PARA DISPOSITIVOS MÓVEIS', True)]`; portal → Home/Aulas
+mostra a disciplina nas turmas I-A e I-B.
+
+**⚠️ Pendência relacionada:** `data/escola_ativa.db` (365 aulas) ainda
+espelha o projeto antigo (novo projeto: 409). **Não rodar
+`audit_backup.sync_local_to_supabase()` (push)** antes de atualizar o SQLite
+a partir do projeto novo, senão dados velhos sobrescrevem os novos.
+
+---
+
+## IS-040 — Lista negra fora do Cloud → mecanismo de inativos no banco 🟢
+
+**Sintoma:** a lista negra de faltosos não funcionava na versão Cloud.
+
+**Causa:** a lista era **apenas** `data/excecoes_alunos.json`, no
+`.gitignore:26` — nunca vai ao GitHub, logo não existe no Streamlit Cloud.
+O código dos plugins **é** versionado e rodava, mas degradava em silêncio
+(`load_json` → `{}` em `student_attendance.py`; `try/except: pass` em
+`gerar_planos_txt.py`) → todos iniciavam "Presente", sem nenhum aviso. Não
+havia tabela Supabase, `st.secrets` nem Storage para esse dado (o arquivo não
+tinha UI de edição: era mantido à mão).
+
+**Semântica adotada (decisão do mantenedor):**
+- `app_users.is_active = false` → aluno **fica** na chamada e **inicia como
+  Falta** (também no bloco `[FREQUENCIA]` dos planos).
+- `app_users.is_portal = false` → aluno é **excluído** da lista de chamada.
+- Login **não** é bloqueado (`views/login.py` intocado).
+- Banco = fonte de verdade (local e Cloud); o JSON local vira **espelho** para
+  os robôs de `apps/`.
+
+**Correções:**
+1. **DDL (executado em 30/09):** `docs/ADD_USER_PROFILES_FREQUENCIA.sql`
+   adiciona `user_profiles.frequencia_status` (`normal|falta|inativo`),
+   `motivo` e `atualizado_em`. Sem o DDL o recurso também funciona: o status é
+   derivado de `is_active`/`is_portal` (fallback explícito).
+2. **`services/database.py`:** `get_frequency_flags()` (cache
+   `app_users_flags:v1`, TTL_MEDIUM), `set_frequency_flag()` (único caminho de
+   escrita: grava `app_users` + `user_profiles` e invalida
+   `app_users:v2`/`app_users_flags:v1`/`students_by_class:*`) e
+   `sync_blacklist_json_mirror()` (regrava o JSON preservando chaves extras
+   como `ignored_names`; falha em silêncio no Cloud).
+3. **Admin (`views/admin.py`):** seção "🚫 Frequência — status dos alunos"
+   com `data_editor` (Normal/Falta/Inativo + motivo), resumo por status e
+   gravação + regeneração do espelho.
+4. **Migração (`scripts/migrar_excecoes_para_banco.py`, whitelist no
+   `.gitignore`):** `--dry-run` mostrou YASMIN `46775155700` e LÁZARO
+   `61607251604` **ativos no banco mas na lista do JSON** → migrados para
+   `falta`; FABIANO `68958439432` já `inativo`; ALUNO TESTE `88888888888`
+   só no banco (mantido). Espelho regerado: **8 `blacklist`, 7
+   `blacklist_names`, 1 `dropouts`**.
+5. **Plugins:** `student_attendance.py` lê o banco primeiro e cai no JSON só
+   se o aluno não estiver nas flags; conta e anuncia os excluídos
+   (`is_portal=false`); `gerar_planos_txt.py`
+   (`buscar_alunos_presenca`) passou a filtrar **somente** por `is_portal`
+   (antes `is_active=false` fora da lista, salvo se estivesse no JSON) e o
+   status inicial vem das flags do banco.
+
+**Arquivos:** `services/database.py`, `views/admin.py`,
+`data/repo/plugins/student_attendance.py`,
+`data/repo/plugins/gerar_planos_txt.py`,
+`scripts/migrar_excecoes_para_banco.py`, `docs/ADD_USER_PROFILES_FREQUENCIA.sql`,
+`.gitignore`, `data/excecoes_alunos.json` (espelho, não versionado).
+
+**Validar:** I-A → FABIANO fora da lista (22 → 20 no plano), Falta em
+GUILHERME/LUARA/YASMIN; I-B → Falta em ISADORA/GUSTAVO/JANAYRA/LÁZARO;
+`python scripts/migrar_excecoes_para_banco.py --dry-run` → sem alterações
+pendentes; no Cloud (sem o JSON) a chamada e os planos repetem o mesmo
+resultado; aluno com `is_active=false` ainda consegue logar.
+
+**Concluído (30/09):** DDL executado no SQL Editor; migração reexecutada
+→ `user_profiles` com **9 linhas** (8 `falta`, 1 `inativo`, todas com
+`motivo='migracao do JSON'`); `get_frequency_flags()` lendo as colunas novas;
+UI do Admin conferida pelo mantenedor.
+
+---
+
+## IS-041 — `historico_aulas` não refletia o portal: 189 órfãs com rótulo antigo de turma 🟢
+
+**Sintoma:** a raspagem do portal iSeduc (`apps/api/tools/bot_raspagem.py`)
+fechou com **Portal: 418 | Local: 601 | Órfãs no local: 189 | Faltantes: 0**
+(e aviso `time data '13/07/2026' does not match format '%Y-%m-%d'`).
+
+**Causa raiz:** **188 linhas** gravadas entre 28/05 e 15/06 com o **nome cru
+da turma vindo do portal** (`EMTPDES-SIS-2ª SERIE - INTEGRAL-I-A/B`) em vez do
+nome canônico de `classes.name` (`2ª SÉRIE - Turma I-A/B (Técnico DS)`) — com
+`turma_id` correto, vindas de uma sincronização/restauração antiga e depois
+replicadas para o Supabase. Como `save_history` usa `INSERT OR REPLACE`
+(**nunca apaga**) e o relatório aplicava o `turma_map` só no lado do portal,
+elas acumulavam como órfãs e o app principal (que filtra por `turma_id` em
+`gerar_planos_txt.py`) as contava em dobro. Detalhes:
+- **167** eram duplicata exata (`turma_id` + data + horário + disciplina) da
+  linha canônica; **22** sem par (16 `Registrada`, 3 `Aula Excluída`, 2
+  `Aguardando confirmação`, 1 `Aula confirmada`);
+- **+1** linha canônica órfã (15/08, PCII) e **+1** variante de grafia de
+  disciplina (`PROGRAMACAO WEB FRONT-END` sem Ç/Ã, status
+  `Aguardando confirmação`) — escapava do relatório porque a comparação
+  normaliza acentos e as duas linhas colapsavam na mesma chave;
+- **15** linhas com status que o próprio `save_history` se recusa a gravar.
+
+**Correções:**
+1. **Backups:** `data/escola_ativa_backup_historico_orfas_20261001_164116.db`
+   (SQLite) e `data/logs/historico_aulas_supabase_backup_20261001_164116.json`
+   (399 linhas do Cloud).
+2. **Limpeza local (`scripts/limpar_historico_orfas.py`, dry-run →
+   `--aplicar`):** removeu **190 linhas** (189 órfãs do relatório + 1 status
+   inválido) → **411 = 418 − 7 status excluídos do portal**.
+3. **Cloud (`scripts/sync_historico_supabase.py`, dry-run → `--aplicar`):**
+   removeu **189** do Supabase e enviou **201** → **411 no Cloud = 411 no
+   local**. A comparação usa `(data_aula, horario, turma, disciplina)` (não só
+   `turma_id`) para o rótulo antigo não passar batido.
+4. **`bot_raspagem.py`:** `carregar_turma_map()` extraído e aplicado **também
+   no lado local** da comparação (simetria); nova
+   `reconciliar_historico(portal_data, root, aplicar=)` que remove linhas sem
+   contraparte no portal **protegendo pares (turma, disciplina) que o portal
+   devolveu 0 registros** (card vazio/portal congelado não apaga histórico) e
+   deduplicando rótulos antigos; roda após cada raspagem completa em
+   **dry-run** (`--reconciliar` ou o checkbox do app aplicam);
+   `load_feriados()` aceita `DD/MM/AAAA` (fim do aviso de feriado).
+5. **`database_model.save_history`:** grava `disciplina` com o nome canônico de
+   `subjects.name` (elimina variantes de grafia) e **ignora** linhas com
+   `turma_id`/`disciplina_id` não resolvidos (antes gravava invisível) — a
+   raspagem as acusa como "faltante no local".
+6. **App 8510:** checkbox "🧹 Reconciliar histórico ao sincronizar" na página
+   Registro + aviso quando a última raspagem listou órfãs pendentes.
+
+**Arquivos:** `apps/api/tools/bot_raspagem.py`, `apps/api/tools/database_model.py`,
+`apps/planejamento_registro/planejamento_registro_streamlit.py`,
+`scripts/limpar_historico_orfas.py`, `scripts/sync_historico_supabase.py`,
+`apps/ISSUES.md` (AP-012).
+
+**Validar:** `python scripts/limpar_historico_orfas.py` → "Nada a limpar";
+`python scripts/sync_historico_supabase.py` → "Remover do cloud: 0 / Enviar: 0";
+comparação 411 × 411 → 0 faltantes/0 órfãs; reconciliação em banco de teste
+remove só a sujeira injetada (rótulo antigo + status excluído) e **protege** o
+par inexistente no portal; `py_compile` OK nos 5 arquivos.
+
+**Concluído (01/10):** local **601 → 411**, Supabase **399 → 411** (213 I-A +
+198 I-B, todas "Aula confirmada", 0 rótulos `EMTPDES-*`, 0 duplicatas).
+
+---
+
+## IS-042 — Gerador: "Sobrescrever"+intervalo pulou 24/09 e duplicou o nº 30 🟡
+
+**Sintoma:** em 01/10 a geração da turma **314114 (I-B)**, disciplina
+**P.C.II** (slot Qui 15:50), não criou o plano de **24/09/2026** e criou
+`01/10 = nº 30` (id 12328), **duplicando** o nº 30 do plano de 17/09
+(id 12272). Estado atual: 04-11=26, 06-27=27, 09-03=28, 09-10=29,
+09-17=30, **(24/09 ausente)**, 10-01=30 (dup), 10-08=31, 10-22=32 —
+todos `pendente`.
+
+**Causa raiz:** a numeração de partida é
+`next = max(hist_efetivo, max_pos_seq_map) + Σ(linhas pendente/pronta)`
+(`core/gerador.py` l.631-674, primeira data recebe `next+1`) — e em
+**Sobrescrever** (`force_overwrite`) os pendentes **não** somam
+(l.658-674, IS-019). Hist P.C.II = 25 (estável desde a limpeza IS-041 às
+16:41:16) e o intervalo `De/Até` é digitado pelo usuário contra a
+numeração **antiga**. Rodadas de 01/10 reconstituídas (todas com
+`bloquear_sabados_letivos=true` já ativo — o save de 19:46:13 em
+`master_config` foi re-save):
+
+1. **00:29** — sem Sobrescrever, pend=0 → base 25 → 04-11=26 … 09-19=31;
+   parou em `Até=31` → **24/09 (#32) ficou fora da janela e nunca surgiu**
+   (12274-12283, criados numa rodada posterior e excluídos antes do backup
+   das 16:41, são resquício da mesma tentativa).
+2. **~16:42:52** — duas gerações sem Sobrescrever com `Até=32`:
+   P.C.II (base 31 = 25+6 pend) → **24/09 = #32** (linha 12324 + arquivo);
+   IA (base 31) → 29/09 = #32 (linha 12325, arquivo movido para
+   `registradas` no Registrador das 16:54). A **linha 12324 — o único
+   24/09 já gerado — foi depois excluída em lote**, junto com 12273
+   (19/09), pela exclusão em lote adicionada na edição das 16:52.
+3. **19:42:51** — **Sobrescrever** + `De=31 Até=32` + saída `pendentes` →
+   base reseta para 25 → seqs 26-30 (09-03 … 01-10) **descartados sem
+   aviso** (`_descarta('aula_menor_que_min')`, l.973-975) → sobraram só
+   10-08=31 (12326) e 10-22=32 (12327). **24/09 recebeu seq 29 e morreu
+   no intervalo.**
+4. **19:48:12** — **Sobrescrever** + `De=30 Até=32` + saída `prontas` →
+   base 25 → 24/09 = 29 descartado (fora do intervalo) → 01/10 = **30**
+   (INSERT 12328 = duplicado), 10-08/10-22 regravados em `prontas`
+   (`UPDATE`, ids preservados); 10-29 = 33 > 32 descartado.
+
+**Provas:** rodadas 3/4 não podem ser sem Sobrescrever (pend 5-7 daria
+seq ≥ 31 para datas que não existem nas saídas); sem sábados bloqueados
+04-11/06-27/09-19 consumiriam seq e 09-19 geraria arquivo (não existe);
+`Até=32` é obrigatório na rodada 4 (sem ele, 10-29 → seq 33 encontra
+`lessons_list[32]='Aula 30'` e gravaria `prontas/10-29`).
+
+**Defeitos:**
+- **D1 (mecanismo direto):** Sobrescrever zera a base só com o histórico,
+  mas o intervalo `De/Até` é digitado contra a numeração antiga → as
+  datas "andam" e caem fora do intervalo sem nenhum aviso.
+- **D2:** a base soma linhas com **status mutável** (`pendente`/`pronta` →
+  `registrada` via `confirm-registration`) e sofre com exclusões → a
+  numeração muda entre rodadas (daí o nº 30 duplicado). Hoje uma
+  geração sem Sobrescrever partiria de **#34** para 24/09 (25 hist + 8
+  pend + 1); cada raspagem que adicionar 03/09-10/09-17/09 ao histórico
+  empurra a base ainda mais.
+- **D3:** os descartes/`slots_pulados` só aparecem na UI quando **0**
+  plano foi gerado (`planejamento_registro_streamlit.py` l.1314-1342);
+  nas rodadas 3/4 a mensagem foi só "✅ 2 plano(s)" — motivo e datas
+  descartadas ficaram invisíveis.
+
+**Correções aplicadas (01/10):**
+1. **Dados (produção):** backup `data/escola_ativa_backup_is042_20261001_222537.db`
+   + os 5 `.txt` com numeracao antiga movidos para `aulas/_backup_is042/`;
+   removidas as 3 linhas erradas (12326-12328) e os 4 planos **recriados pelo
+   próprio gerador** (não-force, intervalo 31-34, saída `pendentes`):
+   **24/09=31 (12379), 01/10=32 (12380), 10-08=33 (12381), 10-22=34
+   (12382** — posição 34 sem lição "Aula XX" → título de fallback). Fila
+   final com numeração **única 26…34** e conteúdo alinhado à posição da
+   fila (`lessons_list[n-1]`: 24/09→Aula 28, 01/10→Aula 29, 10/08→Aula 30).
+2. **D2:** base da numeração passou de `COUNT(*)` para
+   `MAX(CAST(numero_aula AS INTEGER))` por (turma, disciplina) em modo
+   normal (`core/gerador.py` l.658-680) — validado: PCII =
+   `max(hist 25, max 34)` → próxima data nova = **35** (a fórmula antiga
+   daria 33, colidindo com as existentes).
+3. **D3:** `descartados`/`slots_pulados` agora são exibidos na UI **mesmo
+   com planos gerados** (`planejamento_registro_streamlit.py` l.1314-1359;
+   `st.info` com os descartes exceto `filtro_disciplina` + expander com os
+   slots pulados).
+
+**Pendente (D1):** `force_overwrite` continua zerando a base só no histórico
+— intervalo `De/Até` digitado contra a numeração antiga ainda pode descartar
+datas em silêncio (o efeito agora fica **visível** via D3). Sem alteração de
+código por enquanto.
+
+**Arquivos:** `apps/planejamento_registro/core/gerador.py`,
+`apps/planejamento_registro/planejamento_registro_streamlit.py`
+(registro em `apps/ISSUES.md` → **AP-013**).
+
+**Validar:** fila P.C.II = 26,27,28,29,30,31,32,33,34 sem duplicatas e com
+24/09 presente; geração não-force sem intervalo parte de 35 (não de 33/34);
+rodada com planos gerados exibe "Descartes nesta geração: …" na 8510
+(streamlit faz auto-reload no próximo rerun); `py_compile` OK nos 2 arquivos.
+
+---
+
+## IS-043 — Fila Disc.Tec.: plano modular gerado antes da última aula registrada no portal 🟢
+
+**Sintoma:** na turma **309197 (I-A)**, a geração da disciplina
+**Fundamentos de UI/UX** (fila Disc.Tec., slot genérico) criou planos a
+partir de **18/05/2026** (ids 12276-12279: 18/05, 25/05, 01/06, 03/06)
+enquanto o módulo anterior **Front-End** seguia registrado no portal até
+**03/06/2026** (40 aulas, última em 03/06 07:10). O módulo seguinte só
+deveria começar em **04/06**.
+
+**Causa raiz:** o piso "após a última aula registrada" é calculado **por
+turma/disciplina** (`inicio_geracao`/`inicio_disciplina`, `core/datas.py`) —
+Fundamentos, sem histórico próprio, caía no fallback `base` = `data_corte`
+(01/04). A janela de Fundamentos (02/06–03/07) com tolerância ±15 dias
+(`tolerancia_janela_dias=15`) começa em **18/05**, e com a disciplina
+filtrada a `janela_filtro` força a resolução dos slots genéricos para ela
+(AP-011) → as datas de maio/junho foram geradas normalmente (o único gate
+antes do calendário era o slot ocupado via `historico_set`). Em 314114 o
+mesmo efeito criou 05-21 e 05-28 < última Front-End 29/05.
+
+**Correção aplicada (01/10):**
+1. `core/datas.py` → nova `ultima_aula_modular(ids_modulares)`: retorna
+   `(ids_expandidos, {turma: data})` — a última aula registrada entre as
+   disciplinas modulares da turma (ids vindos das janelas ≤300 dias,
+   expandidos via `discipline_aliases` base↔aliases; anuais P.C.II/IA/
+   Mentorias ficam de fora, como em `janelas_modulares`).
+2. `core/gerador.py` → logo após montar `janelas`, calcula `ids_modulares`
+   + `ultima_modular`; no gate de data, quando o slot é genérico ou a
+   disciplina resolvida é modular, o limite passa a ser
+   `max(inicio_disciplina, última_modular + 1 dia)` — **o portal manda
+   sobre o calendário e a tolerância** (o slot ocupado já era o 1º gate via
+   `historico_set`/`planejamento_set`). Debug da 8510 ganhou
+   `piso_modular_turmas`.
+
+**Validação (sandbox A/B — cópia do DB, linhas 309197/8 apagadas, mesmos
+parâmetros):**
+- Controle (código anterior): 4 linhas antes do piso (18/05…03/06),
+  `descartados.antes_inicio_disciplina: 0` → bug reproduzido.
+- Corrigido: `antes_inicio_disciplina: 4`, primeira linha **05/06 ≥
+  04/06**, zero datas abaixo do piso (mesmo total de 40 linhas).
+- Unit: 309197 → última modular 03/06 → piso 04/06; 314114 → 29/05 →
+  piso 30/05. `py_compile` OK; banco de produção intocado (mtime
+  22:25:37; 8 linhas 309197/8 e 10 em 314114/8).
+
+**Dados (produção, 01/10, aprovado "Remover e renumerar"):** backup
+`data/escola_ativa_backup_is043_20261001_225025.db` + os 6 `.txt` abaixo do
+piso movidos para `aulas/_backup_is043/`; removidas as 6 linhas (12276-12279
+em 309197/8 e 12369-12370 em 314114/8) e as restantes **renumeradas pelo
+próprio gerador** (force + `aula_max`, estrategia "Aula de atividades em
+laboratório"): **309197/8 = 4 linhas 1..4** (05/06×3, 06/08) e **314114/8 =
+8 linhas 1..8** (01/06×2, 05/06, 06/08×2, 06/11×3), com `.txt`
+regravados alinhados à nova posição (AULA_NUM ↔ conteúdo da lição) e o
+piso bloqueando a recriação das datas antigas (`antes_inicio_disciplina:
+4`/`2` nas rodadas de força). Verificado em sandbox antes em produção;
+nenhuma linha/file abaixo do piso e nenhum número duplicado.
+
+**Arquivos:** `apps/planejamento_registro/core/datas.py`,
+`apps/planejamento_registro/core/gerador.py` (registro em `apps/ISSUES.md`
+→ **AP-014**).
+
+**Validar:** regenerar (não-force, filtro Fundamentos) para 309197 não
+recria datas < 04/06; o debug da 8510 exibe `piso_modular_turmas`; slots
+do histórico continuam pulados primeiro ("Ja existe no historico"); disciplinas
+anuais (P.C.II etc.) sem histórico não são afetadas (piso continua `data_corte`).
+
+---
+
+## IS-044 — Grade horária com slot fantasma 09:10: plano gerado em horário que não existe no portal 🟢
+
+**Sintoma (relatado):** a geração de Fundamentos (disc 8) criou
+`plano_309197_8_2026-06-08_0910.txt` (AULA_NUM 05, 09:10–10:10) na segunda,
+mas **no portal não existe esse horário** — lá é **09:30–10:30** e a turma
+tem apenas **duas** aulas Disc.Tec. nas segundas (08:10 e 09:30). O mesmo
+fantasma existia na I-B (quintas): linha #8 de 06-11 às 09:10.
+
+**Causa raiz:** o `historico_aulas` tem **0 linhas com horário 09:10** (para
+qualquer turma/disciplina) — o portal sempre registrou 09:30 — mas a
+`weekly_schedule` tem os **dois** horários convivendo nos **3 espelhos**
+(triplo espelho, `docs/AUDITORIA_BANCO.md`), e a deduplicação do IS-020 é
+por `(class_name, day_of_week, time_slot)`: 09:10 e 09:30 são chaves
+distintas, então **ambas sobrevivem** e a segunda da I-A virou 3 slots
+Disc.Tec. (08:10, 09:10, 09:30):
+
+| Espelho | I-A Seg 09:10 | I-B Qui 09:10 | 09:30 correto |
+|---|---|---|---|
+| SQLite local (lido pelo gerador da 8510) | linha `id=NULL` (geração antiga) | cópia `2569` | presente |
+| Supabase (ao vivo) | `2578` | `2569` | `2559` / `2579` |
+| `grade_horaria.json` | `09:10` rotulado `I.A.` | `09:10` | **faltava** |
+
+O JSON trazia ainda I-A Sexta `12:30` (portal: 11:30) e I-A Seg `10:30`
+rotulado `Disc.Tec.` (portal: `I.A.`). Como o `load_grade()` do plugin
+"Grade Semanal" funde JSON+Supabase e o botão **"Sincronizar com Nuvem"**
+reescreve o JSON a partir desse fusionado, corrigir só o SQLite não seria
+durável — o 09:10 reapareceria (e o Supabase também o receberia).
+
+**Correção (somente dados — nenhum código alterado; aprovada "Completo:
+local + Supabase + JSON"; 02/10):**
+1. **SQLite local:** `DELETE` dos 2 slots 09:10, com guard que exigia o
+   09:30 correspondente já presente antes de apagar (1 linha cada).
+2. **Supabase:** `DELETE` ids `2578` (I-A Seg) e `2569` (I-B Qui) com
+   `eq(id)` + `eq(time_slot='09:10')` + `eq(day_of_week)` — `select`
+   final confirmou nenhum 09:10 restante nas turmas da 2ª série.
+3. **JSON:** I-A Seg → `{07:10 P.C.II, 08:10 Disc.Tec., 09:30 Disc.Tec.,
+   10:30 I.A.}`; I-A Sex `12:30`→`11:30`; I-B Qui `09:10`→`09:30`
+   (dias reordenados por horário).
+4. **Planos:** linhas `12399` (I-A #509:10) e `12394` (I-B #8 09:10)
+   removidas, os 2 `.txt` movidos para `aulas/_backup_is044/` e
+   renumeração via **force + intervalo 1–8** (mesmo harness IS-043,
+   **sandbox validado antes** da produção, estratégia "Aula de atividades
+   em laboratório").
+
+**Resultado (produção, 02/10 00:25, "TODAS AS VERIFICACOES OK"):**
+`309197/8` = **8 linhas 1..8** (06-05×3; 06-08 08:10=4, **09:30=5**;
+06-09=6; 06-10 07:10=7, **08:10=8**) e `314114/8` = **8 linhas 1..8**
+(… **06-11 09:30=8**) — `.txt` regravados com `AULA_NUM` ↔ conteúdo da
+posição; **0 linhas 09:10** em `planejamento`, grade local e Supabase;
+JSON válido. Backups: `data/escola_ativa_backup_is044_20261002_002548.db`
+e `aulas/_backup_is044/` (2 `.txt` + `grade_horaria_*.json`).
+
+**Observação:** os 7 arquivos históricos `aulas/registradas/*0910*` da
+disc 6 (Front-End, mai/jun) foram **mantidos** — dizem 09:10, mas não há
+linhas correspondentes em `planejamento` (somente arquivo, sem impacto na
+geração; fora de escopo aprovado).
+
+**Arquivos:** nenhum código alterado (só dados + documentação); registro
+cruzado em `apps/ISSUES.md` → **AP-015**.
+
+**Validar:** gerar planos de Fundamentos na I-A sem force → nenhum slot
+09:10 é considerado (grade limpa) e a segunda exibe exatamente 2 planos
+Disc.Tec. (08:10 e 09:30); plugin 🗓️ Grade Semanal não mostra coluna
+09:10 e "Sincronizar com Nuvem" não a reintroduz; arquivo
+`plano_309197_8_2026-06-08_0930.txt` = AULA_NUM 05 / 09:30 - 10:30.
+
+---
+
+## IS-045 — Aulas especiais via "livro-caixa" (estrutura em blocos + zonas livres) 🟢
+
+**Status: fase 1 CONCLUÍDA e validada em 02/10** (model' + integração na fila
+do gerador + aba "📚 Livro-Caixa" no 8510). As decisões da conversa de 02/10
+ficam registradas abaixo; o que foi implementado e validado está no fim.
+
+**Motivação:** 40h = 32 aulas de conteúdo + 8 especiais (Avaliação,
+Seminário, Pesquisa...). O problema da solução atual é a **numeração linear
+monolítica 01→40** — não há onde encaixar as especiais sem renumerar o
+conteúdo.
+
+**Estrutura aprovada:** fechar conjuntos semanais de 8 aulas com zonas
+livres: **`{01-08} {09-16} [LIVRE] {17-24} {25-32} [LIVRE]`**, com
+fechamento por **horas** (40h = concluído, não "40 linhas"). Conteúdo segue
+linear 01→32 dentro dos blocos; o que entra nas zonas (após o 16 e após o
+32), quantos e de que tipo é **livre, decidido no model**. Essa estrutura
+responde as 4 perguntas de projeto (distribuição, numeração, tipos, escopo)
+sem decisões extras.
+
+**Arquitetura (decidida):**
+1. **`lessons` e suas relações: intocadas.** Zero migração, zero mudança em
+   portal/quizzes/fórum/Atividades — verificado que **não existe join
+   posição↔título** no código: tudo que lê "número da aula" lê do **título**
+   (`get_lesson_number(title)` em `views/aulas.py:386` e
+   `daily_activities.py:72`, que ignora quem não tem número: `if n:` e
+   `max(...+[0])`), enquanto `planejamento.numero_aula` só vira
+   agenda/posição (portal `views/portal.py:72`, registro, histórico).
+2. **model' (somente leitura):** camada nova que consulta o relacionamento
+   banco↔front-end Streamlit e resolve a estrutura por disciplina; tipos e
+   escopo livre são definidos nele. Não escreve em `lessons`.
+3. **Livro-caixa em `master_config`** (decisão "Ponto 1"): JSON por
+   disciplina (chave nova, mesmo padrão de `feriados.json`). Leitura direta
+   no SQLite local — sem egress, logo **sem `local_cache`** (a regra de
+   cache do AGENTS.md vale para leituras repetitivas do Supabase, não do
+   banco local). Espelhado automaticamente pelo `audit_backup`.
+4. **App gerador de planos (8510) passa a "escutar a conversa":** consulta
+   o model, **persiste a resolução no livro-caixa** e gera os planos a
+   partir dele. **Único ponto de integração** com código existente: a fila
+   que hoje ordena por número do título (`apps/planejamento_registro/core/gerador.py`
+   `_ordenar_lessons_fila` 73-84, montagem 449-461, lookup
+   `lessons_list[pedagogical_idx-1]` 1027-1030) passa a consultar o
+   livro-caixa. O resto é aditivo.
+5. **Numeração (decisão "Ponto 2"):** `AULA_NUM` é **figurante** — guarda a
+   **posição para o portal**; pode ficar fora de ordem em relação ao título
+   (título 17 na posição 20 sem problema). O título da posição vem do que
+   for escrito no **plugin Atividades**:
+   `AULA_NUM: 17 -> {titulo = <o que vier do Atividades>}`.
+6. **Exibição:** aula especial **não aparece na página Aulas** — não é
+   conteúdo, é **avaliação**. Aparece na página **Avaliações**, como o
+   Seminário (via `create_assessment`, fluxo de `daily_activities.py:136-229`).
+   Diferença-chave: lançar o seminário **das aulas 01–16** e **registrar na
+   posição 17/18 do portal**; título = o da avaliação; **frequência
+   editável no portal**.
+7. **Legado:** disciplinas já geradas com 40 lineares ficam como estrutura
+   "linear legada" aceita pelo model — sem reescrever conteúdo existente.
+
+**Implementado em 02/10 (fase 1 — único ponto de integração com código
+existente):**
+* `services/livro_caixa.py` (novo): model' somente leitura — CRUD do doc em
+  `master_config` (chave `livro_caixa:<subject_id>`, schema duplo
+  `chave/valor`↔`key/value`), `estrutura_padrao`/`estrutura_linear`,
+  `resolver` (fila posicional `entradas` com `tipo: conteudo|especial`),
+  `conferir` (erros/avisos: blocos fora de ordem, especial sem título,
+  meta≠cobertura, aulas ausentes em `lessons`), `resolver_e_marcar`.
+  Aponta para a cópia do banco no sandbox via `DB_PATH_OVERRIDE`/env
+  `SYSAVA_DB_PATH`.
+* `apps/planejamento_registro/core/gerador.py`: build de `filas_livro`
+  {key: (entradas, num_map)} após a ordenação legada; consumo **posicional**
+  por `seq_num` (`item_lc`/`lesson`/`especial_lc` — a especial vira
+  pseudo-lesson e NÃO conta como "sem lição"); fallback para a fila legada
+  quando a posição está fora da cobertura ou não há doc; `estrategia_plano`
+  + objetivos/recursos/atividade vindos do item; counter `especiais` no
+  retorno.
+* `apps/planejamento_registro/planejamento_registro_streamlit.py`: função
+  `secao_livro_caixa(turma, subject)` + entrada "📚 Livro-Caixa" no rádio de
+  navegação (criar estrutura padrão/linear, recalcular+salvar resolução,
+  métricas e conferência, tabela da fila resolvida com coluna "Nº título",
+  editor de zonas livres, blocos JSON, remover livro-caixa).
+
+**Validação (02/10):**
+* Unitário do model' (`_lc_unit.py`, 25+ asserções; harnesses em
+  `%TEMP%\opencode`): resolver, zonas,
+  conferir (erros/avisos), linear, CRUD local nos dois schemas de
+  `master_config`.
+* Sandbox (`_lc_sandbox.py`, cópia em `%TEMP%\lc_sandbox`, harness padrão
+  IS-043/044): disciplina 8 (Fundamentos, turma 309197), doc de teste
+  `blocos [[1,4],[5,6]]` + 2 zonas com 1 especial cada → 8 planos:
+  posições 1-4 = Aula 1-4, **posição 5 = especial**, **posições 6/7 com
+  `AULA_NUM` 06/07 divergindo do título (Aula 5/Aula 6 — figurante
+  confirmado)**, posição 8 = especial; estratégias vindas do item especial
+  vs. a passada no gerador; `especiais=2`, `sem_licao=0`; doc removido →
+  **regressão legada** idêntica ao comportamento pré-IS-045 (posição N =
+  N-ésima aula por título, `especiais=0`).
+* Smoke da UI (8511 headless, browser-automation): navegação → "📚
+  Livro-Caixa" renderiza subheader/legenda/aviso "sem livro-caixa" e os 2
+  botões de criação, **0 erros de console, 0 requests falhos** (nenhum botão
+  de escrita clicado — leitura apenas).
+
+**Observação:** o app 8510 precisa ser **reiniciado/recarregado** para
+mostrar a nova aba.
+
+**Pendências (fases 2/3):** Atividades (lançamento por tipo nas posições e
+título da posição vindo do plugin) e abertura de zonas/especiais no
+gerador. Registro da frente do app: **AP-016** em `apps/ISSUES.md`.
+
+**Arquivos:** `services/livro_caixa.py` (novo), `master_config` (chaves
+`livro_caixa:<subject_id>`), `apps/planejamento_registro/core/gerador.py`
+(fila), `apps/planejamento_registro/planejamento_registro_streamlit.py`
+(aba), `data/repo/plugins/daily_activities.py` (fase 2, ainda não tocado).
+
+---
+
+## IS-046 — Transição de disciplina: slots livres do dia da última aula ficavam ociosos 🟢
+
+**Sintoma (relatado):** a turma **309197 (I-A)** encerrou o módulo
+**Front-End** (disc 6) em **03/06/2026 07:10** (40ª aula) e o slot
+**03/06 08:10** — o único DT livre de junho na grade I-A — ficou sem dono;
+a geração de Fundamentos (disc 8) só começou em **05/06**. O relato citou
+"5 slots na quarta", mas a grade I-A tem apenas 2 DTs na quarta
+(07:10/08:10); os **5 slots da quinta 04/06 (I-B)** estão livres porque
+**04/06 = Corpus Christi** (confirmado em `feriados.json`) — é o correto,
+não é desperdício. Os slots de julho livres são apenas pendentes ainda não
+gerados (planos param em 01/07 na I-A e 11/06 na I-B).
+
+**Causa raiz:** o piso do IS-043 em `core/gerador.py` usava
+`ultima_modular + 1 dia` → limite 04/06, e o gate
+`antes_inicio_disciplina` descartava **todo o dia 03/06**, mesmo com
+`janela_por_data(03/06)` já resolvendo **Fundamentos** (janela 02/06–03/07,
+tol ±15, distância 0). O slot da aula registrada já era protegido pela
+ocupação (`historico_set`), então o "+1 dia" só jogava fora os horários
+livres restantes do dia da transição.
+
+**Correção (02/10):** `core/gerador.py` (gate pós-IS-043):
+`limite = max(limite, ult + timedelta(days=1))` →
+`limite = max(limite, ult)` — o piso vale o **próprio dia** da última aula
+modular. Continuam valendo: ocupação pula o slot já registrado;
+`inicio_disciplina` da própria disciplina (+1) impede a seguinte de
+reiniciar no mesmo dia; o bloqueio de datas **anteriores** a `ult` (IS-043)
+permanece.
+
+**Validação (02/10, `_trans_sandbox.py`, cópia do DB em `%TEMP%\tr_sandbox`):**
+- Pré-condições: 39 linhas disc 8 (duas turmas) removidas; histórico do
+  FE-I-A de 01/06–02/06 removido de propósito (libera 3 slots) mantendo o
+  de 03/06 (piso = 03/06).
+- **Fase A (I-A, força):** **0 linhas em 01/06–02/06** mesmo com slots
+  livres (piso IS-043 preservado), **exatamente 1 linha em 03/06 08:10 =
+  nº 1** (transição liberada), continuidade 05/06 07:10 nº 2, 40 aulas
+  03/06–08/07, nums 1..40 monotônicos (`sem_licao=9` = posições 32-40 sem
+  lição na fila legada, comportamento pré-existente).
+- **Fase B (I-B, força):** primeira aula **01/06** (pós-29/05 do FE),
+  **0 aulas em 04/06** (feriado), 40 aulas 01/06–09/07, nums monôtonos —
+  regressão preservada (pré/pós-fix idêntico nesta turma).
+- Regressão IS-045: `_lc_sandbox.py` reexecutado → OK. `py_compile` OK.
+
+**Produção (02/10, aprovado):** backup
+`data/escola_ativa_backup_is046_20261002_153325.db`; os 31 `.txt` atuais (30
+em `prontas` + 1 em `registradas`) movidos para `aulas/_backup_is046/`;
+regenerados com **force + intervalo 1..31** (31 lições reais, mesma
+estratégia "Aula de atividades em laboratório", `output_dir='prontas'`):
+**31 linhas 1..31, de 03/06 08:10 (Aula 1) a 06/30 07:10**, sem 01/07 — a
+linha órfã de 01/07 (fora do novo conjunto de slots) foi removida.
+Verificação: nums monotônicos, 31 `.txt` em `prontas` com AULA_NUM × DATA ×
+DB consistentes, `sem_licao=0`. **I-B não regenerada** (não muda nada).
+Efeito colateral: o dia 01/07 ficou sem plano — as 31 lições cabem nos 31
+primeiros slots a partir da transição; se quiser cobrir 01/07, gerar
+intervalo 1..32 (posição 32 = conteúdo genérico, sem lição correspondente).
+
+**Arquivos:** `apps/planejamento_registro/core/gerador.py` (~l.981, gate
+`antes_inicio_disciplina`; frente: `apps/ISSUES.md` → **AP-017**).
+
+**Validar:** gerar disc 8 da I-A e conferir primeiro slot = 03/06 08:10 sem
+nada anterior; I-B mantém início 01/06 e pula 04/06.
+
+---
+
+## IS-047 — Grade horária na ⚙️ Config: monitor dos 3 espelhos + edição (Sex 11:30/13:30 → Qua) 🟢
+
+**Pedido:** as duas últimas aulas de Disc.Tec. da sexta da **I-A** passaram
+para a quarta (print do sistema oficial, 03/06/2026, mostrando 4 horários
+de Fundamentos na quarta: 07:10, 08:10, 11:30, 13:30). Criar na página de
+Configurações um lugar para **monitorar e editar** esse tipo de mudança.
+
+**Solução:**
+1. Novo núcleo `apps/planejamento_registro/core/grade.py`: leitura dos 3
+   espelhos (`weekly_schedule` SQLite do gerador, `grade_horaria.json` do
+   Registro do portal, `weekly_schedule` Supabase), `divergencias()`
+   (comparação slot a slot com status), `impacto()` (aulas registradas +
+   planos por slot, com aviso "planos fora da grade") e edição
+   `mover/adicionar/remover` que grava **nos 3 espelhos de uma vez**
+   (SQLite delete+insert com dedup de duplicatas, JSON reescrito,
+   Supabase delete+upsert `on_conflict=class_name,day_of_week,time_slot`).
+2. Nova seção `#### 🗓️ Grade horária (monitor + edição)` na ⚙️ Config do
+   8510 (logo após Feriados), com abas **📋 Grade** (pivot dia×horário),
+   **🔀 Espelhos** (tabela de divergências + estado da nuvem), **⚖️
+   Impacto** (planos/registradas por slot com flags) e **✏️ Editar**
+   (mover/adicionar/remover, com confirmação antes de gravar).
+
+**Dados aplicados (02/10):** backups `escola_ativa_backup_is047_20261002_171734.db`
+e `aulas/_backup_is047/grade_horaria_*.json` (mais os 31 `.txt` movidos para
+lá); grade I-A: **Sexta 11:30/13:30 removidos, Quarta 11:30/13:30 =
+Disc.Tec.** nos 3 espelhos (Supabase: "ok"); planos disc 8 regenerados com
+**force 1..31**: 31 linhas de 03/06 08:10 (nº1) a 06/30 07:10 (nº31), com
+os **8 planos** que estavam em Sex 11:30/13:30 agora em Quarta 11:30/13:30.
+
+**Validação:**
+- `_grade_sandbox.py` (cópia DB+JSON em `%TEMP%\grade_sandbox`): baseline
+  SQLite==JSON; mover os 2 slots com dedup (duplicata local removida, resta
+  exatamente 1 linha); round-trip adicionar/remover; guards de slot
+  inexistente — todas OK (nuvem leitura OK).
+- `_grade_apply.py` (produção): 3 espelhos idênticos (divergências = 0), 8
+  planos em Quarta 11:30/13:30, 0 em Sexta, 31 `.txt` com AULA_NUM × DATA ×
+  DB consistente.
+- Smoke UI (8511 headless, browser-automation): seção e as 4 abas renderizam,
+  "Espelhos consistentes", "Nenhum plano fora da grade", editor operacional,
+  **0 erros de console, 0 requests falhos**.
+
+**Arquivos:** `apps/planejamento_registro/core/grade.py` (novo),
+`apps/planejamento_registro/planejamento_registro_streamlit.py` (seção na
+Config); frente do app: `apps/ISSUES.md` → **AP-018**.
+
+**Validar:** ⚙️ Config → aba 🔀 Espelhos com os 3 espelhos iguais; o
+Registro do portal (03/06, quarta) oferece os 4 horários de Fundamentos; o
+plugin Grade Semanal não reintegra Sexta 11:30/13:30 (nuvem já corrigida);
+gerar planos sem force não recria slots de sexta 11:30/13:30.
+
+---
+
 ## Comandos úteis
 
 ```powershell
@@ -1337,6 +1986,10 @@ python scripts/restore_new_supabase.py --url <nova-url> --key <nova-anon-key>
 # Auditar/limpar duplicatas de bot no fórum (dry-run / aplicar)
 python scripts/cleanup_forum_duplicates.py
 python scripts/cleanup_forum_duplicates.py --apply
+
+# Lista negra: JSON -> banco (dry-run / aplicar + regenera o espelho local)
+python scripts/migrar_excecoes_para_banco.py --dry-run
+python scripts/migrar_excecoes_para_banco.py
 ```
 
 ## Histórico de commits relacionados
