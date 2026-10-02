@@ -863,16 +863,32 @@ def buscar_alunos_presenca(class_id: int, class_name: str, subject_id: int, subj
         valor = aluno.get('is_portal', True)
         return str(valor).strip().lower() not in {'false', '0', 'nao', 'não', 'no'}
 
+    # Flags de frequência do banco (IS-040) — fonte de verdade. O JSON local é o
+    # espelho/fallback para quando o banco estiver indisponível.
+    freq_flags = {}
+    try:
+        if db is not None and hasattr(db, "get_frequency_flags"):
+            freq_flags = db.get_frequency_flags() or {}
+    except Exception:
+        freq_flags = {}
+
+    def status_freq_inicio(aluno):
+        """'normal' | 'falta' | 'inativo' a partir do banco (ou do JSON)."""
+        username = str(aluno.get('username', '')).strip()
+        ra = str(aluno.get('ra', '') or username).strip()
+        flag = freq_flags.get(username) or freq_flags.get(ra)
+        if flag:
+            return flag.get('frequencia_status') or 'normal'
+        if aluno_na_lista_negra(aluno):
+            return 'falta'
+        return 'normal'
+
     # A chamada deve usar somente a matrícula da turma selecionada. A lista
     # negra altera o status, mas nunca adiciona alunos de outras turmas.
     students = db.get_students_by_class(class_id) if db else []
-    # `is_portal` controla se o cadastro ainda pertence ao portal. `is_active`
-    # indica frequência na sala; alunos inativos na lista negra permanecem na
-    # própria turma e recebem Falta quando não há frequência salva.
-    students = [
-        s for s in students
-        if aluno_no_portal(s) and (s.get('is_active', True) or aluno_na_lista_negra(s))
-    ]
+    # `is_portal` = false exclui o cadastro da lista (transferido/evadido).
+    # `is_active` = false NÃO exclui: o aluno permanece e recebe Falta.
+    students = [s for s in students if aluno_no_portal(s)]
 
     lista_final = []
     for std in sorted(students, key=lambda x: x.get('name', '')):
@@ -901,10 +917,10 @@ def buscar_alunos_presenca(class_id: int, class_name: str, subject_id: int, subj
 
         if forced_status:
             status = forced_status
-        elif aluno_na_lista_negra(std) and normalizar_para_matching(nome) not in attendance_map:
+        elif status_freq_inicio(std) == 'falta' and norm_nome not in attendance_map:
             status = "Falta"
         else:
-            status = attendance_map.get(normalizar_para_matching(nome), "Presente")
+            status = attendance_map.get(norm_nome, "Presente")
 
         lista_final.append({"name": nome_upper, "status": status})
 

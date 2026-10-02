@@ -1,6 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 from services import database as db
+from services import local_cache
 from services import auth
 from services import ai_generation as ai
 from views.aulas import clean_svg_content
@@ -583,6 +584,88 @@ def show_page():
             else:
                 st.info("Nenhum usuario encontrado com os filtros selecionados.")
 
+            # --- IS-040: Frequencia (falta / inativo) ---
+            st.divider()
+            with st.expander("🚫 Frequência — status dos alunos (Falta / Inativo)", expanded=False):
+                flags = db.get_frequency_flags()
+                if not flags:
+                    st.info("Não foi possível ler as flags de frequência do banco.")
+                else:
+                    rows = []
+                    for username in sorted(flags, key=lambda u: (flags[u].get("name") or "")):
+                        f = flags[username]
+                        rows.append({
+                            "username": username,
+                            "Nome": f.get("name") or "",
+                            "RA": str(f.get("ra") or ""),
+                            "Frequência": f.get("frequencia_status") or "normal",
+                            "Motivo": f.get("motivo") or "",
+                        })
+                    df_freq = pd.DataFrame(rows)
+
+                    st.caption(
+                        "**normal** = conta presença · **falta** = aparece na chamada iniciando como "
+                        "Falta · **inativo** = excluído da lista de chamada (não bloqueia o login)."
+                    )
+
+                    edited_freq = st.data_editor(
+                        df_freq,
+                        column_config={
+                            "username": None,
+                            "Nome": st.column_config.TextColumn(disabled=True),
+                            "RA": st.column_config.TextColumn(disabled=True),
+                            "Frequência": st.column_config.SelectboxColumn(
+                                "Frequência",
+                                options=list(db.FREQUENCIA_STATUS_VALIDOS),
+                                required=True,
+                            ),
+                            "Motivo": st.column_config.TextColumn("Motivo", width="medium"),
+                        },
+                        hide_index=True,
+                        width="stretch",
+                        key="editor_frequencia_alunos",
+                    )
+
+                    orig_freq = {
+                        r["username"]: (r["Frequência"], r["Motivo"])
+                        for _, r in df_freq.iterrows()
+                    }
+                    alterados = [
+                        (r["username"], r["Frequência"], r["Motivo"])
+                        for _, r in edited_freq.iterrows()
+                        if (r["Frequência"], r["Motivo"]) != orig_freq.get(r["username"])
+                    ]
+
+                    contagem = df_freq["Frequência"].value_counts().to_dict()
+                    st.caption(
+                        f"Resumo: {contagem.get('normal', 0)} normal · "
+                        f"{contagem.get('falta', 0)} falta · {contagem.get('inativo', 0)} inativo"
+                    )
+
+                    if st.button(
+                        "💾 Salvar status de frequência",
+                        key="btn_save_frequencia",
+                        type="primary",
+                        width="stretch",
+                        disabled=not alterados,
+                    ):
+                        erros = 0
+                        for username, st_frequencia, motivo in alterados:
+                            _, err = db.set_frequency_flag(username, st_frequencia, motivo=motivo)
+                            if err:
+                                st.error(f"{username}: {err}")
+                                erros += 1
+                        if erros == 0:
+                            ok, msg = db.sync_blacklist_json_mirror()
+                            if ok:
+                                st.success(f"{len(alterados)} aluno(s) atualizado(s). Espelho local: {msg}")
+                            else:
+                                st.warning(
+                                    f"{len(alterados)} aluno(s) atualizado(s) no banco. "
+                                    f"Espelho local não gravado ({msg}) — normal no Streamlit Cloud."
+                                )
+                            st.rerun()
+
     elif selected_tab == "Aulas":
             st.subheader("Aulas")
 
@@ -783,11 +866,13 @@ def show_page():
                         )
 
                         if st.button("Salvar Configuracoes", width="stretch", key="btn_save_status_turmas"):
+                            visibility_changed = False
                             for idx, row in edited_links.iterrows():
                                 orig = df_links_pd.iloc[idx]
                                 # Atualiza visibilidade
                                 if row['Ativo'] != orig['Ativo']:
                                     db.supabase.table("class_subjects").update({"is_active": row['Ativo']}).eq("id", row['id']).execute()
+                                    visibility_changed = True
                                 # Atualiza carga horaria e regime
                                 if row['Regime'] != orig['Regime']:
                                     selected_regime = row['Regime']
@@ -819,6 +904,10 @@ def show_page():
                                             db.supabase.table("subjects").update(update_data).eq("id", subject_id_to_update).execute()
                                         except Exception:
                                             db.supabase.table("subjects").update({"duration_type": dur_val}).eq("id", subject_id_to_update).execute()
+                            if visibility_changed:
+                                # Invalida o cache de disciplinas da turma para que a
+                                # nova visibilidade (is_active) apareca imediatamente.
+                                local_cache.invalidate(f"subjects_for_class:{class_id}")
                             st.success("Configuracoes atualizadas!")
                             st.rerun()
 

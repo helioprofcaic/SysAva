@@ -103,6 +103,15 @@ def load_blacklist():
     names = {_normalize_name(x) for x in data.get("blacklist_names", []) if str(x).strip()}
     return ras, names
 
+def load_frequency_flags():
+    """Flags de frequência do banco (IS-040). {} se indisponível."""
+    if db is None or not hasattr(db, "get_frequency_flags"):
+        return {}
+    try:
+        return db.get_frequency_flags() or {}
+    except Exception:
+        return {}
+
 def show_attendance_plugin():
     st.title("📅 Diário de Frequência")
 
@@ -152,9 +161,14 @@ def show_attendance_plugin():
     subject_key = str(selected_subject_id)
     class_id = class_options[selected_class_name]
     students = db.get_students_by_class(class_id)
+    students_todos = students
     students = [
         student for student in students
         if str(student.get('is_portal', True)).strip().lower() not in {'false', '0', 'nao', 'não', 'no'}
+    ]
+    excluidos = [
+        s['name'] for s in students_todos
+        if s not in students
     ]
     
     if not students:
@@ -164,12 +178,26 @@ def show_attendance_plugin():
     # Ordenar alunos por nome para definir o número na lista (Nº)
     students = sorted(students, key=lambda x: x['name'])
 
-    # Lista negra de faltosos: quem estiver nela inicia a chamada como "Falta"
+    # Status de frequência: banco (fonte de verdade, IS-040) com fallback ao JSON.
     blacklist_ras, blacklist_names = load_blacklist()
+    freq_flags = load_frequency_flags()
+
+    def status_inicio(student):
+        """'normal' | 'falta' | 'inativo' para este aluno."""
+        username = str(student.get('username', '')).strip()
+        ra = str(student.get('ra', '') or username).strip()
+        flag = freq_flags.get(username) or freq_flags.get(ra)
+        if flag:
+            return flag.get('frequencia_status') or 'normal'
+        # Banco indisponível: cai para o espelho local (JSON).
+        if (username in blacklist_ras or ra in blacklist_ras
+                or _normalize_name(student.get('name')) in blacklist_names):
+            return 'falta'
+        return 'normal'
 
     def is_blacklisted(student):
-        return (str(student['username']).strip() in blacklist_ras
-                or _normalize_name(student['name']) in blacklist_names)
+        return status_inicio(student) == 'falta'
+
 
     # 2. Carregar Dados de Frequência
     attendance_data = load_json(ATTENDANCE_FILE)
@@ -240,6 +268,11 @@ def show_attendance_plugin():
 
     st.subheader(f"Lista de Presença: {selected_class_name} - {selected_subject_name}")
     st.caption(f"Registro para o dia {selected_date.strftime('%d/%m/%Y')}")
+    if excluidos:
+        st.caption(
+            f"🚫 **{len(excluidos)} aluno(s) inativo(s) fora desta lista** "
+            f"(is_portal = false): {', '.join(excluidos)}"
+        )
 
     # 3. Interface da Chamada (Tabela Condensada)
     # Preparamos um DataFrame para o editor
@@ -256,11 +289,11 @@ def show_attendance_plugin():
         for i, s in enumerate(students)
     ])
 
-    # Aviso dos alunos da lista negra presentes nesta turma
+    # Aviso dos alunos que iniciam a chamada como Falta (lista negra / inativos)
     bl_in_class = [s for s in students if is_blacklisted(s)]
     if bl_in_class:
         nomes = ", ".join(s['name'] for s in bl_in_class)
-        st.caption(f"⚠️ **Lista negra de faltosos** ({len(bl_in_class)}): iniciados como **Falta** — {nomes}")
+        st.caption(f"⚠️ **Iniciam como Falta** ({len(bl_in_class)}): {nomes}")
 
     # O data_editor permite editar o status como um dropdown em uma tabela compacta
     edited_df = st.data_editor(

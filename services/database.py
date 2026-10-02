@@ -1,6 +1,7 @@
 # services/database.py
 from supabase import create_client, Client
 import streamlit as st
+import json
 import os
 import re
 import time
@@ -174,7 +175,7 @@ def create_user(username: str, hashed_password: str, name: str, ra: str, role: s
         response = supabase.table("app_users").insert({
             "username": username, "password": hashed_password, "name": name, "ra": ra, "role": role
         }).execute()
-        local_cache.invalidate("app_users")
+        local_cache.invalidate("app_users:v2")
         return response.data, None
     except Exception as e:
         return None, str(e)
@@ -184,7 +185,7 @@ def delete_user(username: str):
     if not is_db_connected(): return None, "Banco de dados não conectado"
     try:
         response = supabase.table("app_users").delete().eq("username", username).execute()
-        local_cache.invalidate("app_users")
+        local_cache.invalidate("app_users:v2")
         return response.data, None
     except Exception as e:
         return None, str(e)
@@ -194,10 +195,177 @@ def toggle_user_active(username: str, is_active: bool):
     if not is_db_connected(): return None, "Banco de dados nao conectado"
     try:
         response = supabase.table("app_users").update({"is_active": is_active}).eq("username", username).execute()
-        local_cache.invalidate("app_users")
+        _invalidate_frequency_caches()
         return response.data, None
     except Exception as e:
         return None, str(e)
+
+# --- Mecanismo de inativos da frequencia (IS-040) ---
+FREQUENCIA_STATUS_VALIDOS = ("normal", "falta", "inativo")
+
+
+def _derive_frequencia_status(is_active, is_portal):
+    """Status de frequencia derivado dos flags de app_users (fonte de verdade).
+
+    is_active=False -> 'falta'   (fica na chamada, comeca como Falta)
+    is_portal=False -> 'inativo' (excluido da lista de chamada)
+    """
+    if is_portal is False:
+        return "inativo"
+    if is_active is False:
+        return "falta"
+    return "normal"
+
+
+def _invalidate_frequency_caches():
+    local_cache.invalidate("app_users:v2")
+    local_cache.invalidate("app_users_flags:v1")
+    local_cache.invalidate_prefix("students_by_class:")
+
+
+def get_frequency_flags():
+    """Flags de frequencia por aluno, com cache local.
+
+    Combina app_users (is_active / is_portal / status) com user_profiles
+    (motivo e frequencia_status, quando as colunas novas existirem — ver
+    docs/ADD_USER_PROFILES_FREQUENCIA.sql). Sem as colunas o status ainda e
+    derivado dos flags, entao o recurso funciona antes do DDL.
+
+    Retorna {username: {ra, name, is_active, is_portal, status,
+                        frequencia_status, motivo}}.
+    """
+    if not is_db_connected(): return {}
+
+    def _fetch():
+        users = supabase.table("app_users").select(
+            "username, ra, name, is_active, is_portal, status"
+        ).eq("role", "student").execute().data
+
+        try:
+            profs = supabase.table("user_profiles").select(
+                "username, frequencia_status, motivo"
+            ).execute().data
+            prof_map = {p.get("username"): p for p in profs}
+        except Exception:
+            # Colunas ainda nao criadas no Supabase.
+            prof_map = {}
+
+        flags = {}
+        for u in users:
+            prof = prof_map.get(u.get("username")) or {}
+            is_active = u.get("is_active", True)
+            is_portal = u.get("is_portal", True)
+            flags[u.get("username")] = {
+                "ra": u.get("ra"),
+                "name": u.get("name"),
+                "is_active": is_active,
+                "is_portal": is_portal,
+                "status": u.get("status") or "active",
+                "frequencia_status": _derive_frequencia_status(is_active, is_portal),
+                "motivo": prof.get("motivo") or "",
+            }
+        return flags
+
+    try:
+        return local_cache.get_or_fetch("app_users_flags:v1", _fetch, ttl=local_cache.TTL_MEDIUM)
+    except Exception as e:
+        print(f"[get_frequency_flags] falha ao consultar flags: {e}")
+        return {}
+
+
+def set_frequency_flag(username: str, frequencia_status: str, motivo: str = ""):
+    """Grava o status de frequencia de um aluno (unico caminho de escrita).
+
+    'normal'  -> is_active=true,  is_portal=true,  status=active
+    'falta'   -> is_active=false, is_portal=true,  status=active
+    'inativo' -> is_active=false, is_portal=false, status=inactive
+    """
+    if not is_db_connected(): return None, "Banco de dados nao conectado"
+    if frequencia_status not in FREQUENCIA_STATUS_VALIDOS:
+        return None, f"Status de frequencia invalido: {frequencia_status}"
+
+    if frequencia_status == "normal":
+        user_update = {"is_active": True, "is_portal": True, "status": "active"}
+    elif frequencia_status == "falta":
+        user_update = {"is_active": False, "is_portal": True, "status": "active"}
+    else:
+        user_update = {"is_active": False, "is_portal": False, "status": "inactive"}
+
+    try:
+        response = supabase.table("app_users").update(user_update).eq("username", username).execute()
+    except Exception as e:
+        return None, str(e)
+
+    # Espelho em user_profiles (frequencia_status + motivo). Se o DDL ainda nao
+    # foi executado, apenas segue: app_users continua sendo a fonte de verdade.
+    profile_row = {
+        "username": username,
+        "frequencia_status": frequencia_status,
+        "motivo": motivo or "",
+        "atualizado_em": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+    }
+    saved_profile = False
+    try:
+        res = supabase.table("user_profiles").update(profile_row).eq("username", username).execute()
+        saved_profile = bool(res.data)
+    except Exception:
+        saved_profile = False
+    if not saved_profile:
+        try:
+            supabase.table("user_profiles").upsert(profile_row, on_conflict="username").execute()
+        except Exception:
+            pass
+
+    _invalidate_frequency_caches()
+    return response.data, None
+
+
+def sync_blacklist_json_mirror():
+    """Regrava data/excecoes_alunos.json a partir do banco (espelho local).
+
+    Os robos em apps/ leem apenas o JSON; o portal e os plugins leem o banco.
+    Chaves extras do arquivo (ex.: ignored_names) sao preservadas. No Streamlit
+    Cloud a funcao apenas devolve erro: o banco e a fonte de verdade.
+
+    Retorna (ok, mensagem).
+    """
+    if not is_db_connected(): return False, "banco offline"
+
+    flags = get_frequency_flags()
+    if not flags: return False, "sem flags de frequencia"
+
+    blacklist, blacklist_names, dropouts = [], [], []
+    for username in sorted(flags):
+        f = flags[username]
+        ra = str(f.get("ra") or username or "").strip()
+        nome = str(f.get("name") or "").strip().upper()
+        if not ra: continue
+        if f.get("frequencia_status") == "inativo":
+            dropouts.append(ra)
+        elif f.get("frequencia_status") == "falta":
+            blacklist.append(ra)
+            if nome and nome not in blacklist_names:
+                blacklist_names.append(nome)
+
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    folder = os.path.join(project_root, "data")
+    path = os.path.join(folder, "excecoes_alunos.json")
+    try:
+        data = {}
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as fh:
+                data = json.load(fh) or {}
+        elif not os.path.isdir(folder):
+            return False, "pasta data/ inexistente (ambiente efemero)"
+        data["blacklist"] = blacklist
+        data["blacklist_names"] = blacklist_names
+        data["dropouts"] = dropouts
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(data, fh, ensure_ascii=False, indent=2)
+        return True, f"espelho gravado ({len(blacklist)} falta, {len(dropouts)} inativo)"
+    except Exception as e:
+        return False, str(e)
+
 
 # --- Funções de Histórico do Usuário ---
 def add_user_history(username: str, activity: str):
@@ -243,7 +411,7 @@ def upsert_user(username: str, hashed_password: str, name: str, ra: str):
         response = supabase.table("app_users").upsert({
             "username": username, "password": hashed_password, "name": name, "ra": ra, "role": "student"
         }).execute()
-        local_cache.invalidate("app_users")
+        local_cache.invalidate("app_users:v2")
         return response.data, None
     except Exception as e:
         return None, str(e)
@@ -729,27 +897,29 @@ def get_subjects_for_class(class_id: int):
     if not is_db_connected(): return []
 
     def _fetch():
-        try:
-            # Busca usando join para trazer o status is_active da tabela de ligação class_subjects
-            response = supabase.table("class_subjects").select("is_active, subjects(*)").eq("class_id", class_id).execute()
-            if not response.data:
-                return []
-
-            # Achata a estrutura para que o objeto disciplina contenha o campo is_active
-            processed = []
-            for item in response.data:
-                if item.get('subjects'):
-                    subj = item['subjects']
-                    subj['is_active'] = item.get('is_active', True)
-                    processed.append(subj)
-
-            # Retorna a lista ordenada por nome
-            return sorted(processed, key=lambda x: x['name'])
-        except Exception as e:
-            print(f"Erro ao buscar disciplinas da turma {class_id}: {e}")
+        # A excecao sobe de proposito: get_or_fetch usa o erro para cair no cache
+        # antigo em vez de gravar uma lista vazia como se fosse fresca.
+        # Busca usando join para trazer o status is_active da tabela de ligacao class_subjects
+        response = supabase.table("class_subjects").select("is_active, subjects(*)").eq("class_id", class_id).execute()
+        if not response.data:
             return []
 
-    return local_cache.get_or_fetch(f"subjects_for_class:{class_id}", _fetch, ttl=local_cache.TTL_BASE)
+        # Achata a estrutura para que o objeto disciplina contenha o campo is_active
+        processed = []
+        for item in response.data:
+            if item.get('subjects'):
+                subj = item['subjects']
+                subj['is_active'] = item.get('is_active', True)
+                processed.append(subj)
+
+        # Retorna a lista ordenada por nome
+        return sorted(processed, key=lambda x: x['name'])
+
+    try:
+        return local_cache.get_or_fetch(f"subjects_for_class:{class_id}", _fetch, ttl=local_cache.TTL_BASE)
+    except Exception as e:
+        print(f"Erro ao buscar disciplinas da turma {class_id}: {e}")
+        return []
 
 def enroll_student_in_class(username: str, class_id: int):
     if not is_db_connected(): return None, "Offline"
@@ -767,17 +937,31 @@ def get_students_by_class(class_id: int):
     if not is_db_connected(): return []
 
     def _fetch():
-        try:
-            enrollments_res = supabase.table("student_enrollments").select("user_username").eq("class_id", class_id).execute()
-            if not enrollments_res.data: return []
-            usernames = [e['user_username'] for e in enrollments_res.data]
-            users_res = supabase.table("app_users").select("*").in_("username", usernames).execute()
-            return users_res.data
-        except Exception as e:
-            print(f"Erro ao buscar alunos da turma {class_id}: {e}")
+        # A excecao sobe de proposito (nao envenena o cache com lista vazia).
+        enrollments_res = supabase.table("student_enrollments").select("user_username").eq("class_id", class_id).execute()
+        if not enrollments_res.data:
             return []
+        usernames = [e['user_username'] for e in enrollments_res.data]
+        try:
+            # Listagem leve: nunca baixa senha/hash para o cache (regra de egress).
+            users_res = supabase.table("app_users").select(
+                "username, name, ra, role, status, is_active, is_portal"
+            ).in_("username", usernames).execute()
+        except Exception:
+            # Compatibilidade com bancos sem status/is_portal.
+            users_res = supabase.table("app_users").select(
+                "username, name, ra, role, is_active"
+            ).in_("username", usernames).execute()
+            for u in users_res.data:
+                u.setdefault('is_portal', True)
+                u.setdefault('status', 'active')
+        return users_res.data
 
-    return local_cache.get_or_fetch(f"students_by_class:v2:{class_id}", _fetch, ttl=local_cache.TTL_MEDIUM)
+    try:
+        return local_cache.get_or_fetch(f"students_by_class:v3:{class_id}", _fetch, ttl=local_cache.TTL_MEDIUM)
+    except Exception as e:
+        print(f"Erro ao buscar alunos da turma {class_id}: {e}")
+        return []
 
 def get_classes_for_subject(subject_id: int):
     if not is_db_connected(): return []
