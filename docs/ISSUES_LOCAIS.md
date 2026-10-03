@@ -71,6 +71,9 @@ Formato de ID: `IS-NNN`.
 | IS-045 | Aulas especiais via "livro-caixa": estrutura `{01-08}{09-16}{LIVRE}{17-24}{25-32}{LIVRE}` (fechamento por horas), model' de leitura em `master_config`, planos 8510 consultam o livro — fase 1 (model' + fila + aba 8510) implementada e validada | 🟢 | 2026-10-02 |
 | IS-046 | Transição disciplina→disciplina: piso IS-043 (`ult+1 dia`) descartava os slots livres do dia da última aula (03/06 08:10 da I-A ficava ocioso) — piso agora vale o próprio dia; ocupação/feriado/`inicio_disciplina` seguem protegendo | 🟢 | 2026-10-02 |
 | IS-047 | Grade horária na ⚙️ Config do 8510: monitor dos 3 espelhos (SQLite/JSON/Supabase) + edição mover/adicionar/remover — mudança real Sex 11:30/13:30 → Qua (I-A, Disc.Tec.) aplicada e planos disc 8 renumerados | 🟢 | 2026-10-02 |
+| IS-048 | Caderno de notas `student_scores.json` era JSON inválido (`NaN` gravado pelo plugin) e a opção [5] do `run_apps.bat` apontava para um README inexistente — app novo de Análise de Notas (8511) + sanitização dos plugins | 🟢 | 2026-10-03 |
+| IS-049 | Investigação das notas no portal iSeduc (aba 🔍 do 8511 + `POST /notas/investigar` na API local) e centralização dos 6 bots ativos em `apps/bots/` — só repo syava-apps, nenhum arquivo do núcleo alterado | 🟢 | 2026-10-03 |
+| IS-050 | Análise de Notas: lançamento direto do caderno destruía nota de aluno transferido/fora do portal e não permitia editar notas antes de enviar — tabela editável na aba 🤖 + 5ª aba ⚙️ Config com status de envio por aluno, incluindo **piso 6** para AEE/Licença | 🟢 | 2026-10-03 |
 
 ---
 
@@ -1946,10 +1949,219 @@ os **8 planos** que estavam em Sex 11:30/13:30 agora em Quarta 11:30/13:30.
 `apps/planejamento_registro/planejamento_registro_streamlit.py` (seção na
 Config); frente do app: `apps/ISSUES.md` → **AP-018**.
 
+---
+
+## IS-048 — Caderno de notas com `NaN` (JSON inválido) + opção [5] do menu dos apps quebrada 🟢
+
+**Sintomas:**
+1. `data/repo/plugins/student_scores.json` continha `"N2": NaN` — **não é JSON
+   válido**. O `JSON.parse` do `dashboard_dinamico.html` falhava com
+   *"Unexpected token 'N'"* e o dashboard caía no modo demonstração.
+2. `apps/run_apps.bat` opção `[5] Analise de Notas` testava a existência de
+   `apps/analise_notas/README_DASHBOARD.md`, arquivo movido para
+   `apps/docs/` no commit `046ee7c` — a opção caía no `else` e só imprimia
+   `[INFO] Rode: export_student_scores.py`.
+
+**Causa do `NaN`:** `student_scores.py` grava `round(row["NM1"], 2)` a partir
+de uma média pandas sem valores válidos → `NaN`, e `json.dump` aceita `NaN`
+por padrão (a leitura em Python também aceita, por isso ninguém notava).
+
+**Solução:**
+1. `data/repo/plugins/student_scores.py` e `data/repo/plugins/daily_activities.py`
+   — `save_json()` agora passa os dados por `_sem_nan()` (recursivo) e grava
+   com `allow_nan=False`: nada de `NaN`/`Infinity` chega ao disco.
+2. `data/repo/plugins/student_scores.json` — reescrito uma vez com `NaN` →
+   `null` (42 alunos preservados; `json.loads` estrito OK).
+3. App novo **`apps/analise_notas/`** (porta **8511**): `core.py` saneia na
+   leitura (`sanitizar_json`), `analise_notas_streamlit.py` com as abas
+   Análise / Dashboard HTML / Registro iSeduc, `bot_lancar_notas.py` como
+   subprocesso e `README.md` com o passo a passo do servidor HTTP local +
+   dashboard. Ver **AP-019** no `apps/ISSUES.md`.
+4. `run.bat` ganhou a opção `[6]` (8511) e `apps/run_apps.bat` a `[5]` agora
+   inicia o app (antes abria o README sumido).
+
+**Validação:** `py_compile` dos plugins e de todos os `.py` do app;
+`pytest` em `apps/` → **36 testes OK** (22 novos em
+`tests/test_analise_notas.py`); smoke do app 8511 com `streamlit.testing.v1.AppTest`
+(0 exceções, 0 avisos de `use_container_width` deprecado, 6 KPIs); dashboard
+via browser-automation servido em `http://127.0.0.1:8765/dashboard_dinamico.html`
+(**"✅ Dados carregados: 42 alunos"**, 3 gráficos Plotly renderizados em SVG,
+100 linhas de tabela, **0 erros de console e 0 requests falhos**).
+
+**Arquivos:** `data/repo/plugins/student_scores.py`,
+`data/repo/plugins/daily_activities.py`,
+`data/repo/plugins/student_scores.json` (dado), `run.bat`,
+`apps/run_apps.bat`, `apps/README.md`, `apps/AGENTS.md`,
+`apps/requirements.txt`, `apps/analise_notas/*` (novo), `apps/tests/test_analise_notas.py`
+(novo); frente do app: `apps/ISSUES.md` → **AP-019**.
+
 **Validar:** ⚙️ Config → aba 🔀 Espelhos com os 3 espelhos iguais; o
 Registro do portal (03/06, quarta) oferece os 4 horários de Fundamentos; o
 plugin Grade Semanal não reintegra Sexta 11:30/13:30 (nuvem já corrigida);
 gerar planos sem force não recria slots de sexta 11:30/13:30.
+
+---
+
+## IS-049 — Investigação das notas no portal iSeduc + pasta `apps/bots/` 🟢
+
+**Pedido (2 problemas em um):** (1) criar uma página de investigação da
+situação de notas **no portal** iSeduc a partir do scraper da API, e (2)
+criar uma pasta `bots/` centralizando todos os bots do sistema.
+
+**Decisões do mantenedor:** página em **modo Ambos** (endpoint na API local +
+aba consumidora), pasta **`apps/bots/` versionada** e escopo **apenas os 6
+bots ativos** (`registrar_aulas`, `registrar_notas`, `grade_scraper`,
+`bot_raspagem`, `inspector_diagnostico`, `inspector_frequencia`); o legado
+`api/tools/versão_aulas_selenium/` permanece onde está (só com o import
+corrigido).
+
+**Solução (tudo dentro do repo aninhado `apps/`, que o `.gitignore` da raiz
+ignora — nenhum arquivo do núcleo do SysAva foi alterado):**
+1. **`apps/bots/`** — 6 bots movidos de `apps/api/tools/`, cada um com
+   bootstrap `PROJECT_ROOT` (raiz) + `apps/` + `apps/api` no `sys.path`;
+   referências externas redirecionadas em `api/api_service.py`,
+   `api/tools/agents/agent_router.py`,
+   `planejamento_registro/planejamento_registro_streamlit.py` e
+   `analise_notas/bot_lancar_notas.py`.
+2. **`apps/bots/grade_scraper.py`** — modo investigação de **somente
+   leitura**: descobre os cards da grade pelo nome (turma/disciplina),
+   resolve os ids no SQLite local, lê os 3 trimestres, monta e grava
+   `data/logs/investigacao_ultimo.json` (escrita atômica) e aceita CLI
+   (`--turma-id --disciplina-id --trimestres --out`).
+3. **`apps/api/api_service.py`** — `POST /notas/investigar` (subprocesso +
+   `BackgroundTasks`, log `data/logs/investigacao_notas.log`, timeout 600s),
+   `GET /notas/investigar/status` e `GET /notas/investigar/relatorio`.
+4. **`apps/analise_notas/`** — `core.comparar_portal_vs_caderno()` puro
+   (status `Divergente`/`Falta no portal`/`Só no portal`/`Só no caderno`/
+   `Igual`/`Sem dado`) + 4ª aba **🔍 Investigação iSeduc** no app 8511
+   (coleta via API 8002 se estiver de pé, senão subprocesso; KPIs, filtro,
+   tabela, CSV).
+
+**Validação:** `py_compile` OK; `pytest -q` em `apps/` → **41 testes OK**;
+import smoke dos 6 bots e de `api_service` (96 rotas); API de pé →
+`/health-check` 200, `/notas/investigar/status` `parado`, relatório 404 sem
+coleta; `AppTest` do 8511 → **4 abas**, 0 exceções/erros, KPIs da investigação
+renderizando com relatório sintético (23 linhas).
+
+**Arquivos:** `apps/bots/*` (novo), `apps/api/api_service.py`,
+`apps/api/tools/agents/agent_router.py`,
+`apps/api/tools/versão_aulas_selenium/*`,
+`apps/planejamento_registro/planejamento_registro_streamlit.py`,
+`apps/analise_notas/{core,analise_notas_streamlit,bot_lancar_notas}.py`,
+`apps/tests/test_analise_notas.py`, `apps/{README.md,AGENTS.md,.gitignore}`;
+frente do repo: `apps/ISSUES.md` → **AP-020**.
+
+**Validar:** subir a 8511 → aba **🔍 Investigação iSeduc** → escolher
+turma/disciplina → **🔎 Coletar notas no portal** → KPIs e tabela por status;
+`.sysenv\Scripts\python.exe apps\bots\grade_scraper.py --turma-id 1
+--disciplina-id 11 --trimestres 1` imprime `RELATORIO: …`.
+
+---
+
+## IS-050 — Análise de Notas: notas editáveis + quem pode receber nota (⚙️ Config) 🟢
+
+**Pedido:** (1) permitir **editar as notas livremente** numa tabela antes de
+mandar para o portal iSeduc, e (2) garantir que alunos que não podem receber
+nota **nunca tenham a nota destruída** pelo robô.
+
+**Causa:** o robô montava o payload direto do caderno
+(`student_scores.json`) e escrevia em todas as linhas da turma. O portal
+**não tem** status "transferido" (lá quem saiu aparece como "Falta"), então
+não havia como distinguir um transferido de um faltoso normal — e alunos
+transferidos cuja linha continua no portal corriam o risco de ser zerados.
+
+**Decisões do mantenedor (régua dos casos reais):**
+
+| Aluno | Situação | Status |
+|---|---|---|
+| Luara | saiu da escola, continua no caderno com notas | **Transferido** → nunca escreve (notas preservadas) |
+| Fabiano | fora da lista do portal (drop-out) | **Fora do portal** |
+| Yasmin | na escola, nunca fez prova | **Zero sempre** |
+| Cleison | AEE, não pode ser reprovado | **AEE** → piso 6 |
+| Alice | licença maternidade, recuperação até o fim do ano | **Licença** → piso 6 |
+| Lázaro | voltou a frequentar as aulas | **Voltou às aulas** → idêntico a *Normal* (rastreio) |
+
+* **"Zero sempre" envia os `0,0` e mantém os valores não-zero** do caderno —
+  nunca força `0,0`; quem quiser zerar tudo edita a célula na tabela.
+* **"Zero sempre" só existe por marcação manual** (ninguém nasce assim).
+* **Piso 6 (AEE e Licença)**: nota abaixo de 6, `0,0`, vazia ou inválida é
+  enviada como `6,0` — inclusive o zero. A **tabela mostra a nota real do
+  caderno**; quem eleva é o envio, e a aba 🤖 lista cada elevação
+  (*ANA NM2: 4,00 → 6,00*). Rastreável pelo status, sem mexer no portal.
+* **Balanço com o portal (decisão do mantenedor: "portal é a fonte da
+  verdade")**: se o relatório da 🔍 Investigação mostra **≥ 6,0** naquela
+  célula, **nada é escrito** — se lá tem 9, fica 9 (ele edita no portal se
+  houver divergência). O piso só age onde o portal não protege: caderno
+  ≥ 6,0 vai como está; abaixo dele (ou vazio) entra `6,0`. Fonte local
+  (`data/logs/investigacao_ultimo.json`, 0 bytes de egress); sem relatório
+  da seleção atual, o aviso da aba 🤖 diz que o balanço ficou só pelo
+  caderno.
+* **"Voltou às aulas"** = *Normal* (sem piso, zeros conforme a opção) —
+  existe para rastrear quem saiu de "A classificar".
+* Quem está no espelho da lista negra **ainda sem decisão** vira
+  **"A classificar" = não envia** (proteção padrão: Luara é salva mesmo
+  antes de alguém classificá-la).
+
+**Solução (repo aninhado `apps/`, nenhum arquivo do núcleo do SysAva foi
+alterado):**
+
+1. **`apps/analise_notas/core.py`** — espelho da lista negra
+   (`carregar_lista_negra()` lê `data/excecoes_alunos.json`, com fallback no
+   SQLite local; `motivo_lista_negra()` casa por RA **ou** nome normalizado)
+   + **status de envio** (`Normal`, `Zero sempre`, `AEE`, `Licença`,
+   `Voltou às aulas`, `Transferido`, `Fora do portal`, `A classificar`)
+   resolvidos por `status_do_aluno()` / `mapa_status_envio()` /
+   `aplicar_lista_negra()`, com `valor_para_envio(bruto, status, portal=)`
+   aplicando as regras de cada status (balanço do piso com o portal, piso 6,
+   zeros, faixa 0..10), `balanco_piso()` listando o que foi elevado/preservado
+   e `notas_do_portal()` lendo o relatório da 🔍 Investigação (`{RA: {NM1:
+   8.0}}`, filtrado por turma/disciplina/trimestre). A classificação é gravada
+   no **`master_config`** local
+   (SQLite `key/value/updated_at`, fallback `data/master_config.json`) na
+   chave **`notas_status_alunos.json`** — o espelho de frequência **não é
+   alterado**. As três montagens de payload (`montar_payload_lancamento`,
+   `montar_edicao_lancamento`, `payload_da_tabela`) aplicam as regras e aceitam
+   `portal_notas=`; a
+   investigação (`comparar_portal_vs_caderno`) passa `status_notas={},
+   lista={}` para continuar comparando a **realidade**.
+2. **`apps/analise_notas/analise_notas_streamlit.py`** — aba **🤖 Registro**
+   virou `st.data_editor` (RA/Aluno/Status travados, notas 0..10), grava
+   `data/logs/notas_payload.json` (escrita atômica) e passa `--payload` ao
+   robô; **aviso do balanço AEE/Licença** (regras, contagem de
+   elevadas/preservadas e expander com o detalhe por célula). Nova **5ª aba
+   ⚙️ Config** com monitoramento das duas fontes
+   (espelho × `master_config`, contagens e mtime), lista dos pendentes,
+   explicação de cada status e a classificação por aluno (selectbox, por
+   turma da sidebar) com merge que preserva quem está fora do filtro.
+3. **`apps/analise_notas/bot_lancar_notas.py`** — `--payload ARQ` com
+   validação (nota finita em 0..10), aviso se o arquivo foi gerado para
+   outra turma/disciplina/trimestre, descarte de RAs de outra turma e
+   **`aplicar_lista_negra()` de segurança** antes de qualquer envio
+   (inclusive em payload escrito à mão); no modo caderno carrega
+   `portal_notas=` e imprime a linha do **balanço** no cabeçalho.
+4. **`apps/bots/registrar_notas.py`** — `lancar_notas_do_banco(..., payload=)`
+   usa o JSON da UI **e reaplica as regras** (defesa em profundidade).
+
+**Validação:** `py_compile` de 5 arquivos OK; `pytest -q` em `apps/` →
+**69 testes OK** (27 do AP-021, sendo 5 do balanço piso × portal, roundtrip
+do `master_config` nos dois schemas, payload editável e o arquivo
+do robô); dados reais → espelho com 9 RAs e classificação manual gravada no
+`master_config` (42 alunos: Luara `Transferido`, Fabiano `Fora do portal`,
+Yasmin + 3 `Zero sempre`, resto `Normal`); `AppTest` do 8511 → **5 abas**, 0
+exceções/erros, com o aviso do balanço renderizando **1 célula elevada · 2
+preservadas** quando o relatório da 🔍 traz 8,0/7,5 para um AEE; dry-run do
+robô com payload contendo a Luara com `0,0`
+escritos à mão → `Filtro: 1 aluno(s) removido(s)` e exit 0.
+
+**Arquivos:** `apps/analise_notas/{core,analise_notas_streamlit,bot_lancar_notas}.py`,
+`apps/bots/registrar_notas.py`, `apps/tests/test_analise_notas.py`;
+frente do repo: `apps/ISSUES.md` → **AP-021**.
+
+**Validar:** subir a 8511 → aba **⚙️ Config** → conferir espelho e
+`master_config` → classificar (ex.: Luara = *Transferido*, Yasmin =
+*Zero sempre*) → **💾 Salvar classificação**; voltar à aba **🤖 Registro** →
+conferir que os bloqueados saíram da tabela → **🧪 Dry-run** → verificar no
+log `Origem: payload editado da UI` + `Filtro: N aluno(s) removido(s)`.
 
 ---
 
