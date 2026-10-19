@@ -19,8 +19,10 @@ requests
 starlette<0.37
 # Streamlit 1.56 usa protobuf <6; o Cloud com Python 3.13 puxava o 6.x e
 # quebrava no import (Descriptors cannot be created directly).
+# O pin do streamlit força a troca de um venv antigo em cache (o unpinned
+# mantinha a versão velha instalada e o protobuf novo quebrava o import).
 protobuf==5.29.6
-streamlit
+streamlit==1.56.0
 streamlit-javascript
 streamlit-pdf-viewer
 supabase
