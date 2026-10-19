@@ -8,39 +8,62 @@ project_root = os.path.abspath(os.path.dirname(__file__))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
+APP_LOGO = os.path.join(project_root, "assets", "logo_sysava.png")
+
 # Importa as funções que renderizam cada página
 
 from views import home, aulas, forum, quiz, avaliacoes, admin, login, register, gerador_aulas, plugins, portal
 from services import database, auth
 import config
 
+# Título e ícone da aba do navegador (deve ser o primeiro comando st.*)
+st.set_page_config(
+    page_title="SysAva",
+    page_icon=APP_LOGO if os.path.exists(APP_LOGO) else "🎓",
+)
+
 # Define o tema da aplicação
 st.markdown(
     """
     <style>
-        /* Modern UI Theme */
+        /* Escala de leitura: o navegador a 100% fica confortável em telas grandes */
+        html { font-size: 112.5% !important; } /* 18px (padrão Streamlit: 16px) */
+
+        /* Tema azul SysAva (mesma paleta do logo) */
         [data-testid="stAppViewContainer"] {
-            background: linear-gradient(135deg, #1e1e2f 0%, #121212 100%);
-            color: #e0e0e0;
+            background: linear-gradient(135deg, #0B1E3F 0%, #070D18 100%);
+            color: #E5E7EB;
         }
         [data-testid="stHeader"] {
             background: rgba(0,0,0,0);
+        }
+        [data-testid="stSidebar"] {
+            background: linear-gradient(180deg, #0A1730 0%, #081020 100%);
+            border-right: 1px solid rgba(37, 99, 235, 0.35);
         }
         /* Card Style para seções */
         div.stButton > button {
             border-radius: 8px;
             transition: all 0.3s ease;
-            border: 1px solid #4a4a6a;
+            border: 1px solid #2563EB;
         }
         div.stButton > button:hover {
-            border-color: #00ffa3;
-            color: #00ffa3;
-            box-shadow: 0 0 10px rgba(0, 255, 163, 0.2);
+            border-color: #60A5FA;
+            color: #60A5FA;
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.35);
         }
         /* Melhora a visibilidade de inputs */
         .stTextInput input, .stTextArea textarea {
-            background-color: #262636 !important;
+            background-color: #0F1B2E !important;
             color: #ffffff !important;
+        }
+        a { color: #60A5FA !important; }
+
+        /* Boxes de código: azul mais claro que o fundo, sem branco */
+        pre, code, [data-testid="stCodeBlock"], [data-testid="stCodeBlock"] pre {
+            background-color: #152C52 !important;
+            color: #E5E7EB !important;
+            border: 1px solid #2E4F7A !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -87,7 +110,10 @@ def main():
     else:
         # Sidebar de Navegação
         with st.sidebar:
-            st.image("https://cdn-icons-png.flaticon.com/512/2991/2991148.png", width=100)
+            if os.path.exists(APP_LOGO):
+                st.image(APP_LOGO, width=100)
+            else:
+                st.markdown("## 🎓 SysAva")
             st.title(f"Olá, {st.session_state['usuario']}")
 
             # Menu base (O Fórum agora é condicional à visualização de uma aula)
@@ -149,6 +175,13 @@ def main():
                     pass
 
                 # Limpa a sessão para fazer logout
+                try:
+                    from services import audit_log
+                    audit_log.registrar("Logout", username=st.session_state.get('username', ''),
+                                        name=st.session_state.get('usuario', ''),
+                                        role=st.session_state.get('role', ''), pagina='Sair')
+                except Exception:
+                    pass
                 st.session_state['logado'] = False
 
                 st.session_state['usuario'] = ''
@@ -157,6 +190,25 @@ def main():
                 st.rerun()
                 
         page_to_show = st.session_state.get('page', 'Home')
+
+        # --- Auditoria (IS-071): registra a navegação (1x por troca de página) ---
+        try:
+            from services import audit_log
+            if st.session_state.get('_audit_ultima_pagina') != page_to_show:
+                st.session_state['_audit_ultima_pagina'] = page_to_show
+                _ip = "local"
+                try:
+                    _ip = (st.context.headers.get("X-Forwarded-For", "") or "").split(",")[0].strip() or "local"
+                except Exception:
+                    pass
+                audit_log.registrar(
+                    "Navegou",
+                    username=st.session_state.get('username', ''),
+                    name=st.session_state.get('usuario', ''),
+                    role=st.session_state.get('role', ''),
+                    pagina=page_to_show, ip=_ip)
+        except Exception:
+            pass
 
         # Renderização das Páginas
         if page_to_show == "Home":

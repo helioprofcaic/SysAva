@@ -74,6 +74,52 @@ Formato de ID: `IS-NNN`.
 | IS-048 | Caderno de notas `student_scores.json` era JSON inválido (`NaN` gravado pelo plugin) e a opção [5] do `run_apps.bat` apontava para um README inexistente — app novo de Análise de Notas (8511) + sanitização dos plugins | 🟢 | 2026-10-03 |
 | IS-049 | Investigação das notas no portal iSeduc (aba 🔍 do 8511 + `POST /notas/investigar` na API local) e centralização dos 6 bots ativos em `apps/bots/` — só repo syava-apps, nenhum arquivo do núcleo alterado | 🟢 | 2026-10-03 |
 | IS-050 | Análise de Notas: lançamento direto do caderno destruía nota de aluno transferido/fora do portal e não permitia editar notas antes de enviar — tabela editável na aba 🤖 + 5ª aba ⚙️ Config com status de envio por aluno, incluindo **piso 6** para AEE/Licença | 🟢 | 2026-10-03 |
+| IS-051 | Aba 🌐 Portal do app principal: recursos do app 8510 trazidos para o Portal (Planejar/gerar planos, Registrar lote + status, Sincronizar/raspagem, Painel/Consolidadas e Config), via API local | 🟢 | 2026-10-05 |
+| IS-052 | Grade semanal duplicada (`weekly_schedule` com 18 slots repetidos / "COLISÃO!"): `/pull-from-cloud` recriava a tabela como TEXT e destruía a UNIQUE — script de correção + schema canônico restaurado | 🟢 | 2026-10-05 |
+| IS-053 | Auditoria das demais tabelas afetadas pelo mesmo `/pull-from-cloud`: `attendance` (835 linhas repetidas) e `assessments` (11) deduplicadas e constraints restauradas via `scripts/repair_local_db.py` | 🟢 | 2026-10-05 |
+| IS-054 | Raspagem do Portal coletava 0 cards: filtro de turma recebia o `code` (309197) mas o bot casa pelo texto do card — bot resolve code/nome/sigla; Portal agora sincroniza completo por padrão com reconciliação opcional | 🟢 | 2026-10-07 |
+| IS-078 | `lessons` local desatualizado vs Supabase (ex.: PROGRAMAÇÃO PARA DISPOSITIVOS MÓVEIS com 0 no local e 17 na nuvem): script `sync_lessons_from_supabase.py` faz upsert por `id` | 🟢 | 2026-10-14 |
+| IS-079 | Gerador de planos: piso modular excluía os slots livres do **próprio dia** da última aula registrada (Fundamentos UI perdeu 10/06 08:10/11:30/13:30) — piso agora é inclusivo (intenção do IS-046) | 🟢 | 2026-10-15 |
+| IS-080 | Cesta de chamadas (rateio proporcional da frequência real → planos compensados): `core/cesta.py` expande as chamadas pelo peso da **grade real** (backup), duplica semana se faltar chamada e fecha a carga | 🟡 | 2026-10-15 |
+| IS-055 | Monitor de laboratório: bloqueio manual expandido de jogos (Roblox/League of Legends + sites/proxies no navegador, ex. Loki) | 🟢 | 2026-10-09 |
+| IS-056 | Monitor: modo não invasivo — bloqueio do Roblox via arquivo `hosts` (sem instalação do agente) | 🟢 | 2026-10-09 |
+| IS-057 | Monitor: descoberta robusta do servidor (cache local + broadcast UDP 5001) para rede com IP dinâmico | 🟢 | 2026-10-09 |
+| IS-058 | Monitor: servidor de instalação/atualização pela rede (`/setup`) — sem pendrive | 🟢 | 2026-10-09 |
+| IS-059 | Monitor: agente em SYSTEM (sessão 0) relança na sessão ativa do aluno (janela correta) | 🟢 | 2026-10-09 |
+| IS-060 | Monitor: selecionar todas, ações em massa (desligar/reiniciar), Bloquear Sites (YouTube/Instagram) e hosts com redes sociais | 🟢 | 2026-10-09 |
+| IS-061 | Monitor: rótulos amigáveis por máquina (ex.: PC1-Fila1) em `lab_labels.json` | 🟢 | 2026-10-09 |
+| IS-062 | Tela de bloqueio + papel de parede do SysAva (login por RA no logon) | 🟢 | 2026-10-09 |
+| IS-063 | Associar o aluno ao PC pelo RA da tela de bloqueio (`lab_users.json` + coluna "Aluno (RA)") | 🟢 | 2026-10-09 |
+| IS-064 | Agente não voltava após reboot (sem auto-start) — tarefa "SysAva Agent" no logon | 🟢 | 2026-10-09 |
+| IS-065 | Curso Técnico de Marketing: professora + turma + 6 disciplinas + 25 alunos (script `criar_turma_professor.py`) | 🟢 | 2026-10-13 |
+| IS-066 | Filtro por professor: cada docente vê só as turmas dele (mapa `professores_turmas.json`; admin vê tudo) | 🟢 | 2026-10-13 |
+| IS-067 | Login tolerante: aceitar login por RA/CPF e ignorar maiúsculas (`get_user_by_ra`/`get_user_ci`) | 🟢 | 2026-10-13 |
+| IS-068 | Tela de bloqueio não travava no logon — autostart via Startup comum (VBS) + fallback tarefa | 🟢 | 2026-10-13 |
+| IS-069 | Estrutura de pastas turma/disciplina/aluno/**aula XX** (comando do agente, intervalo fixo) | 🟢 | 2026-10-14 |
+| IS-073 | Painel web do receiver: login do professor + controles via HTTP (sem Streamlit) | 🟢 | 2026-10-14 |
+| IS-074 | Receiver fora do Streamlit não carregava `.env` — login do painel e `/api/auth_ra` sempre falhavam | 🟢 | 2026-10-14 |
+| IS-075 | Monitor: seção "Histórico de Hoje" aparecia vazia (filtro só de infração + fuso UTC) | 🟢 | 2026-10-14 |
+| IS-076 | Desligar/Reiniciar não concluía: `shutdown` com `/t 10` → trocado por `/t 0` (imediato) | 🟢 | 2026-10-14 |
+| IS-077 | (Estudo/Backlog) Monitor "online" no Streamlit Cloud: relay via Supabase (A) + túnel p/ tempo real/DNS (B) | ⚪ | 2026-10-14 |
+| IS-078 | Bloqueio persistente: watchdog que derruba jogos sozinho + tela reforçada (IFEO pendente) | 🟢 | 2026-10-14 |
+| IS-079 | Relatório detalhado por PC no dashboard (navegadores, jogos e apps em atividade) | 🟢 | 2026-10-14 |
+| IS-080 | Autostart: `GroupId "BUILTIN\Users"` falha em Windows pt-BR — trocar por pasta Startup (VBS) | 🟢 | 2026-10-14 |
+| IS-081 | Ação "Atualizar Monitor": agente baixa o lab do servidor e reexecuta elevado (UAC pede a senha admin) | 🟢 | 2026-10-14 |
+| IS-082 | Plugin Monitor: botão/link para abrir o dashboard web do receiver | 🟢 | 2026-10-14 |
+| IS-083 | Tela de bloqueio: memorizar o último RA (preenche no próximo logon) | 🟢 | 2026-10-14 |
+| IS-084 | Relatório/dashboard: mostrar o aluno da tela de bloqueio (RA) em vez da conta Windows "ALUNO" | 🟢 | 2026-10-14 |
+| IS-085 | Ao iniciar: fechar navegadores e bootloaders de jogos e abrir 1 janela só do SysAva | 🟢 | 2026-10-14 |
+| IS-086 | Servidor portátil: receiver autônomo (auth via REST/bcrypt) + `INICIAR_SERVIDOR` (Python embutido) | 🟢 | 2026-10-16 |
+| IS-087 | Servidor portátil: bootstrap baixa tudo sozinho (`/servidor.zip`) — resolve "não encontrou lab_receiver" | 🟢 | 2026-10-16 |
+| IS-070 | (Backlog) Instaladores de ferramentas/pacotes por disciplina (kit dev mobile etc.) | ⚪ | 2026-10-13 |
+| IS-071 | Log de atividade dos usuários + histórico do navegador + relatório HTML em pasta oculta (`.relatorios/`) | 🟢 | 2026-10-14 |
+| IS-072 | (Em andamento) Proteção do aluno: conteúdo adulto, sites perigosos e Tor/dark web — bloqueio por categoria + alerta | 🟡 | 2026-10-13 |
+| IS-088 | Planejamento 8510: sábado recomeçava em 13 depois da aula 23 registrada, o gerador automático (base 21) pulava 07:10/08:10/11:30 com o filtro “De 24” e planejava 10/06 — numeração/ocupação agora leem os `.txt` (inclui `aulas/registradas/`) e a ⚙️ Config ganhou o **sábado alvo** (`sabado_alvo_planejamento`, marcado em 20/06) para planejar só o dia demarcado | 🟢 | 2026-10-19 |
+| IS-089 | SysAva principal: aba mostrava “Streamlit” e a sidebar exibia o **logo do Google** (a URL do flaticon era o “G”) — `app.py` não chamava `st.set_page_config`; agora título **SysAva** + logo próprio em `assets/logo_sysava.png` | 🟢 | 2026-10-19 |
+| IS-090 | Tema azul do SysAva: paleta do logo (#2563EB) no tema do Streamlit e no CSS global (fundo navy, sidebar, botões e links azuis) | 🟢 | 2026-10-19 |
+| IS-091 | Visualização da prova: texto escuro sobre fundo navy (ilegível) — agora renderiza como folha A4 branca sobre fundo claro, com sombra e botão de impressão azul | 🟢 | 2026-10-19 |
+| IS-092 | Legibilidade em telas grandes: fontes/elementos pequenos com o navegador a 100% — base do Streamlit elevada de 16px para 18px | 🟢 | 2026-10-19 |
+| IS-093 | Boxes de código/conteúdo em azul mais claro (principal e 8510): `pre/code/stCodeBlock`, textarea do plano e dropdown de planos com fundo `#152C52` e texto `#E5E7EB` | 🟢 | 2026-10-19 |
 
 ---
 
@@ -2165,6 +2211,1408 @@ log `Origem: payload editado da UI` + `Filtro: N aluno(s) removido(s)`.
 
 ---
 
+## IS-051 — Aba 🌐 Portal: recursos do app de Planejamento trazidos para o Portal 🟢
+
+**Pedido:** estudar o app `apps/planejamento_registro` (porta 8510) e trazer
+alguns recursos para a aba **🌐 Portal** do app principal (`views/portal.py`),
+que era só um esqueleto com avisos "🚧 Em construção".
+
+**Arquitetura:** o Portal **não** roda os bots nem lê a árvore local
+diretamente — fala com a **API local** (`services/portal_api.py`), o que
+mantém o app principal leve e seguro no Cloud (offline degrada com aviso).
+Para isso a API ganhou endpoints de planejamento. Leitura de visão geral
+continua no Supabase; as ações locais passam pela API (0 bytes de egress).
+
+**Solução:**
+
+1. **`apps/api/api_service.py`** (ambiente local, não versionado): estendeu
+   `POST /gerar-txt-planos` (`estrategia`, `aula_min`, `aula_max`) e adicionou
+   `GET /aulas/listar`, `POST /aulas/excluir`, `GET /painel`,
+   `GET /consolidadas`, `POST /planejamento/reset`, `POST /config/set`,
+   `GET /feriados`, `GET /sabados`, `GET /grade/turmas`, `GET /grade/ver` e
+   `POST /grade/editar` (grade nos 3 espelhos via `core/grade.py`).
+2. **`apps/api/tools/database_model.py`**: `get_all_configs` passou a aceitar
+   os dois schemas da `master_config` (`key/value` novo e `chave/valor`
+   legado) — o `/config/all` estava 500 no schema novo.
+3. **`services/portal_api.py`**: cliente tipado para os endpoints acima e
+   **correção da porta padrão** de `8000` para `8002` (a mesma do
+   `api_service.py` e da Análise de Notas). `PORTAL_API_URL` continua
+   sobrepondo.
+4. **`views/portal.py`**: contexto turma×disciplina na sidebar e 6 seções —
+   **📝 Planejar aulas** (métricas, fila, gerar planos e listar/visualizar/
+   baixar/excluir `.txt`), **🚀 Registrar no Portal** (lote + progresso do
+   robô), **🔄 Sincronizar** (raspagem, status e relatório/reconciliação),
+   **📊 Painel / Consolidadas** (carga × registradas × faltantes + gráfico),
+   **📊 Notas** (preservada) e **⚙️ Config** (feriados, data de corte,
+   bloqueio de sábados, grade horária com edição e reset do planejamento).
+
+**Validação:** `py_compile` dos 4 arquivos OK; `import views.portal` OK;
+`api_service` carregou com **106 rotas** (as 13 novas presentes); endpoints
+testados contra o banco real (`/aulas/listar` → 25 prontas/21 pendentes,
+`/consolidadas` → 22 linhas, `/painel`, `/feriados`, `/sabados` → 18,
+`/grade/turmas` → 2); `services.portal_api` callado via HTTP com a API
+rodando (health, turmas, subjects, listar, consolidadas, painel, config_all,
+grade) OK; `AppTest` das **6 seções** — **0 exceções** com a API **online e
+offline**.
+
+**Arquivos:** `views/portal.py`, `services/portal_api.py`; frente local (não
+versionada): `apps/api/api_service.py`, `apps/api/tools/database_model.py`.
+
+**Validar:** rodar a API local (`python apps/api/api_service.py`) → menu
+**Portal** (admin/teacher) → conferir as 6 seções; com a API desligada, cada
+seção mostra aviso em vez de quebrar.
+
+---
+
+## IS-052 — Grade semanal duplicada (`weekly_schedule`) e UNIQUE destruída 🟢
+
+**Sintoma:** a "Grade Semanal" mostrava 2 cards por slot (o mesmo componente
+repetido) marcados como *COLISÃO!*.
+
+**Diagnóstico:** a tabela local `weekly_schedule` tinha **40 linhas / 22 slots**
+(18 slots duplicados) e schema `id TEXT, ...` **sem PRIMARY KEY e sem
+UNIQUE**. A nuvem (Supabase) estava correta: 22 slots, sem duplicatas, com os
+mesmos horários. Causa raiz: o endpoint **`/pull-from-cloud`**
+(`apps/api/backup_routes.py`) fazia `DROP TABLE` + `CREATE TABLE (... TEXT)`
+para **toda** tabela sincronizada — recriava a grade sem as constraints, então
+os syncs seguintes inseriam sem sobrescrever.
+
+**Solução:**
+
+1. **`scripts/fix_weekly_schedule.py`** (novo, versionado) — dry-run por
+   padrão; com `--apply` faz backup de `data/escola_ativa.db`, reconstrói
+   `weekly_schedule` com o schema canônico (`id INTEGER PRIMARY KEY
+   AUTOINCREMENT`, `UNIQUE(class_name, day_of_week, time_slot)`) e reinsere a
+   grade de-deduplicada. Fonte: **Supabase (soberano)** se acessível; senão,
+   deduplica o local (preferindo a linha com `created_at`/`class_id`).
+2. **`apps/api/backup_routes.py`** — `/pull-from-cloud` não faz mais
+   `DROP TABLE`; cria só se não existir e preserva o schema existente
+   (`DELETE` + insert), garantindo o índice único de `weekly_schedule`.
+3. **`apps/planejamento_registro/core/grade.py`** — `_sqlite_apply` (3
+   espelhos, usado pelo app 8510 e pela API) cria, de forma defensiva,
+   `ux_weekly_schedule_slot` se ele não existir (auto-recuperação).
+
+**Validação:** dry-run 40→22 (origem Supabase, 0 duplicatas na nuvem);
+`--apply` gravou 22 linhas, schema com `UNIQUE` (autoindex), 0 duplicatas;
+`py_compile` OK. Backup: `data/escola_ativa_backup_weekly_*.db`.
+
+**Arquivos:** `scripts/fix_weekly_schedule.py`; frente local (não versionada):
+`apps/api/backup_routes.py`. Frente do repo aninhado:
+`apps/planejamento_registro/core/grade.py` → `apps/ISSUES.md` **AP-024**.
+
+**Validar:** `python scripts/fix_weekly_schedule.py` (dry-run) → deve mostrar
+0 duplicatas e schema com UNIQUE; reabrir a Grade Semanal (1 card por slot).
+
+---
+
+## IS-053 — Auditoria das demais tabelas afetadas por `/pull-from-cloud` 🟢
+
+**Pedido:** o mesmo endpoint que duplicou a grade recriava **todas** as tabelas
+sincronizadas como TEXT (sem PK/UNIQUE). Auditar e corrigir as demais.
+
+**Auditoria (local × nuvem):** única tabela com dados duplicados além da grade
+foi `attendance` — 2963 linhas / 2128 distintas (**835 repetições exatas**) e
+`assessments` — 26 / 15 (**11 repetições**). Nuvem: `attendance` 3145 linhas
+sem duplicatas; `weekly_schedule` 22 sem duplicatas. Várias tabelas perderam o
+`UNIQUE`/PK sem ainda duplicar (`app_users`, `classes`, `subjects`,
+`class_subjects`, `lessons`, `student_enrollments`).
+
+**Solução — `scripts/repair_local_db.py`** (novo, versionado): dry-run por
+padrão; `--apply` faz backup de `data/escola_ativa.db`, deduplica cada tabela
+pela chave natural (mantendo a linha mais recente, via `ROW_NUMBER() OVER
+PARTITION BY`) e (re)cria índice `UNIQUE` (`ux_<tabela>_key`), com `IFNULL` nas
+colunas anuláveis. Idempotente.
+
+**Resultado:** `attendance` 2963 → **2128** (0 dups); `assessments` 26 → **15**;
+índices UNIQUE criados em `attendance`, `app_users`, `classes`, `subjects`,
+`class_subjects`, `lessons`, `student_enrollments`, `historico_aulas`,
+`weekly_schedule`, `turma_disciplina_config`, `assessments`,
+`assessment_questions`, `quizzes`, `quiz_questions`. Backups:
+`data/escola_ativa_backup_repair_*.db`.
+
+**Pendências (não causadas por este endpoint, reportadas):**
+
+* `student_grades` tem **schema diferente** do canônico
+  (`student_name/class_name/subject/nm1..nm3`), sem as colunas
+  `user_username/class_id/subject_id/trimester` — divergência anterior; as
+  funções `database_model.get_students_with_grades` / `save_student_grades_batch`
+  esperam o schema canônico.
+* `attendance` local (2128) × nuvem (3145): divergência de conteúdo (local não
+  tem ~1017 registros da nuvem) — não é duplicação; precisa de decisão de
+  sincronização.
+
+**Arquivos:** `scripts/repair_local_db.py`.
+
+**Validar:** `python scripts/repair_local_db.py` (dry-run) → deve reportar 0
+duplicatas em todas as tabelas.
+
+---
+
+## IS-054 — Raspagem do Portal retornava "0 cards" (filtro por turma) 🟢
+
+**Sintoma:** em **Portal → 🔄 Sincronizar**, a raspagem logava
+`Encontrados 0 cards para coletar` e `Portal: 0 registros coletados`.
+
+**Causa:** o bot filtra os cards por **texto do `<h3>`** (`nf in
+normalize_key(h3)`), esperando a sigla/nome da turma (`--turma "I-A"`). O
+Portal passava o **`code`** (`turma["code"]` = `309197`), que não aparece no
+nome do card → o filtro descartava todos. Além disso, o `code` como filtro
+também **desabilitava a reconciliação** (`executar_raspagem` ignora
+reconciliação quando há filtro de turma).
+
+**Solução:**
+
+1. **`apps/bots/bot_raspagem.py`** — novo `candidatos_turma()`: expande o
+   filtro consultando `classes` (code ↔ name ↔ portal_name ↔ sigla) e o match
+   passa a aceitar **qualquer** candidato. Passar `309197`, `I-A` ou o nome
+   completo agora casa com o card. Adicionado **filtro de disciplina**
+   (`candidatos_disciplina()` + `resolve_subject_alias`, match nos dois
+   sentidos) e ambos os filtros aceitam **lista por vírgula** (`--turma "I-A,I-B"
+   --disciplina "P.C. II,Disc.Tec."`). Sem filtro, raspa todos os cards.
+2. **`views/portal.py`** (`_sincronizar`) **e** `apps/planejamento_registro`
+   (`secao_registrar` / `rodar_raspagem`) — escopo **🌐 Tudo** (sem filtro,
+   habilita **🧹 Reconciliar histórico**) ou **🔎 Filtrar (turma × disciplina)**,
+   com `multiselect` de turmas (padrão: turma do contexto) e de disciplinas
+   (padrão: contexto/todas); `rodar_raspagem` passou a montar `--turma`/
+   `--disciplina`. O app 8510 era o que o usuário usava e não tinha filtros —
+   por isso "raspava os 22 cards". Raspagens filtradas não reconciliam.
+3. **`services/portal_api.py`** e **`apps/api/api_service.py`** (local) —
+   `POST /raspagem/executar` passou a aceitar `reconciliar`, `turma` e
+   `disciplina`.
+
+**Validação:** `candidatos_turma("309197"|"I-A"|nome)` casa com o h3;
+`candidatos_disciplina("P.C. II,Disc.Tec.")` filtra os cards certos; as 6
+seções do Portal renderizam sem exceções (online e offline) e o modo **Filtrar**
+exibe os dois `multiselect`; `py_compile` OK; 71 testes dos apps + 12 do SysAva.
+
+**Arquivos:** `views/portal.py`, `services/portal_api.py`; frente local
+(não versionada): `apps/api/api_service.py`. Frente do repo aninhado:
+`apps/bots/bot_raspagem.py` → `apps/ISSUES.md` **AP-025**.
+
+**Validar:** Portal → 🔄 Sincronizar → **Sincronizar (raspagem)** (sem marcar
+"somente a turma") → log deve escanear os cards; com o filtro marcado, o log
+mostra `Filtro de turma '309197' ... Candidatos: [...]` quando não casar.
+
+---
+
+## IS-078 — `lessons` local desatualizado vs Supabase 🟢
+
+**Sintoma:** PROGRAMAÇÃO PARA DISPOSITIVOS MÓVEIS (subject `5`) tem **0 aulas**
+no `lessons` local, mas **17** no Supabase → "🚀 Gerar planos" não produz nada
+para ela, e a raspagem mostrou 0 registros no portal.
+
+**Causa:** o gerador de planos e a API local leem `lessons` do
+`data/escola_ativa.db`, que estava **desatualizado** em relação à nuvem (365
+locais × 418 na nuvem; outras disciplinas também com lacunas: 8, 11, 1, 2).
+O material da disciplina existe em `data/repo/.../PROGRAMAÇÃO PARA DISPOSITIVOS
+MÓVEIS/S01–S04` (PDFs), mas não estava cadastrado como aula.
+
+**Solução — `scripts/sync_lessons_from_supabase.py`** (novo, versionado):
+busca as aulas no Supabase (por disciplina ou todas) e faz **upsert por `id`**
+nas mesmas 14 colunas; dry-run por padrão, `--apply` faz backup.
+
+```
+python scripts/sync_lessons_from_supabase.py --subject 5          # dry-run
+python scripts/sync_lessons_from_supabase.py --subject 5 --apply
+python scripts/sync_lessons_from_supabase.py --all --apply        # todas
+```
+
+**Resultado:** subject `5` 0 → **17** aulas; `lessons` local 365 → **382**.
+`get_lesson_content_by_number(5, n)` já resolve "Aula 1"…"Aula 17".
+Depois, subject `8` (FUNDAMENTOS DE UI / UX OU IHC) 31 → **46** aulas
+(Aula 26–40, incluindo os 8 seminários); `lessons` local 382 → **397**.
+
+**Observação (subject 8):** a nuvem tem **números de Aula repetidos**
+(7–12 aparecem 2×, com títulos diferentes — ex. "Protegendo sua Genialidade…"
+× "A Importância dos Direitos Autorais…"). O `_ordenar_lessons_fila` do
+gerador posiciona por número, então as duplicatas **desalinhavam o conteúdo**
+(AULA_NUM 8 → "Aula 7", 9–10 → "Aula 8"…). O `created_at` mostrou que o
+**Set B (ids 568–641, 09–25/09) é o novo**; o Set A (525–542, 28/08–03/09) é
+antigo. **Correção aplicada:** removidas as 6 duplicatas antigas
+(ids 530, 533, 534, 538, 540, 542) → subject 8 fica com **40 aulas (Aula
+1–40) sem repetição**, e os planos foram **limpos e regenerados**:
+I-A `prontas` (aulas 9–40) e I-B `pendentes` (aulas 1–40), agora **alinhados**.
+Resta desalinhada só a **Aula 8 já registrada** (no histórico/portal — não
+regenerável localmente). As 6 duplicatas **continuam no Supabase** (limpar
+depois para não voltarem num `--all`).
+
+**Pendências:** a janela de Programação Mobile no calendário é **06/07 a
+21/08/2026** (já passou); os planos gerados sairão nessas datas. Demais
+disciplinas (11, 1, 2) continuam com lacunas — usar `--all --apply`.
+
+**Arquivos:** `scripts/sync_lessons_from_supabase.py`.
+
+**Validar:** `python scripts/sync_lessons_from_supabase.py --subject 5`
+(dry-run) → deve mostrar `novos: 0`; no app 8510, **📄 Planos → 🚀 Gerar
+planos** com essa disciplina.
+
+---
+
+## IS-079 — Gerador: piso modular excluía os slots livres do próprio dia 🟢
+
+**Sintoma:** em **FUNDAMENTOS DE UI / UX OU IHC** (I-A) a quarta **10/06**
+ficou só com o 07:10 já registrado — os slots **08:10/11:30/13:30** não
+viraram plano; a disciplina "empurrou" aulas para julho.
+
+**Causa:** a regra do piso modular (IS-043/IS-046) usa
+`limite = max(inicio_disciplina, ultima_modular)`. `inicio_disciplina` devolve
+**última aula + 1 dia** (10/06 → 11/06). Como o subject 8 já tem histórico até
+10/06, o piso virou 11/06 e os slots livres **do mesmo dia 10/06** foram
+descartados (`antes_inicio_disciplina`). O IS-046 queria justamente esse dia
+inclusivo (o caso clássico do Front-End 03/06 07:10 → Fundamentos 08:10), mas
+a regra só funcionava para a disciplina *seguinte* (sem histórico), não para
+uma que já tem registros.
+
+**Solução (`core/gerador.py`):** para disciplinas modulares/genéricas, o piso
+passa a ser **inclusivo**: recua 1 dia do `limite` (clamp no corte) e mantém o
+maior com o piso modular da turma. Assim os slots livres do dia da última aula
+voltam a ser usados.
+
+**Resultado:** regenerados os planos de Fundamentos UI — I-A `prontas` (aulas
+9–40, agora com **10/06 08:10/11:30/13:30**) e I-B `pendentes` (aulas 1–40),
+todos alinhados (`AULA_NUM` = conteúdo). 71 + 12 testes OK.
+
+**Arquivos:** `apps/planejamento_registro/core/gerador.py` (repo aninhado) →
+`apps/ISSUES.md` **AP-026**.
+
+**Validar:** regenerar a disciplina (`Sobrescrever`) e conferir que a quarta
+da última aula registrada volta a receber os slots vagos.
+
+---
+
+## IS-080 — Cesta de chamadas (rateio proporcional da frequência) 🟡
+
+**Contexto:** as disciplinas modulares foram ministradas em datas **reais**
+(ago/set) sob uma grade que **mudou** (ex.: I-A Qua 2→4, Sex 3→1). Ao registrar
+planos com datas **compensadas** (jun), a frequência real precisa ser redistribuída
+sem beneficiar/prejudicar por causa da troca de grade — "peso da Falta = peso do
+Presente".
+
+**Solução (parcial — core pronto):** `apps/planejamento_registro/core/cesta.py`
+(novo, compartilhado app+API):
+
+* **Peso** de cada chamada = nº de aulas genéricas ("Disc.Tec.") do dia da semana
+  na **grade real** — recuperada do backup mais antigo
+  `aulas/_backup_is*/grade_horaria_*.json`; fallback: `weekly_schedule`.
+* Expande as chamadas pelo peso real → **cesta**; se faltar chamada, **duplica a
+  semana** até fechar a carga; se sobrar, corta.
+* Lista negra (RA/nome em `data/excecoes_alunos.json`) sempre **Falta**.
+* `montar_cesta(...)` e `revisao(...)` (resumo por aluno: faltas, presenças, %).
+
+**Validação:** I-A → peso real `{Seg 2, Ter 1, Qua 2, Sex 3}` (fonte backup
+IS-044), 17 chamadas + duplicação → cesta **40**; I-B → `{Seg 2, Qui 5, Sex 1}`,
+10 chamadas + duplicação → cesta **40**. `py_compile` OK.
+
+**Pendências (🟡):**
+1. **Tela de revisão** no app (por aluno/semana) antes de gerar.
+2. **Hook no gerador**: usar a cesta quando gerar **>2 planos** por disciplina
+   (anuais seguem normal), gravando `[FREQUENCIA]`.
+3. **Histórico de grades**: gravar a grade vigente a cada mudança (para a cesta
+   achar a grade da época no futuro, sem depender de backup).
+4. **Seminários**: 3 dias faltantes entram como presença (menos lista negra);
+   decisão caso a caso no portal.
+
+**Arquivos:** `apps/planejamento_registro/core/cesta.py` → `apps/ISSUES.md`
+**AP-027**.
+
+---
+
+## IS-055 — Monitor de laboratório: bloqueio manual expandido de jogos 🟢
+
+**Pedido:** ampliar o bloqueio do painel de intervenção para plataformas de jogos
+além do Roblox — incluindo sites/proxies abertos no navegador (ex.: **Loki**).
+
+**Solução:**
+- `lab_agent.py` (e o agente embutido em `lab_agent.ps1`): listas
+  `BLOCKED_PROCESS_KEYWORDS` (robôs instalados: Roblox, League of Legends),
+  `BLOCKED_SITE_KEYWORDS` (sites/proxies: Loki, Poki, Friv, Y8, ClickJogos,
+  Gartic...) e `BROWSER_PROCESS_KEYWORDS`. Novas funções `kill_game_processes`,
+  `close_blocked_sites` (fecha a janela do navegador pelo título via
+  `pygetwindow`), `close_browsers` e `block_games`.
+- `get_category()` passou a reconhecer os sites bloqueados como **Games**.
+- Comandos tratados: `Bloquear Jogos` (antes só `Bloquear Processo`/Roblox),
+  `Bloquear Navegador` (existia no painel mas não no agente) e `Forçar Logoff`
+  (idem).
+- `lab_monitor.py`: ação renomeada para **Bloquear Jogos (Fechar
+  Roblox/Loki/Games)**, aviso das plataformas-alvo e expander informativo do
+  modo via `hosts`.
+
+**Arquivos:** `data/repo/plugins/lab_agent.py`, `data/repo/plugins/lab_agent.ps1`,
+`data/repo/plugins/lab_monitor.py`
+
+**Validar:** `python -m py_compile` no agente e o gerado pelo `.ps1`; escolher
+uma máquina com Roblox ou com o Loki aberto no navegador e acionar **Bloquear
+Jogos** — o processo/aba deve fechar e o log registrar `Bloqueio de jogos -> ...`.
+
+---
+
+## IS-056 — Monitor: modo não invasivo (bloqueio via arquivo `hosts`) 🟢
+
+**Pedido:** opção de bloqueio para PCs onde não é possível instalar o agente, sem
+nenhuma instalação.
+
+**Solução:** script standalone **`bloquear_hosts.ps1`** + atalho
+**`bloquear_hosts.bat`** (duplo-clique, pede Administrador). Aplica/remove um
+bloco marcado (`# === SysAva Bloqueio de Jogos ===`) no arquivo `hosts` do
+Windows, redirecionando os domínios do Roblox para `0.0.0.0` e limpando o cache
+DNS (`ipconfig /flushdns`). É **idempotente** (não duplica linhas) e
+**reversível** (`-Revert`, ou opção **[2] Remover** no `.bat`). A lista fica em
+`$Dominios` (padrão: somente Roblox); domínios extras podem ser adicionados por um
+`dominios_extra.txt` (um por linha) — caminho pensado para incluir o Loki depois.
+
+**Arquivos:** `data/repo/plugins/bloquear_hosts.ps1`,
+`data/repo/plugins/bloquear_hosts.bat`
+
+**Validar:** rodar o `.bat` → **[1] Aplicar**: `hosts` ganha o bloco e o Roblox
+para de conectar; rodar de novo não duplica; **[2] Remover** devolve o arquivo
+original. Teste de lógica (aplicar 3x / reverter) confirmou idempotência.
+
+---
+
+## IS-057 — Monitor: descoberta robusta do servidor (cache + UDP) 🟢
+
+**Contexto:** a rede do laboratório tem "switch rigoroso" e IP dinâmico. A
+investigação na rede real mostrou:
+- Sub-rede real é **`192.168.10.0/23`** (máscara `255.255.254.0`), gateway/DHCP
+  `192.168.10.1`; o servidor (notebook do professor) pegou **`192.168.11.253`**
+  por DHCP (lease ~3h).
+- O `KNOWN_SERVER_IP = 192.168.11.249` do agente estava **obsoleto**: `.249` agora
+  é um PC do lab (ASRock); os desktops do lab são MACs `A8:A1:59` (ASRock).
+- Firewall do servidor **libera `python.exe`** no perfil Público → TCP 5000 ok.
+- Unicast cliente↔cliente funciona (SMB do `192.168.11.112` acessível).
+- `netstat` confirmou o receiver **parado** no momento da coleta.
+
+**Solução (descoberta em camadas, sem depender de IP fixo):**
+1. **Cache local** `server_cache.txt` (ao lado do agente): a última URL que
+   funcionou é tentada primeiro e revalidada por `/health`.
+2. **Broadcast UDP** na porta **5001**: o agente envia `SYSAVA_DISCOVER` para
+   `255.255.255.255`, broadcast da sub-rede e `192.168.10/11.255`; o receiver
+   responde `SYSAVA_SERVER <ip>:5000` e o agente valida por HTTP.
+3. Fallback mantido: MAC/ARP → IP conhecido → varredura da sub-rede.
+
+**Arquivos:** `data/repo/plugins/lab_agent.py`,
+`data/repo/plugins/lab_agent.ps1` (agente embutido),
+`data/repo/plugins/lab_receiver.py` (thread `run_udp_discovery`)
+
+**Validar:** subir o receiver e rodar o round-trip UDP — respondido
+`SYSAVA_SERVER 192.168.11.253:5000` com o IP correto; `discover_server_udp()`
+retornou a URL; `load/save_cached_server` idempotente. Se `netstat` não mostrar
+UDP 5001 no servidor, verifique firewall (regra de programa do `python.exe`).
+Substituir o IP fixo por **reserva DHCP** no roteador é recomendado como reforço.
+
+---
+
+## IS-058 — Monitor: servidor de instalação/atualização pela rede (sem pendrive) 🟢
+
+**Pedido:** sem pendrive, digitar um endereço no cliente para baixar/atualizar o
+agente e os utilitários.
+
+**Solução:** rotas novas no `lab_receiver.py` (mesmo servidor do radar):
+- `GET /setup` (e `/instalar`): página de instruções com o IP detectado e links.
+- `GET /download/<arquivo>`: entrega **apenas** os arquivos de uma whitelist
+  (`lab_agent.ps1`, `bloquear_hosts.ps1`, `bloquear_hosts.bat`) — protege contra
+  path traversal.
+- `GET /instalar_agente.bat` e `/instalar_hosts.bat`: geram na hora um `.bat` que
+  baixa o script **deste** servidor (IP/porta do request) e o executa como
+  Administrador. Como os arquivos vêm do disco a cada request, rebaixar = atualizar.
+- Link para `/setup` adicionado ao dashboard (`/`).
+- `lab_agent.ps1`: antes de iniciar, **encerra instâncias anteriores** do agente
+  (`lab_agent.py`) para uma atualização limpa.
+- `lab_receiver.bat`: passou a criar também a regra de firewall **UDP 5001**.
+
+**Arquivos:** `data/repo/plugins/lab_receiver.py`,
+`data/repo/plugins/lab_receiver.bat`, `data/repo/plugins/lab_agent.ps1`,
+`servidor_instalacao.bat` (raiz — atalho que sobe o receiver, cria firewall
+TCP 5000/UDP 5001, mostra o IP e a URL `/setup`, e não duplica se já estiver no ar)
+
+**Validar:** com o receiver no ar, abrir `http://<ip>:5000/setup` no cliente e
+usar os botões de download. Teste via Flask test client: `/setup`, `/download/*`,
+`/instalar_agente.bat`, `/instalar_hosts.bat` retornam 200; o `.bat` gerado contém
+a URL do servidor.
+
+---
+
+## IS-059 — Monitor: agente em SYSTEM relança na sessão ativa do aluno 🟢
+
+**Sintoma:** máquinas apareciam no radar com `user: SYSTEM` e "Janela Ativa:
+Administrador: Windows PowerShell". Como o agente rodava como **SYSTEM (sessão 0)**,
+ele não enxergava a janela/aplicações do aluno — a atividade e a categoria saíam
+distorcidas.
+
+**Solução:** em `lab_agent.py` e no agente embutido do `lab_agent.ps1`:
+- Detecção: `is_system_process()` + comparação da sessão atual (`ProcessIdToSessionId`)
+  com a sessão de console ativa (`WTSGetActiveConsoleSessionId`).
+- Se for SYSTEM fora da sessão ativa, `WTSQueryUserToken` → `DuplicateTokenEx` →
+  `CreateEnvironmentBlock` → `CreateProcessAsUserW` inicia uma cópia do agente na
+  **sessão do usuário** (`lpDesktop = winsta0\\default`), e a cópia de sistema encerra.
+- Guarda `--session-agent` no argv evita relançamento em loop.
+
+**Arquivos:** `data/repo/plugins/lab_agent.py`, `data/repo/plugins/lab_agent.ps1`
+
+**Validar:** rodar o agente como SYSTEM numa máquina com usuário logado — o log deve
+registrar `Agente relancado na sessao ativa N`; o radar deve passar a mostrar o
+usuário real e a janela do aluno. Em sessão normal (não-SYSTEM) nada muda
+(testado localmente: `is_system_process=False`, `relaunch=False`).
+**Limite:** se o aluno não for admin, comandos privilegiados (desligar/reiniciar)
+podem falhar — a cópia herda o token do usuário.
+
+---
+
+## IS-060 — Monitor: massa, Bloquear Sites e hosts com redes sociais 🟢
+
+**Pedido:** ter "selecionar todas", desligar/reiniciar todas em um clique, e
+bloquear YouTube/Instagram (que não eram cobertos).
+
+**Solução:**
+- `lab_monitor.py`: checkbox **Selecionar TODAS as máquinas** no painel de comando;
+  novo expansor **⚡ Ações em Massa** com **Desligar TODAS**, **Reiniciar TODAS** e
+  **Bloquear Sites em TODAS** (com confirmação); helper `_enfileirar_comando()`
+  evita duplicar a lógica de comando; nova ação **Bloquear Sites
+  (YouTube/Instagram/TikTok/Facebook)**.
+- `lab_agent.py` (+ embutido no `.ps1`): `BLOCKED_SOCIAL_KEYWORDS` e
+  `close_social_sites()` (generalização de `close_windows_by_keywords`); trata o
+  comando **Bloquear Sites** fechando só as janelas desses sites.
+- `bloquear_hosts.ps1`: `$DominiosSociais` + parâmetro **`-Sociais`**; `.bat` com
+  menu **[1] Roblox / [2] Roblox + Redes Sociais / [3] Remover**.
+
+**Arquivos:** `data/repo/plugins/lab_monitor.py`,
+`data/repo/plugins/lab_agent.py`, `data/repo/plugins/lab_agent.ps1`,
+`data/repo/plugins/bloquear_hosts.ps1`, `data/repo/plugins/bloquear_hosts.bat`
+
+**Validar:** marcar "Selecionar TODAS" e enviar um Alerta; usar as Ações em Massa
+(exige confirmação); "Bloquear Sites" fecha só abas de redes sociais; no hosts,
+`-Sociais` inclui youtube/instagram (merge testado). `py_compile` + parse do `.ps1`
++ Python embutido OK.
+
+---
+
+## IS-061 — Monitor: rótulos amigáveis por máquina 🟢
+
+**Pedido:** identificar facilmente os PCs (hostnames como `22139923-LAB-70006` são
+difíceis). Atribuir nomes como `PC1-Fila1`, `PC4-Fila4`, `PC5-Fila3`.
+
+**Solução:** novo `lab_labels.json` (mapa hostname → rótulo) e em `lab_monitor.py`:
+- `load_labels()`/`save_labels()`; coluna **Rotulo** como 1ª da tabela ao vivo
+  (`Máquina (host)` continua como coluna secundária).
+- Expander **🏷️ Rótulos das máquinas** (form) edita os rótulos, inclusive de PCs
+  offline (união das máquinas online + rótulos já salvos); campo vazio remove.
+- As listas de seleção/target e a mensagem de sucesso passam a exibir o rótulo.
+
+Rótulos já pré-carregados: `22139923-LAB-70006→PC4-Fila4`,
+`22139923-LAB-80054→PC5-Fila3`, `DESKTOP-7H3URJE→PC1-Fila1`.
+
+**Arquivos:** `data/repo/plugins/lab_monitor.py`,
+`data/repo/plugins/lab_labels.json`
+
+**Validar:** Plugins → Monitor: a tabela mostra a coluna **Rótulo** e o expander
+permite editar/salvar; `py_compile` OK.
+
+---
+
+## IS-062 — Tela de bloqueio + papel de parede do SysAva 🟢
+
+**Pedido:** PCs iniciarem com a marca do SysAva e uma tela de bloqueio que já abre
+o `sysava.streamlit.app`, com desbloqueio pelo login do SysAva (RA).
+
+**Solução:**
+- **Marca**: `gerar_logo_sysava.py` (Pillow) gera `logo_sysava.png` (512×512) e
+  `wallpaper_sysava.png` (1920×1080) com a identidade SysAva.
+- **Papel de parede**: `aplicar_papel_parede.ps1` (HKCU + `PersonalizationCSP` p/
+  tela de bloqueio com admin).
+- **Tela de bloqueio**: `sysava_lock.ps1` (WinForms fullscreen, topmost) — fundo com
+  a marca, abre o `sysava.streamlit.app` e pede o **RA**; valida em
+  `/api/auth_ra` do receiver; libera em modo offline se o servidor não responder.
+- **Receiver**: endpoint `GET /api/auth_ra?ra=...` (consulta `services.database.get_user`,
+  login = RA, com cache em memória); whitelist de download ampliada; card **3** em
+  `/setup`; rota `/instalar_tela.bat` (o `.bat` gerado passa `-Server`).
+- **Instalador**: `instalar_tela_sysava.ps1` baixa os arquivos p/
+  `C:\ProgramData\SysAva`, aplica o papel de parede e registra a tarefa
+  **"SysAva Lock"** no logon (`BUILTIN\Users`); `-Remover` desinstala.
+
+**Arquivos:** `data/repo/plugins/gerar_logo_sysava.py`,
+`logo_sysava.png`, `wallpaper_sysava.png`, `aplicar_papel_parede.ps1`,
+`sysava_lock.ps1`, `instalar_tela_sysava.ps1`, `lab_receiver.py`
+
+**Validar:** `/api/auth_ra?ra=` → 400 e RA inexistente → 404 (test client);
+descoberta em PowerShell retornou `http://192.168.10.161:5000`; `/setup` e
+`/download/*` 200; `py_compile` + parse dos `.ps1` OK.
+
+**Limite:** bloqueio leve (Alt+F4/Task Manager fecham); sem senha (só RA). Evolução
+possível: kiosk rígido e/ou exigir senha.
+
+---
+
+## IS-063 — Associar o aluno ao PC pela tela de bloqueio 🟢
+
+**Pedido:** aproveitar o RA digitado no desbloqueio para saber qual aluno está em
+qual PC (o agente reporta `user: SYSTEM`, sem identificar o aluno).
+
+**Solução:**
+- `lab_receiver.py`: `_associar_usuario_maquina()` grava `lab_users.json`
+  (`máquina → {ra, name, ts}`); `/api/auth_ra` passou a aceitar `&maquina=` e, ao
+  validar o RA, registra a associação (sem custo extra no banco).
+- `sysava_lock.ps1`: envia `$env:COMPUTERNAME` na validação.
+- `lab_monitor.py`: `load_users_map()` + coluna **Aluno (RA)** (coluna `Conta Win`
+  para o usuário do Windows do agente).
+
+**Arquivos:** `data/repo/plugins/lab_receiver.py`,
+`data/repo/plugins/sysava_lock.ps1`, `data/repo/plugins/lab_monitor.py`
+
+**Validar:** chamar `/api/auth_ra?ra=<valido>&maquina=PC1` grava a associação em
+`lab_users.json`; o radar mostra "Aluno (RA)". Teste da função de gravação OK e
+`py_compile` OK.
+
+**Histórico (IS-063, ampliação):** ao associar, grava
+`db.add_user_history(ra, "Entrou no <Rótulo> (tela de bloqueio)")`, **deduplicado
+por aluno/máquina/dia** (campo `logged_date` em `lab_users.json`) para não pesar no
+egress. Teste com `db` simulado: 1ª vez grava, repetição no mesmo dia não grava,
+RA diferente grava.
+
+---
+
+## IS-064 — Agente sumia do radar após reiniciar (auto-start) 🟢
+
+**Sintoma:** "PC1-Fila1 está ligado e não aparece". `/api/debug` mostrou o
+`ram_cache` vazio (nenhum agente reportando). As máquinas haviam sido
+desligadas/reiniciadas nos testes.
+
+**Causa:** o instalador **iniciava o agente uma única vez**, sem persistência — não
+havia chave Run/pasta Startup/tarefa. Depois de reboot/shutdown o agente não voltava
+(alguns scripts do projeto mexem em hosts/firewall, mas **nenhum** no autostart).
+
+**Solução:** `lab_agent.ps1`, passo **5b**, registra a tarefa agendada
+**“SysAva Agent”** (`AtLogOn`, `BUILTIN\Users`, `RunLevel Limited`) rodando
+`pythonw.exe lab_agent.py` (fallback `python.exe`). `Register-ScheduledTask -Force`
+torna idempotente.
+
+**Bug encontrado na 1ª versão:** `New-ScheduledTaskPrincipal -GroupId ... -LogonType
+Group` falha com *"O conjunto de parâmetros não pode ser resolvido"* (`-LogonType`
+só existe no parameter set de `-UserId`). O instalador caía no `catch` e avisava que
+**não** agendaria. **Correção:** remover `-LogonType Group` (idem em
+`instalar_tela_sysava.ps1`); adicionado fallback via **pasta Startup comum**
+(`SysAva Agent.vbs` com `WScript.Shell.Run ..., 0, False`) caso a tarefa falhe.
+
+**Arquivos:** `data/repo/plugins/lab_agent.ps1`,
+`data/repo/plugins/instalar_tela_sysava.ps1`
+
+**Validar:** re-executar o instalador (`/setup` → `instalar_agente.bat`), reiniciar a
+máquina e conferir que o agente volta e aparece no radar. `schtasks /query /tn "SysAva
+Agent"` deve listar a tarefa. Parse do `.ps1` + Python embutido OK.
+
+**Nota para o operador:** máquinas instaladas antes deste ajuste precisam
+**re-rodar o instalador** para ganhar o autostart.
+
+---
+
+## IS-065 — Curso Técnico de Marketing (professora/turma/disciplinas/alunos) 🟢
+
+**Pedido:** criar login da professora (Adriana), a turma e disciplinas de Marketing,
+e matricular os alunos. Dúvida: o schema tem "curso"? (não) e onde ficam dados do
+professor.
+
+**Diagnóstico:** não há coluna de **curso** (o curso é implícito no
+`classes.name`/`official_name`/`portal_name`); não há vínculo professor↔turma;
+`get_classes()` retorna todas as turmas; dados do professor = só `app_users.name`/`ra`.
+
+**Decisão:** rótulo de curso por **convenção de nome** (sem migração) + script de
+criação. Novo `scripts/criar_turma_professor.py` (dry-run por padrão, `--apply`) —
+espelha `seed_data.py`/`seed_students.py` (MockSecrets + `.env`).
+
+**Executado (`--apply`):**
+- Professora `adriana` (name=FRANCISCA ADRIANA COUTINHO PASSOS, ra=CPF `66900069304`,
+  role=teacher, senha inicial = RA).
+- Turma `312076` → `classes.id=3`: name `1ª SÉRIE - Turma I-B (Técnico Marketing)`,
+  `official_name=EMTPMARK-DIG-1ª SERIE - INTEGRAL-I-B`, `portal_name=...1a SERIE...`.
+- Disciplinas: E-COMMERCE(36), GESTÃO ESTRATÉGICA DE REDES SOCIAIS(37),
+  PRODUÇÃO DE CONTEÚDO DIGITAL(38), FUNDAMENTOS DA ADMINISTRAÇÃO(39), FUNDAMENTOS
+  DO MARKETING(40) e **INTELIGÊNCIA ARTIFICIAL(11, compartilhada com o DS)** — todas
+  vinculadas à turma.
+- 25 alunos criados (username=RA, senha=RA) e matriculados.
+
+**Arquivos:** `scripts/criar_turma_professor.py`
+
+**Validar:** `db.get_class_by_code("312076")` → id 3; `get_subjects_for_class(3)` → 6;
+`get_students_by_class(3)` → 25; `get_user("adriana")` role=teacher. Dry-run confere
+tudo antes de gravar.
+
+**Pendente (combinado):** **filtro por professor** (novo) — criar vínculo
+professor↔turma e fazer `get_classes()` respeitar o docente logado (admin vê tudo).
+
+---
+
+## IS-066 — Filtro por professor (isolamento de turmas) 🟢
+
+**Pedido:** cada professor vê só as turmas dele; admin vê tudo.
+
+**Limitação encontrada:** só existe a chave **anon** do Supabase no `.env` (PostgREST
+não faz DDL) — **não é possível criar tabela** pela aplicação. Optou-se por um
+**mapeamento local** `data/professores_turmas.json` (`username → [codigos de turma]`),
+consistente com os demais espelhos JSON do projeto.
+
+**Solução (centralizada, sem tocar em cada tela):**
+- `services/database.py`: `_current_teacher_scope()` (lê `st.session_state` role/username;
+  fora do Streamlit → `None`) e `_load_teacher_map()` (lê o JSON).
+- `get_classes()` aplica o filtro **depois** do cache: se o professor logado está no
+  mapa, retorna só as turmas dele; **admin/script** (`None`) e **professor sem mapa**
+  continuam vendo tudo (sem regressão para `heliol`).
+- Como plugins e telas chamam `db.get_classes()`, o filtro vale em todo o app.
+- Conteúdo do mapa: `{ "adriana": ["312076"] }`.
+
+**Arquivos:** `services/database.py`, `data/professores_turmas.json`
+
+**Validar (com db real):** sem escopo → 3 turmas; `adriana` → só `312076`; `heliol`
+(sem mapa) → 3 turmas. `py_compile` OK.
+
+**Upgrade opcional (tabela no Supabase):** quando houver a chave de serviço/Editor SQL,
+rodar e aí eu ligo o código na tabela:
+```sql
+CREATE TABLE IF NOT EXISTS class_teachers (
+    id BIGSERIAL PRIMARY KEY,
+    class_id BIGINT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    username TEXT NOT NULL REFERENCES app_users(username) ON DELETE CASCADE,
+    UNIQUE (class_id, username)
+);
+INSERT INTO class_teachers (class_id, username)
+SELECT id, 'adriana' FROM classes WHERE code = '312076'
+ON CONFLICT DO NOTHING;
+```
+
+---
+
+## IS-067 — Login tolerante (RA/CPF e maiúsculas) 🟢
+
+**Sintoma:** a professora `adriana` não conseguia logar. Diagnóstico: a conta está
+correta (`check_password("66900069304", hash)=True`, `is_active=True`, `role=teacher`);
+`get_user` é case-sensitive e usa só `username` — o CPF (RA) não era aceito.
+
+**Solução:** `views/login.py` passou a tentar, em ordem: `get_user(user)` →
+`get_user_by_ra(user)` → `get_user_ci(user)`; o `username` real é assumido na sessão
+(importante para o filtro por professor). Novas funções em `services/database.py`:
+`get_user_by_ra` (coluna `ra`) e `get_user_ci` (`ilike`, sem diferenciar caixa).
+
+**Arquivos:** `services/database.py`, `views/login.py`
+
+**Validar:** login OK com `adriana`, `Adriana`, `ADRIANA` e `66900069304` (senha =
+`66900069304`). `py_compile` OK.
+
+**Atenção:** o fallback é código novo — só vale no app local (ou após redeploy no
+Cloud). De todo modo, `adriana` + senha já funcionavam no banco.
+
+---
+
+## IS-068 — Tela de bloqueio não travava no logon (autostart) 🟢
+
+**Sintoma:** depois de instalar a tela de bloqueio, o PC continuava **liberado** (só
+o papel de parede mudava). A tela não aparecia no logon.
+
+**Causa:** o `instalar_tela_sysava.ps1` registrava **só** uma tarefa agendada — e a
+versão instalada ainda tinha o bug `New-ScheduledTaskPrincipal -GroupId ... -LogonType
+Group` (IS‑064), que **falha** e aborta o registro. Resultado: nenhuma inicialização
+no logon.
+
+**Solução:** o instalador passou a registrar a tela via **pasta Startup comum**
+(`C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\SysAva Lock.vbs`, que
+roda no logon de qualquer usuário, oculto), com a **tarefa agendada como fallback**
+(parâmetro corrigido). O `-Remover` limpa a tarefa e o VBS. Mensagem final mostra
+como **testar agora** rodando o `sysava_lock.ps1` direto.
+
+**Arquivos:** `data/repo/plugins/instalar_tela_sysava.ps1`
+
+**Validar:** reinstalar (`/setup` → card 3 → `instalar_tela.bat`), fazer logoff e
+confirmar a tela; ou rodar `powershell -File C:\ProgramData\SysAva\sysava_lock.ps1`
+para ver na hora. Parse do `.ps1` OK.
+
+---
+
+## IS-069 — Estrutura de pastas turma/disciplina/aluno/aula XX 🟢
+
+**Pedido:** gerar a árvore `Escola / Turma / Disciplina / Aluno / Aula XX` em cada
+PC, com as aulas por **intervalo fixo** (via agente).
+
+**Solução:** a ação **"Estruturar Pastas de Projetos"** do agente passou a aceitar um
+**5º campo** com o intervalo de aulas:
+- Monitor (`lab_monitor.py`): ao escolher a ação, aparece o campo **"Aulas (ex.: 1-32
+  ou 32)"**; a mensagem vira `escola|turma|disciplina|aluno|<aulas>`.
+- Agente (`lab_agent.py` + embutido no `lab_agent.ps1`): `_parse_aula_range("32"|"1-32")`
+  e cria `C:\Projetos\<Escola>\<Turma>\<Disciplina>\<Aluno>\Aula 01..NN`
+  (`os.makedirs(..., exist_ok=True)` — idempotente).
+
+**Arquivos:** `data/repo/plugins/lab_agent.py`,
+`data/repo/plugins/lab_agent.ps1`, `data/repo/plugins/lab_monitor.py`
+
+**Validar:** `_parse_aula_range("32")` → 1..32; `"1-5"` → 1..5; `""` → []. `py_compile`
++ parse do `.ps1` + Python embutido OK. **Clientes precisam re-rodar o instalador**
+para baixar o agente novo (o código é embutido no `lab_agent.ps1`).
+
+---
+
+## IS-073 — Painel web do receiver com login e controles 🟢
+
+**Pedido:** melhorar a página `http://<ip>:5000/` com **login do professor** e
+**controles via HTTP** (sem abrir o Streamlit).
+
+**Solução (em `lab_receiver.py`):**
+- **Login** (`/login`, `/logout`): valida contra o SysAva
+  (`get_user`/`get_user_by_ra`/`get_user_ci` + `auth.check_password`) exigindo
+  `role` teacher/admin; sessão por cookie assinado (`app.secret_key` persistida em
+  `receiver_secret.key`). `/` e `/diagnostics` passam a exigir login (`login_required`).
+- **Controles** (`POST /control`): o dashboard ganhou **checkboxes por máquina**,
+  select de **ação** (as mesmas do plugin: alerta, bloquear jogos/sites/anônimos/
+  navegador, deslogar, desligar, reiniciar) e campo de mensagem; grava
+  `pending_command` no `lab_status.json` — o agente recebe no próximo `/ping`.
+- Dashboard mostra o **usuário logado**, **Sair**, links para `/setup` e atualizar,
+  e mensagens de sucesso/erro. As APIs do agente (`/ping`, `/health`, `/api/*`,
+  `/scan`, `/download`, `/setup`) seguem **abertas** (não autenticáveis por máquina).
+
+**Arquivos:** `data/repo/plugins/lab_receiver.py`
+
+**Validar (test client):** `/` sem login → 302 → `/login`; senha errada → mensagem;
+`adriana`/senha → 302 → `/`; logado → 200 com o form de controle. HTTP real: 302 e
+`/login` 200. Receiver reiniciado OK.
+
+---
+
+## IS-074 — Receiver não carregava `.env` (login/`auth_ra` sempre falhavam) 🟢
+
+**Sintoma:** o login do painel web (`/login`) sempre dizia "Usuário ou senha
+inválidos"; a validação de RA da tela de bloqueio (`/api/auth_ra`) também não achava
+ninguém.
+
+**Diagnóstico:** o receiver roda **fora do Streamlit** (`lab_receiver.py`), e
+`services.database` busca `SUPABASE_URL/KEY` em `st.secrets` e, na falta, em
+variáveis de ambiente. Como o `.env` **não** era carregado e o processo inicia com
+`cwd = data/repo/plugins`, as credenciais não existiam → `is_db_connected()` falso →
+`get_user()` sempre `None`. (Nos testes via script o `cwd` era a raiz e o
+`st.secrets`/`.env` era encontrado — daí parecer que funcionava.) O `/api/auth_ra`
+retornava 404 "RA não encontrado" mesmo com RA válido (mesma resposta do
+não-conectado), mascarando o problema.
+
+**Solução:** no topo do `lab_receiver.py`, `load_dotenv(PROJECT_ROOT/.env)` (com
+`python-dotenv`) + inserir `PROJECT_ROOT` no `sys.path`. Além disso, o login passou a
+**registrar o motivo da falha** (`usuario nao encontrado` / `senha invalida` /
+`sem permissao`).
+
+**Arquivo:** `data/repo/plugins/lab_receiver.py`
+
+**Validar:** `/api/auth_ra?ra=adriana` → `{"ok":true,...}`; `POST /login` com
+`adriana`/senha → 302 e log `LOGIN PAINEL: adriana`. Reiniciar o receiver após
+alterar credenciais.
+
+---
+
+## IS-070 — (Backlog) Instaladores de ferramentas por disciplina ⚪
+
+Pacotes prontos instaláveis pelo agente (winget), por disciplina: ex. **kit dev
+mobile** (Android SDK/emulador, Flutter, Node), design (Figma/Canva), marketing
+(ferramentas de edição), etc. Já existe "Instalar Kit Lab DS" (VS Code, JDK, Node,
+NetBeans) — generalizar para uma **lista por disciplina** escolhida no painel.
+
+## IS-071 — Log de atividade dos usuários + relatório HTML 🟢
+
+Registrar **o que cada usuário fez e quando** no sistema, com um local para consultar,
+e — se possível — o **histórico do navegador**. Relatórios em `.log`/`.html` numa
+**pasta oculta** na pasta do monitor.
+
+Pontos a considerar (quando implementar):
+- **Já existe** base para reaproveitar: `lab_receiver.log` (eventos/mudanças de
+  estado), `lab_status.json`, `db.add_user_history` (login/entradas) e o "Histórico
+  de Desvios" do plugin Monitor.
+- **Servidor (Streamlit):** logar navegação/ações por usuário (página, timestamp,
+  IP) — ex. middleware em `app.py` + persistência local.
+- **Agente (PCs):** coletar o histórico do navegador (Chrome/Edge: `History` SQLite
+  em `%LocalAppData%`, copiando o arquivo pois fica travado com o navegador aberto)
+  e enviar esporadicamente (evitar egress em excesso).
+- **Armazenamento:** pasta oculta na pasta do monitor (ex.:
+  `data/repo/plugins/.relatorios/` — nome com `.` e/ou atributo *hidden* do Windows),
+  com relatórios `.log` (texto) e `.html` (navegável).
+- **Privacidade/legal:** histórico de navegador é dado sensível — precisa de
+  finalidade/consentimento escolar; documentar e limitar o escopo.
+
+**IMPLEMENTADO (completo):**
+- Novo `audit_log` (em `services/` **e** cópia portátil em `data/repo/plugins/`): grava
+  eventos em **JSON-lines diário** em pasta **oculta** `.relatorios/`
+  (`atividade-AAAA-MM-DD.log` e `historico-AAAA-MM-DD.log`), com `registrar()`,
+  `registrar_historico()`, `ler()`, `gerar_html()`. Sem rede (não afeta egress).
+- **Ganchos:** `app.py` registra **navegação** (1x por troca de página, com IP) e
+  **logout**; `views/login.py` registra **Login**.
+- **Histórico do navegador:** o **agente** lê Chrome/Edge (`%LocalAppData%\...\History`,
+  copiando o arquivo por estar travado) a cada ~180s e envia para **`POST /api/historico`**;
+  o receiver grava via `audit_log.registrar_historico()`.
+- **Consulta:** rota **`/relatorios`** (login) renderiza o HTML com **duas tabelas**
+  (atividade + histórico do navegador); link **📋 Relatórios** no dashboard.
+
+**Residual (opcional):** filtros por dia/usuário na tela e retenção/limpeza automática
+dos logs (definir política).
+
+**Validar:** `registrar()` cria a pasta **Hidden** e grava; `gerar_html()` monta as
+tabelas; `/api/historico` recebe e grava; `/relatorios` sem login → 302, logado → 200.
+`py_compile` OK. **Reinstalar o agente** para ele começar a enviar o histórico.
+
+## IS-072 — (Backlog) Proteção do aluno: categorias perigosas + Tor/dark web ⚪
+
+**Contexto:** preocupação de proteção (risco criminal/emocional). Além das redes
+sociais (bloqueadas quando houver excesso), o foco é **conteúdo adulto, sites
+perigosos, dark web e outros riscos**. Nas redes sociais há maior exposição e não dá
+para acompanhar tudo manualmente — daí a automação de **detecção + alerta**.
+
+**Abordagem em camadas (a definir):**
+1. **Filtro de rede por categoria (recomendado):** trocar o DNS do laboratório por um
+   DNS de família/filtro (ex.: família Cloudflare `1.1.1.3`/`1.1.1.2`, OpenDNS
+   FamilyShield) ou um DNS local com listas de categorias (NextDNS/Pi‑hole + listas
+   como StevenBlack/UT1). Pega adulto/malware/phishing **sem tocar em cada PC**.
+2. **Bloqueio por hosts nas máquinas (complemento):** estender `bloquear_hosts.ps1`
+   com **listas por categoria** (adulto, apostas, malware, proxy/VPN/anônimos).
+3. **Dark web / Tor:** `.onion` exige Tor — inacessível na rede normal. O foco é
+   **detectar/bloquear Tor** (`tor.exe`, bridges, I2P) e **alertar**.
+4. **Detecção e alerta (safeguarding):** o agente sinaliza categorias de risco
+   (adulto, automutilação/violência, Tor) e o painel **alerta o responsável** — não
+   só bloqueio silencioso. Combina com IS‑071 (logs/relatórios).
+5. **Ação humana:** alerta → pedagógico/apoio; manter registro discreto.
+
+**Cuidados obrigatórios:** finalizar por **autorização da escola/responsáveis** e
+**finalidade declarada**; guardar relatórios com acesso restrito; não é vigilância
+genérica — é proteção. Definir retenção e quem vê.
+
+**REGRA (decidida) — política de tiers (implementar amanhã, no laboratório):**
+
+| Tipo | Ação | Alerta ao professor |
+|---|---|---|
+| Adulto/pornografia, malware/phishing, apostas, Tor/anônimos/VPN de evasão | **Bloqueia automático** (silencioso) | **Não** — só log |
+| Redes sociais e jogos/streaming em **excesso** | **Sugere bloquear** (professor aciona) | Sim (agrupado por limiar) |
+| Risco emocional (automutilação, violência) e criminal (aliciamento) | **Bloqueia + destaca** | **Prioritário e discreto** |
+| Qualquer ocorrência | **Registra** (log/relatório) | — |
+
+Regras de implementação:
+- **Evitar fadiga de alerta:** Tier 1 **não** alerta por evento (só grava); Tiers 2/3
+  agrupam por limiar (ex.: N acessos ou X min no período) antes de notificar.
+- **Tier 1 (base técnica):** DNS de filtro (família Cloudflare `1.1.1.3`/`1.1.1.2`,
+  OpenDNS FamilyShield) ou DNS local com categorias **+** `bloquear_hosts.ps1`
+  estendido com listas por categoria (adulto/apostas/malware/anônimos).
+- **Tor/dark web:** `.onion` não acessa na rede normal; **detectar/bloquear** `tor.exe`,
+  bridges e I2P; alertar.
+- **Tiers 2/3 (base técnica):** o **agente** classifica por janela ativa/histórico do
+  navegador e sinaliza a categoria; o **painel do Monitor** mostra e permite a ação
+  ("Bloquear Sites/Navegador"), com alerta destacado no Tier 3.
+- **Log/registro:** o que/quando/quem/máquina/categoria; pasta **oculta** na pasta do
+  monitor (ex.: `data/repo/plugins/.relatorios/`) em `.log` **e** `.html`; **acesso
+  restrito**, retenção definida e quem pode ver.
+- **Não bloquear "tudo" automaticamente** (evita bypass por VPN/celular e perda de
+  visibilidade); o humano decide o ambíguo.
+
+**IMPLEMENTADO (parcial — Tier 1/Tor):**
+- `aplicar_dns_seguro.ps1` (+ `/instalar_dns.bat` e card **4** em `/setup`): DNS de
+  família (Cloudflare for Families) — `family-adult` bloqueia **adulto + malware**
+  por PC; `-Revert` desfaz. Recomendado aplicar também no **roteador/DHCP**.
+- `bloquear_hosts.ps1 -Perigo`: lê todos os `.txt` de `categorias/` (adulto/apostas/
+  malware/anônimos) e adiciona ao `hosts`; `.bat` ganhou a opção **[3] Proteção**.
+  Pasta `categorias/` + `LEIA-ME.txt` (o arquivo `-Perigo` é o mecanismo; as listas
+  ficam a critério da escola).
+- **Tor/anonimizadores:** agente detecta (`BLOCKED_ANON_*`), categoria **"Anônimo"**
+  no radar e ação **"Bloquear Anônimos (Tor)"** (encerra `tor.exe`/I2P e fecha o Tor
+  Browser).
+
+**Ainda pendente (próximas etapas):** alerta automático no painel (sugerir/bloquear
+por limiar), categorias de risco emocional/criminal e o log/relatório (IS‑071).
+
+---
+
+## IS-075 — Monitor: "Histórico de Hoje" aparecia vazio 🟢
+
+**Sintoma:** o expansor "Histórico de Desvios e Infrações (Hoje)" mostrava "Nenhuma
+infração..." mesmo com atividade no dia.
+
+**Causa:** a seção filtrava **apenas** termos de infração (`"INFRAÇÃO"`, `"Enviou '"`,
+`"Bloqueio"` com B maiúsculo, `"Celular"`). As entradas do dia eram logins da tela de
+bloqueio (`"Entrou no ... (tela de bloqueio)"`, com **b** minúsculo) → **nada casava**.
+Além disso, o timestamp vem em **UTC** e o match era por string de data local.
+
+**Solução (`lab_monitor.py`):** a seção virou **"Histórico de Hoje (entradas, ações e
+infrações)"** — mostra **todos** os registros do dia, com coluna **Tipo**
+(Entrada/Ação do professor/Infração/Registro) e contagem; conversão de fuso via
+`_dt_local()` (ISO→local) e `datetime.now().date()`.
+
+**Validar:** com dados reais, passou de **0** para **222** registros de hoje. `py_compile` OK.
+
+---
+
+## IS-076 — Desligar/Reiniciar não concluía (delay de 10s) 🟢
+
+**Sintoma:** ao enviar "Desligar PC", a máquina ia para a tela **"Você escolheu
+sair"** mas **não desligava**.
+
+**Diagnóstico:** o comando **chegou** (o `activity` da máquina mostrava "Você escolheu
+sair"); o problema era o `shutdown /s /f /t 10` — a contagem de 10s permite abortar
+(`shutdown /a`) e deixa a tela pendurada.
+
+**Solução:** trocado para **`/t 0`** (imediato, sem janela para abortar) em
+`lab_agent.py` e no embutido do `lab_agent.ps1` (Shutdown e Restart).
+
+**Arquivos:** `data/repo/plugins/lab_agent.py`, `data/repo/plugins/lab_agent.ps1`
+
+**Ação:** **reinstalar o agente** nas máquinas (o código é embutido no `lab_agent.ps1`)
+para valer. Se ainda assim não desligar, será questão de privilégio (agente na sessão
+do aluno sem direito de desligar) — aí elevamos o agente.
+
+---
+
+## IS-077 — (Estudo/Backlog) Monitor online no Streamlit Cloud ⚪
+
+**Problema:** o Streamlit Cloud **não recebe conexões de entrada** nem roda um Flask
+persistente; o **receiver** (que escuta os agentes na porta 5000) **não pode morar no
+Cloud**. O Cloud só lê um datastore alcançável (Supabase).
+
+**Opções avaliadas:**
+- **A) Relay via Supabase (recomendado):** o receiver no PC do professor **empurra**
+  um snapshot agregado (throttle ~60s) para `lab_snapshot` e **puxa** comandos de
+  `lab_commands`; a página **Monitor** no app Cloud lê o Supabase. Online, multiusuário,
+  reaproveita login. Não é tempo real.
+- **B) Túnel (Tailscale/Cloudflare Tunnel):** expõe o receiver por **nome fixo**
+  (Tailscale já instalado) → tempo real + resolve IP/DNS. Exige túnel ativo.
+- **C) Agentes enviando direto p/ Supabase:** rejeitado (egress/segurança/internet).
+- **D) Receiver em VPS público:** custo/segurança/rede da escola.
+
+**DNS:** professores usam a URL pública do Cloud (sem DNS); os **agentes** ganham nome
+fixo via túnel (ou DDNS+port-forward, menos seguro).
+
+**Recomendação:** fase 1 = **A) relay Supabase + página Monitor no Cloud**; fase 2
+opcional = **B) Tailscale Funnel** para tempo real. App separado no repo `apps/` é
+possível, mas **não necessário** (uma página no app principal resolve).
+
+**Cuidados:** push a cada ~60s (não 10s), sem `select(*)`, cache `st.cache_data` no
+Cloud; comandos só por tabela (latência de 1 ciclo); manter login teacher/admin.
+
+---
+
+## IS-078 — Bloqueio persistente: watchdog + tela reforçada 🟢
+
+**Pedido:** "fechar o jogo" hoje não adianta (reabrem logo). Ter um rastreador que
+**derruba o processo sozinho** e/ou **impede a inicialização**.
+
+**IMPLEMENTADO:**
+- **Watchdog no agente** (`lab_agent.py` + embutido no `.ps1`): thread daemon que a
+  cada **4s** encerra processos cujo nome contenha alguma chave de `BLOCKED_PROCESS_KEYWORDS`
+  ∪ `blocked_apps.json` (novo arquivo, editável — ex.: `tor.exe`, `i2prouter.exe`).
+  Flag `AUTO_BLOCK` (default `True`). Cada kill é registrado no log.
+- **`blocked_apps.json`**: lista extra de processos (reload dinâmico).
+- **Tela de bloqueio reforçada** (`sysava_lock.ps1`): `ShowInTaskbar=false`, timer de
+  **1s** que reafirma `TopMost`/`BringToFront` e **mata `taskmgr.exe`**; e
+  **`DisableTaskMgr=1`** no HKCU enquanto bloqueado (restaurado ao desbloquear).
+
+**Pendente (backlog):** **IFEO** (`Image File Execution Options`) para impedir de vez a
+abertura dos `.exe` (requer Admin), e hook de teclado/quiosque se quiser bloquear
+Alt+F4/Alt+Tab.
+
+**Arquivos:** `data/repo/plugins/lab_agent.py`, `data/repo/plugins/lab_agent.ps1`,
+`data/repo/plugins/sysava_lock.ps1`, `data/repo/plugins/blocked_apps.json`
+
+**Ação:** **reinstalar o agente** (código embutido no `.ps1`) nas máquinas.
+
+## IS-079 — Relatório detalhado por PC no dashboard 🟢
+
+**Pedido:** selecionar um PC e ver **navegadores, jogos e apps** em atividade.
+
+**IMPLEMENTADO:**
+- Agente passa a enviar `procs` (lista compacta dos nomes de processos ativos,
+  até 200) no payload do `/ping`.
+- Nova rota **`/detalhes?maquina=X`** (login) no receiver: mostra usuário/IP, janela
+  ativa, categoria, portas e **três colunas** — 🌐 Navegadores, 🎮 Jogos, ⚙️ Outros
+  processos. Link **🔎** adicionado em cada linha do dashboard.
+
+**Arquivos:** `data/repo/plugins/lab_receiver.py`, `data/repo/plugins/lab_agent.py`,
+`data/repo/plugins/lab_agent.ps1`
+
+**Validar:** `/detalhes` sem login → 302; logado e máquina existente → 200 com
+"Navegadores". `py_compile` + parse dos `.ps1` + Python embutido OK.
+
+---
+
+## IS-080 — Autostart falhava no `GroupId` (nome de grupo localizado) 🟢
+
+**Sintoma:** ao atualizar o agente, dava **erro no `GroupId`** na criação da tarefa.
+
+**Causa:** `New-ScheduledTaskPrincipal -GroupId "BUILTIN\Users"` usa o **nome do grupo
+local** — num Windows **pt-BR** o grupo é "Usuários", então `BUILTIN\Users` não
+resolve e a tarefa falha.
+
+**Solução:**
+- `lab_agent.ps1` (passo 5b): o autostart passou a usar a **pasta Startup comum**
+  (`SysAva Agent.vbs`, que roda no logon de qualquer usuário, oculto) como
+  **método principal** — sem depender de nome de grupo. Fallback de tarefa agora usa
+  **`-UserId "$env:USERDOMAIN\$env:USERNAME"`** (+ `-LogonType Interactive`), não GroupId.
+- `instalar_tela_sysava.ps1`: o fallback da tarefa também trocado para `-UserId`.
+
+**Arquivos:** `data/repo/plugins/lab_agent.ps1`,
+`data/repo/plugins/instalar_tela_sysava.ps1`
+
+**Validar:** parse OK e **nenhum `GroupId`** restou nos `.ps1`. Re-executar o
+instalador deve mostrar **"[OK] ... via Startup"**.
+
+---
+
+## IS-081 — Ação "Atualizar Monitor" pelo painel 🟢
+
+**Pedido:** uma opção de atualização que, na máquina, baixa o lab e roda o script
+pedindo a senha de Administrador.
+
+**Solução:**
+- Agente (`lab_agent.py` + embutido no `.ps1`): nova função `atualizar_monitor()` —
+  baixa `lab_agent.ps1` do servidor (`/download/lab_agent.ps1`) para o TEMP e o
+  reexecuta com **`Start-Process -Verb RunAs`** (o **UAC pede a senha de
+  Administrador**); o instalador atualiza o agente e reinicia. Trata o comando
+  **"Atualizar"**.
+- Ação **"Atualizar Monitor (baixar e reinstalar)"** adicionada ao painel do plugin
+  (`lab_monitor.py`) e ao dashboard web (`ACOES_CONTROLE` no `lab_receiver.py`).
+
+**Arquivos:** `data/repo/plugins/lab_agent.py`, `data/repo/plugins/lab_agent.ps1`,
+`data/repo/plugins/lab_monitor.py`, `data/repo/plugins/lab_receiver.py`
+
+**Bug de encoding corrigido junto:** o passo `/t 0` (IS-076) gravou os arquivos com
+`Get-Content`/`Set-Content`, **duplo-codificando os acentos** ("Anônimos"→"AnÃ´nimos").
+Corrigido por round-trip `cp1252→utf-8` em `lab_agent.py`/`lab_agent.ps1` (mesmo
+padrão de `lab_agent.py`/`.ps1` recentes; usar **LF** foi mantido).
+
+**Validar:** parse + `py_compile` + Python embutido OK; `"Anônimos"` presente e sem
+resíduo `Ã`. **Reinstalar o agente** para receber a ação.
+
+---
+
+## IS-082 — Abrir o dashboard web pelo plugin Monitor 🟢
+
+**Pedido:** no plugin Monitor, visualizar e clicar num link para abrir o dashboard
+web do receiver.
+
+**Solução (`lab_monitor.py`):** adicionado **`st.link_button`** para
+`http://<ip>:5000/` (via `get_receiver_base_url()`), **em dois lugares**: no topo da
+página e na barra lateral. Ao lado, um `st.caption` mostra a URL (com aviso de
+"login do professor").
+
+**Validar:** `py_compile` OK; `st.link_button` disponível no Streamlit instalado.
+
+---
+
+## IS-083 — Memorizar o RA na tela de bloqueio 🟢
+
+**Pedido:** não ter que digitar o RA toda vez que logar.
+
+**Solução (`sysava_lock.ps1`):** guarda o **último RA válido** em
+`%LOCALAPPDATA%\SysAva\ultimo_ra.txt` (por usuário do Windows) e **preenche o campo**
+no próximo logon (com o texto selecionado — basta teclar **Enter**). O RA é salvo ao
+validar com sucesso (também no modo offline). Se não for o mesmo aluno, basta
+sobrescrever o campo.
+
+**Arquivos:** `data/repo/plugins/sysava_lock.ps1`
+
+**Observação:** em PC com **conta Windows compartilhada**, o RA lembrado é o do
+**último** aluno (o próximo confirma ou troca). Se cada aluno tem conta Windows
+própria, cada um lembra o seu.
+
+**Ação:** reinstalar a tela (`/setup` → card 3) para baixar o `sysava_lock.ps1` novo.
+
+---
+
+## IS-084 — Mostrar o aluno da tela de bloqueio no relatório 🟢
+
+**Contexto:** a conta Windows do laboratório é **sempre "ALUNO"**, então o relatório
+mostrava "ALUNO" em vez do aluno real.
+
+**Solução (`lab_receiver.py`):** o **dashboard** e a página **`/detalhes`** passaram a
+exibir **`Aluno (RA)`** a partir de `lab_users.json` (associação gravada pela tela de
+bloqueio via `/api/auth_ra?ra=...&maquina=...`), com **fallback** para a conta Windows
+quando não houver associação. Coluna do dashboard renomeada de "Usuário" para
+**"Aluno (RA)"**.
+
+**Arquivos:** `data/repo/plugins/lab_receiver.py`
+
+**Validar:** com uma associação de teste, `GET /` mostrou **"Aluno Teste (12345)"** em
+vez de "ALUNO"; `py_compile` OK. (No plugin Streamlit já existia a coluna "Aluno (RA)".)
+
+---
+
+## IS-085 — Início limpo: só o SysAva, sem navegadores/bootloaders 🟢
+
+**Pedido:** ao iniciar, deixar **apenas uma janela do navegador na página do SysAva** e
+**fechar outros navegadores e bootloaders de jogos**.
+
+**Solução:**
+- **Tela de bloqueio** (`sysava_lock.ps1`): nova função **`Fechar-Navegadores-E-Jogos`**
+  (mata `chrome`, `msedge`, `firefox`, `brave`, `opera`, `iexplore` e launchers
+  `steam`, `epicgameslauncher`, `battle.net`, `riotclientservices`, `origin`,
+  `eadesktop`, `ubisoftconnect`, `gog`/`galaxyclient`). Chamada no **`Add_Shown`**
+  **antes** de abrir a URL — assim abre **uma** instância já na página do SysAva.
+- **Watchdog do agente** (`blocked_apps.json`): adicionados os **bootloaders** para
+  não reabrirem (são derrubados a cada ~4s).
+
+**Arquivos:** `data/repo/plugins/sysava_lock.ps1`,
+`data/repo/plugins/blocked_apps.json`
+
+**Validar:** parse do `.ps1` OK; `blocked_apps.json` válido. **Reinstalar a tela**
+(`/setup` card 3) e o agente (card 1) para valer.
+
+---
+
+## IS-086 — Servidor portátil (sem depender do notebook) 🟢
+
+**Pedido:** o receiver não pode depender do notebook (bateria/cair). Ter uma versão
+para instalar num PC fixo.
+
+**Limitação:** o Streamlit Cloud **não hospeda** o receiver (sem conexões de entrada).
+
+**Solução — receiver autônomo + pacote portátil:**
+- **Autonomia (`lab_receiver.py`):** removida a dependência do `services` na
+  autenticação/relatório/histórico:
+  - Login do painel e `/api/auth_ra` agora usam **REST do Supabase** (PostgREST, via
+    `requests`) + **`bcrypt`** (`_rest_get`, `_buscar_usuario`, `_bcrypt_ok`).
+  - Histórico do aluno via `_rest_insert("user_history", ...)`.
+  - Relatório usa **`audit_log.py` local** (novo arquivo ao lado do servidor, pasta
+    oculta `.relatorios/`), com fallback para o `services`.
+  - Credenciais carregadas do `.env` local **e** da raiz.
+  Deps do servidor: **flask, waitress, filelock, requests, bcrypt, python-dotenv**.
+- **Pacote portátil:** `INICIAR_SERVIDOR.ps1` + `.bat` — baixa/instala um **Python
+  embutido** (ou usa o do PATH), instala as dependências, **abre o firewall** (TCP 5000
+  / UDP 5001) e sobe o `lab_receiver.py`. `config.env.example` para o `.env`.
+- **Uso:** copiar a pasta **`plugins`** para o PC fixo, criar `.env`
+  (`SUPABASE_URL`/`SUPABASE_KEY`) e rodar `INICIAR_SERVIDOR.bat`. Card **6** no `/setup`
+  baixa os arquivos.
+
+**Arquivos:** `data/repo/plugins/lab_receiver.py`, `data/repo/plugins/audit_log.py`,
+`data/repo/plugins/INICIAR_SERVIDOR.ps1`, `data/repo/plugins/INICIAR_SERVIDOR.bat`,
+`data/repo/plugins/config.env.example`
+
+**Validar:** `/api/auth_ra?ra=adriana` → `ok:true` e `POST /login` OK (REST, sem o
+`services`); `/download/INICIAR_SERVIDOR.*` → 200; card 6 no `/setup`; parse do `.ps1`
+e `py_compile` OK.
+
+**Observação:** o servidor precisa de **internet** (Supabase) para login/relatório;
+agentes e downloads funcionam na **LAN**. Ainda é preciso um PC ligado (o fixo), mas
+**não** o notebook.
+
+---
+
+## IS-087 — Bootstrap do servidor portátil baixa tudo sozinho 🟢
+
+**Sintoma:** ao rodar o `INICIAR_SERVIDOR.bat` numa pasta nova, deu
+**"lab_receiver.py nao encontrado"** — porque só o `.bat` havia sido baixado, sem os
+demais arquivos.
+
+**Solução:**
+- `INICIAR_SERVIDOR.ps1` ganhou o parâmetro **`-Fonte`**: se o `lab_receiver.py` não
+  estiver na pasta, ele **pergunta a URL de origem** (ex.: `http://<ip>:5000`), baixa
+  **`/servidor.zip`** e extrai tudo (**`Expand-Archive -Force`**).
+- Rota **`/servidor.zip`** no receiver: empacota os arquivos do servidor
+  (`lab_receiver.py`, `audit_log.py`, `INICIAR_SERVIDOR.*`, `config.env.example`,
+  agentes/scripts, `logo`/`wallpaper`, `blocked_apps.json`, `categorias/`).
+- Card **6** no `/setup` ganhou o botão **📦 servidor.zip (tudo)**.
+
+**Arquivos:** `data/repo/plugins/lab_receiver.py`,
+`data/repo/plugins/INICIAR_SERVIDOR.ps1`
+
+**Validar:** `/servidor.zip` → 126 KB com todos os itens; parse do `.ps1` +
+`py_compile` OK. Uso no PC novo: rodar `INICIAR_SERVIDOR.bat` e informar a URL de
+origem — ou baixar o `servidor.zip` do `/setup` e extrair.
+
+---
+
+## IS-088 — Sábado manual recomeçava a numeração em 13 🟢
+
+**Sintoma:** com a aula **23** já registrada no portal (Fundamentos UI/UX, I-A,
+turma 309197), o botão **➕ Gerar até 4 planos** da aba **🟣 Sábados
+(reposição)** do app 8510 gerou os planos de 20/06 com `AULA_NUM 13..16` e
+conteúdo da “Aula 13 Coleta de Informações”, em vez de partir da **24**.
+
+**Causa:** `proximo_numero()` (em
+`apps/planejamento_registro/planejamento_registro_streamlit.py`) usava
+`COUNT(*)` de `historico_aulas` e `planejamento`. O histórico local tinha 8
+linhas e a fila 12 planos → `max(8, 12) + 1 = 13`. Os planos **21..23** já
+registrados estavam em `aulas/registradas/` **sem linha em `planejamento`**, e
+o `COUNT` ainda é instável a exclusões/mudança de status (mesmo defeito do
+IS-042/AP-013 no gerador automático).
+
+**Mudança:** novo helper `core/banco.maior_aula_num_por_arquivo` (maior
+`AULA_NUM` dos `.txt` em `pendentes/`, `prontas/` e `registradas/`).
+- `proximo_numero()` (aba 🟣 Sábados) usa o maior entre `COUNT(historico)`,
+  `MAX(numero_aula)` do `planejamento` e esse helper.
+- `core/gerador.py` (aba 📄 Planos) mescla o mesmo mapa em `next_aula_num`:
+  antes partia de `MAX(planejamento)+1 = 21`, e com o filtro **“De 24”** os
+  slots 07:10/08:10/11:30 do sábado eram descartados — só o 13:30 virava 24.
+  Agora os 4 slots iniciais são gerados como 24..27.
+- A ocupação do gerador também passa a considerar os `.txt` (data+horário):
+  as aulas já registradas em 22/06 e 23/06 não são regeradas.
+- **Sábado alvo em ⚙️ Config:** chave `sabado_alvo_planejamento` (selectbox)
+  + parâmetro `data_alvo` no gerador/API. A aba Sábados já abre nele; no
+  «🚀 Gerar planos» a restrição é **opcional** (checkbox desmarcado por
+  padrão). Marcado como **20/06/2026**; 10/06 tem registro e não é planejado.
+- **Grade normal depois do sábado:** a fila continua em **24/06** (28..), pois
+  20/06 já foi gerado (24..27) e 22/06/23/06 estão registrados.
+- **«Sobrescrever» protege aulas registradas:** `registrados_set` (`.txt` de
+  `aulas/registradas/`) é respeitado **sempre**, mesmo com force ligado. Antes
+  o force ignorava a ocupação e gerou 5 planos em 15/16/17-06 como 28..32;
+  esses 5 `.txt`/linhas foram removidos. O force renumera só pendentes/prontas.
+- **Reposição da disc. 5 (sem buraco entre disciplinas):** Fundamentos termina
+  em 03/07 07:10 (aula 40) e a disc. 5 começa no **slot seguinte, 03/07 08:10**
+  (aula 1). Demais repostas: **11/07** (sábado letivo de sexta, 07:10=2),
+  **15/08** (08:10=3, 09:30=4) e **12/09** (07:10=5); 22/08 já tinha P.C.II às
+  07:10. Disc. 5 volta a **1–40**. Janela de Fundamentos volta a 03/07.
+- **Turma I-B (314114), Fundamentos UI:** **40/40 planos** (1–40, sem
+  buracos/duplicatas/conflitos), em `aulas/prontas/` como `pronta`; **0
+  registrados** no histórico. O **20/06 não é usado** (a A já tem 4 planos).
+  Seminários **36–39** foram para **27/06** (07:10, 08:10, 09:30, 13:30);
+  aulas **33–35** voltaram a 02/07 (13:30/14:30) e 03/07 (08:10); a **40** foi
+  para **11/07 14:30**. Fundamentos B termina em **03/07** (aula 35), liberando
+  06/07 e 09/07.
+- **Programação Mobile na I-B:** aulas **1–3** em **11/07** (sábado de sexta)
+  às **08:10, 09:30 e 13:30**; a aula 40 de Fundamentos ocupa 14:30 — 4 aulas
+  da B no dia (a A fica no 07:10).
+
+**Arquivos:** `apps/planejamento_registro/planejamento_registro_streamlit.py`,
+`apps/planejamento_registro/core/banco.py`,
+`apps/planejamento_registro/core/gerador.py` (registro em `apps/ISSUES.md` →
+**AP-028**).
+
+**Validar:** harness com o banco real (`309197` / disciplina `8`):
+`_maior_aula_em_arquivos = 23` e `proximo_numero = 24`; sandbox do gerador com
+`aula_min=24` e `data_alvo=2026-06-20` → exatamente 4 planos: 20/06
+**07:10=24, 08:10=25, 11:30=26, 13:30=27**; com `force_overwrite=True` +
+`aula_min=28` → **24/06 28..31 + 26/06=32**, sem tocar em 15/16/17-06
+(registrados); `py_compile` + 71 testes OK. Foram excluídos os planos errados
+de 20/06 (13..16), os da base antiga (24 em 13:30 e 25 em 22/06), os de 10/06
+(24..26) e os 5 de 15/16/17-06 (28..32).
+
+---
+
+## IS-089 — Título e ícone da aba do SysAva 🟢
+
+**Sintomas:** a aba do app principal aparecia como **“Streamlit”** com o ícone
+padrão, diferente do app de Planejamento (8510); e a sidebar mostrava um
+**logo do Google** grande, sem sentido para o SysAva.
+
+**Causa:** o `app.py` principal nunca chamava `st.set_page_config()`. Pior: a
+sidebar usava `https://cdn-icons-png.flaticon.com/512/2991/2991148.png`, e essa
+URL retorna o **“G” do Google** (não um capacete/logo do portal).
+
+**Mudança:**
+- Logo próprio copiado para **`assets/logo_sysava.png`**.
+- No topo de `app.py`, antes de qualquer outro comando `st.*`:
+
+```python
+APP_LOGO = os.path.join(project_root, "assets", "logo_sysava.png")
+st.set_page_config(
+    page_title="SysAva",
+    page_icon=APP_LOGO if os.path.exists(APP_LOGO) else "🎓",
+)
+```
+
+- A sidebar passou a usar `st.image(APP_LOGO, width=100)` (com fallback
+  `## 🎓 SysAva` se o arquivo não existir).
+
+**Arquivos:** `app.py`, `assets/logo_sysava.png`.
+
+**Validar:** subir o app principal e conferir `document.title === "SysAva"` e o
+favicon servido localmente (`/media/...png`), além do logo SysAva na sidebar
+(verificado via browser-automation). Reinicie o Streamlit para carregar.
+
+---
+
+## IS-090 — Tema azul do SysAva 🟢
+
+**Pedido:** aplicar o **azul do logo** ao app principal (fundo/sidebar/botões),
+mantendo o visual escuro.
+
+**Mudança:**
+- Novo `.streamlit/config.toml` com `base = "dark"`,
+  `primaryColor = "#2563EB"`, `backgroundColor = "#0A1220"`,
+  `secondaryBackgroundColor = "#101A2E"` e `textColor = "#E5E7EB"`.
+- CSS global do `app.py`: fundo `linear-gradient(135deg, #0B1E3F, #070D18)`,
+  sidebar azul-escura com borda `rgba(37,99,235,.35)`, botões com borda
+  `#2563EB`, hover `#60A5FA` (substituiu o verde `#00ffa3`), inputs `#0F1B2E`
+  e links `#60A5FA`.
+
+**Arquivos:** `.streamlit/config.toml`, `app.py`.
+
+**Validar:** subir o app e conferir o fundo
+`linear-gradient(135deg, rgb(11,30,63), rgb(7,13,24))` e o texto
+`rgb(229,231,235)` (verificado via browser-automation + screenshot da tela de
+login). Reinicie o Streamlit para carregar o `config.toml`.
+
+---
+
+## IS-091 — Visualização da prova (folha branca) 🟢
+
+**Sintoma:** na aba de emissão/impressão, o “Visualizar Prova” mostrava o texto
+da prova em cinza-escuro direto sobre o fundo navy do app — sem contraste e
+sem cara de folha.
+
+**Causa:** `generate_assessment_print_html()` (em `views/avaliacoes.py`) definia
+`body { color:#333 }` mas **não** definia fundo. O `components.html` é
+transparente, então o navy do Streamlit aparecia atrás do texto.
+
+**Mudança:** a prévia agora tem:
+- fundo geral claro (`#e8eef8`) e uma **folha `.paper`** branca centralizada,
+  com `max-width: 820px`, padding de 40px, cantos arredondados e sombra;
+- texto escuro (`#1f2937`) e cabeçalho/linhas ajustados para papel;
+- botão **“🖨️ Imprimir / Salvar PDF”** azul (`#2563EB`), centralizado;
+- `@media print` preservado: A4, margens de 15mm, sem sombra/padding da folha
+  e sem o botão (`.no-print`).
+
+**Arquivos:** `views/avaliacoes.py`.
+
+**Validar:** gerar o HTML com dados de exemplo e abrir no navegador — body
+`rgb(232,238,248)`, `.paper` branco, texto `rgb(31,41,55)` (verificado via
+browser-automation + screenshot). No app, clicar em **Visualizar Prova**;
+imprimir/PDF continua em A4.
+
+---
+
+## IS-092 — Fontes pequenas com o navegador a 100% 🟢
+
+**Sintoma:** em telas grandes, com o zoom do navegador em 100%, as letras do
+menu, títulos e controles ficavam pequenas demais.
+
+**Causa:** o Streamlit usa base de **16px**; em monitores grandes/4K, 100% de
+zoom deixa tudo reduzido.
+
+**Mudança:** no CSS global do `app.py`:
+
+```css
+html { font-size: 112.5% !important; } /* 18px (padrão Streamlit: 16px) */
+```
+
+Como os componentes usam `rem`, títulos, menus, botões, inputs e textos sobem
+juntos (~12,5%). O layout continua centralizado e o tema azul intacto.
+
+**Arquivos:** `app.py`.
+
+**Validar:** com o app aberto, `getComputedStyle(document.documentElement)
+.fontSize === "18px"` e `h1` em `49.5px` (verificado via browser-automation);
+screenshot da tela de login mostra o texto maior. Reinicie/rerrole o app.
+
+---
+
+## IS-093 — Boxes de código/conteúdo em azul mais claro 🟢
+
+**Pedido:** com o tema azul escuro, os boxes de código/conteúdo e o dropdown
+de planos prontos (8510) ficavam escuros demais. Um primeiro ajuste em branco
+ficou com contraste excessivo; o pedido final é **mesma tonalidade azul, só
+um pouco mais clara**.
+
+**Mudança:**
+- No **app principal** (`app.py`): `pre`, `code` e
+  `[data-testid="stCodeBlock"]` com fundo `#152C52` (azul mais claro), texto
+  `#E5E7EB` e borda `#2E4F7A`.
+- No **Planejamento 8510**: mesmo estilo + `[data-testid="stTextArea"]
+  textarea` (conteúdo do plano) e popover do multiselect
+  (`[data-baseweb="popover"]`, `[role="listbox"]`/`option`) no mesmo azul, com
+  hover `#1C3A66`.
+
+**Arquivos:** `app.py`,
+`apps/planejamento_registro/planejamento_registro_streamlit.py` (registro no
+repo de apps: **AP-029**).
+
+**Validar:** abrir uma aula com código no app principal e, no 8510, 📄 Planos
+(conteúdo `.txt`) e 🤖 Registrar / Sincronizar (dropdown dos planos) — fundo
+azul mais claro e texto claro; `py_compile` OK.
+
+---
+
 ## Comandos úteis
 
 ```powershell
@@ -2202,6 +3650,13 @@ python scripts/cleanup_forum_duplicates.py --apply
 # Lista negra: JSON -> banco (dry-run / aplicar + regenera o espelho local)
 python scripts/migrar_excecoes_para_banco.py --dry-run
 python scripts/migrar_excecoes_para_banco.py
+
+# Bloqueio não invasivo via hosts (rodar em cada PC; pede Administrador)
+powershell -NoProfile -ExecutionPolicy Bypass -File data\repo\plugins\bloquear_hosts.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File data\repo\plugins\bloquear_hosts.ps1 -Revert
+
+# Verificar se o receiver esta ouvindo (TCP 5000 + UDP discovery 5001)
+netstat -ano | findstr ":5000 :5001"
 ```
 
 ## Histórico de commits relacionados

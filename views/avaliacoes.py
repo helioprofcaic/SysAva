@@ -334,37 +334,90 @@ def generate_assessment_print_html(school_name, subject_name, class_name, assess
         <meta charset="UTF-8">
         <title>Avaliação - {assessment_title}</title>
         <style>
-            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: min(800px, 100%); margin: 0 auto; padding: 20px; box-sizing: border-box; overflow-wrap: break-word; }}
-            .header {{ text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }}
-            .header h1 {{ margin: 0; font-size: 20px; }}
-            .header p {{ margin: 5px 0; color: #666; }}
-            .student-info {{ border: 1px solid #000; padding: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0 12px; }}
+            * {{ box-sizing: border-box; }}
+            body {{
+                font-family: Arial, Helvetica, sans-serif;
+                line-height: 1.6;
+                color: #1f2937;
+                margin: 0;
+                padding: 24px;
+                background: #e8eef8;
+            }}
+            .paper {{
+                max-width: 820px;
+                margin: 0 auto;
+                background: #ffffff;
+                padding: 40px;
+                border-radius: 10px;
+                box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+                color: #1f2937;
+                overflow-wrap: break-word;
+            }}
+            .header {{
+                text-align: center;
+                border-bottom: 2px solid #1f2937;
+                padding-bottom: 10px;
+                margin-bottom: 20px;
+            }}
+            .header h1 {{ margin: 0; font-size: 20px; color: #111827; }}
+            .header p {{ margin: 5px 0; color: #4b5563; }}
+            .student-info {{
+                border: 1px solid #111827;
+                padding: 10px;
+                margin-bottom: 15px;
+                display: flex;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 0 12px;
+            }}
+            .no-print {{ text-align: center; margin-bottom: 20px; }}
+            .no-print button {{
+                background-color: #2563EB;
+                color: #ffffff;
+                padding: 12px 24px;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: bold;
+                font-size: 14px;
+                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+            }}
+            .no-print button:hover {{ background-color: #1D4ED8; }}
             @media print {{
+                body {{ background: #ffffff; padding: 0; margin: 0; }}
                 .no-print {{ display: none !important; }}
-                body {{ margin: 0; padding: 15mm; }}
+                .paper {{
+                    box-shadow: none;
+                    border-radius: 0;
+                    padding: 0;
+                    max-width: 100%;
+                    margin: 0;
+                }}
                 @page {{ size: A4; margin: 15mm; }}
             }}
         </style>
     </head>
     <body>
-        <div class="no-print" style="text-align: center; margin-bottom: 15px;">
-            <button onclick="window.print()" style="background-color: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px;">IMPRIMIR / SALVAR PDF</button>
+        <div class="no-print">
+            <button onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
         </div>
-        <div class="header">
-            <h1>{school_name}</h1>
-            <p><strong>Disciplina:</strong> {subject_name} | <strong>Turma:</strong> {class_name}</p>
-            <p><strong>Avaliação:</strong> {assessment_title} ({assessment_type}) | <strong>Data:</strong> {date_str}</p>
-        </div>
-        <div class="student-info">
-            <span><strong>Aluno(a):</strong> _________________________________________________</span>
-            <span><strong>Nota Final:</strong> _________</span>
-        </div>
-        <p><strong>RA:</strong> ___________________</p>
-        <hr style="margin: 15px 0;">
-        {rows_html}
-        <br>
-        <div style="text-align: center; margin-top: 30px; font-style: italic;">
-            Boa prova!
+        <div class="paper">
+            <div class="header">
+                <h1>{school_name}</h1>
+                <p><strong>Disciplina:</strong> {subject_name} | <strong>Turma:</strong> {class_name}</p>
+                <p><strong>Avaliação:</strong> {assessment_title} ({assessment_type}) | <strong>Data:</strong> {date_str}</p>
+            </div>
+            <div class="student-info">
+                <span><strong>Aluno(a):</strong> _________________________________________________</span>
+                <span><strong>Nota Final:</strong> _________</span>
+            </div>
+            <p><strong>RA:</strong> ___________________</p>
+            <hr style="margin: 15px 0;">
+            {rows_html}
+            <br>
+            <div style="text-align: center; margin-top: 30px; font-style: italic;">
+                Boa prova!
+            </div>
         </div>
     </body>
     </html>
