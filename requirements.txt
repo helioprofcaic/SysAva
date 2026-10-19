@@ -17,6 +17,9 @@ pyinstaller
 python-dotenv
 requests
 starlette<0.37
+# Streamlit 1.56 usa protobuf <6; o Cloud com Python 3.13 puxava o 6.x e
+# quebrava no import (Descriptors cannot be created directly).
+protobuf==5.29.6
 streamlit
 streamlit-javascript
 streamlit-pdf-viewer
