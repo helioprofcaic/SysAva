@@ -76,6 +76,22 @@ def parse_arguments():
     parser.add_argument("--theme", type=str, default="default", help="Theme for the Streamlit app")
     return parser.parse_args()
 
+@st.cache_resource(show_spinner="Sincronizando arquivos do Google Drive...")
+def _drive_bootstrap():
+    """Uma vez por processo: baixa plugins/repo e o banco (se faltar)."""
+    try:
+        from services import drive_storage
+        if not drive_storage.credentials_available():
+            return False
+        drive_storage.sync_repo_down()
+        db_path = os.path.join(project_root, "data", "escola_ativa.db")
+        if not os.path.exists(db_path):
+            drive_storage.sync_db_down(db_path)
+        return True
+    except Exception:
+        return False
+
+
 def main():
     args = parse_arguments()
     # Tenta recuperar a sessão via URL se o usuário não estiver logado
@@ -108,6 +124,8 @@ def main():
             st.session_state.page = 'login'  # Se não logado, volta para a página de login
             st.rerun()
     else:
+        _drive_bootstrap()
+
         # Sidebar de Navegação
         with st.sidebar:
             if os.path.exists(APP_LOGO):

@@ -120,6 +120,7 @@ Formato de ID: `IS-NNN`.
 | IS-091 | Visualização da prova: texto escuro sobre fundo navy (ilegível) — agora renderiza como folha A4 branca sobre fundo claro, com sombra e botão de impressão azul | 🟢 | 2026-10-19 |
 | IS-092 | Legibilidade em telas grandes: fontes/elementos pequenos com o navegador a 100% — base do Streamlit elevada de 16px para 18px | 🟢 | 2026-10-19 |
 | IS-093 | Boxes de código/conteúdo em azul mais claro (principal e 8510): `pre/code/stCodeBlock`, textarea do plano e dropdown de planos com fundo `#152C52` e texto `#E5E7EB` | 🟢 | 2026-10-19 |
+| IS-094 | Google Drive (conta bot/service account): sync de `data/repo` (plugins/Turmas) para o Cloud, download do `escola_ativa.db`, aba ☁️ Drive no Plugins e `scripts/drive_check.py`; upload limitado pela cota do service account | 🟢 | 2026-10-19 |
 
 ---
 
@@ -3610,6 +3611,41 @@ repo de apps: **AP-029**).
 **Validar:** abrir uma aula com código no app principal e, no 8510, 📄 Planos
 (conteúdo `.txt`) e 🤖 Registrar / Sincronizar (dropdown dos planos) — fundo
 azul mais claro e texto claro; `py_compile` OK.
+
+---
+
+## IS-094 — Google Drive (conta bot/service account) 🟢
+
+**Pedido:** manter a pasta `data/` no Google Drive e deixar plugins e banco
+funcionais no Cloud, usando uma “conta bot”. O login da service account e o
+download da pasta foram validados.
+
+**Implementação:**
+- `services/drive_storage.py`: autentica com service account (JSON em
+  `data/drive_credentials.json` local ou `[gcp_service_account]` nos Secrets),
+  lista/baixa/envia arquivos. A pasta padrão é
+  `1db5qPNH9vOQKIabfNgWpetvjQsYsUuQi` (pode ser trocada por `DRIVE_FOLDER_ID`).
+- `sync_repo_down()` baixa `repo/` para `data/repo` pulando `__pycache__`,
+  `.pyc`, logs e arquivos > 1 MB (plugins, JSONs e scripts).
+- `sync_db_down()` baixa `escola_ativa.db` para `data/` (nunca abre direto do
+  Drive); `sync_db_up()` envia o SQLite como backup.
+- `app.py`: no login, `_drive_bootstrap()` (cache_resource) sincroniza o repo
+  uma vez por processo e baixa o banco apenas se ele não existir.
+- **Plugins → ☁️ Drive**: testar conexão, baixar repo/plugins, enviar banco
+  local e baixar banco do Drive (com confirmação).
+- `scripts/drive_check.py`: CLI `--pull`/`--push` para validar/sincronizar.
+
+**Limitação:** service account **não tem cota para criar** arquivos no Meu
+Drive. Ela baixa normalmente; para criar o `escola_ativa.db` pela primeira vez,
+envie pelo Drive web (ou use Shared Drive/OAuth de uma conta comum). Depois,
+atualizações de um arquivo existente podem funcionar.
+
+**Arquivos:** `services/drive_storage.py`, `scripts/drive_check.py`,
+`app.py`, `views/plugins.py`, `requirements.txt`, `.gitignore`,
+`docs/ISSUES_LOCAIS.md`.
+
+**Validar:** `python scripts/drive_check.py` lista a pasta; `--pull <tmp>`
+baixa 109→72 arquivos úteis (~1,2 MB, sem logs/backups); `py_compile` OK.
 
 ---
 

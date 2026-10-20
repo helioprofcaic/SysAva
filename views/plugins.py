@@ -86,7 +86,7 @@ def show_page():
     # Substituímos st.tabs por um seletor de rádio horizontal para controle de execução.
     # O Streamlit avalia o conteúdo de todas as abas no st.tabs, o que causava a poluição do sidebar.
     # Com o if/elif, apenas o código (e o sidebar) do plugin selecionado é processado.
-    menu_options = ["Nativos", "Externos", "Planos", "Monitor", "Agenda", "Registro", "Atividades", "Notas", "Frequência", "Grade"]
+    menu_options = ["Nativos", "Externos", "Planos", "Monitor", "Agenda", "Registro", "Atividades", "Notas", "Frequência", "Grade", "Drive"]
     icons = {
         "Nativos": "🔌", 
         "Externos": "📂", 
@@ -97,7 +97,8 @@ def show_page():
         "Notas": "📊", 
         "Frequência": "📝",
         "Grade": "🗓️",
-        "Monitor": "🖥️"
+        "Monitor": "🖥️",
+        "Drive": "☁️"
     }
     
     selected_tab = st.radio(
@@ -253,3 +254,65 @@ def show_page():
             render_plugin_integrated(grade_path)
         else:
             st.info("O plugin de grade semanal não foi encontrado.")
+
+    # --- Aba do Google Drive (service account) ---
+    elif selected_tab == "Drive":
+        st.markdown("### ☁️ Google Drive (service account)")
+        try:
+            from services import drive_storage
+            info = drive_storage.load_service_account_info()
+            st.caption(f"Bot: `{info.get('client_email')}` • Pasta: `{drive_storage.get_folder_id()}`")
+
+            st.caption("O bot baixa arquivos normalmente. Para **criar** arquivos "
+                       "novos no Meu Drive ele não tem cota — envie uma vez pelo Drive "
+                       "web; atualizações de um arquivo existente podem funcionar.")
+
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                if st.button("🔄 Testar conexão", width="stretch", key="drive_test"):
+                    try:
+                        itens = drive_storage.list_files()
+                        st.success(f"{len(itens)} item(ns) na raiz do Drive.")
+                        st.dataframe(
+                            [{"Nome": i["name"],
+                              "Tipo": "pasta" if i["mimeType"] == "application/vnd.google-apps.folder" else i["mimeType"],
+                              "Modificado": i.get("modifiedTime", "")} for i in itens],
+                            width="stretch", hide_index=True)
+                    except Exception as e:
+                        st.error(f"Falha no teste: {e}")
+            with c2:
+                if st.button("⬇️ Baixar repo/plugins", width="stretch", key="drive_pull_repo"):
+                    try:
+                        with st.spinner("Baixando do Drive..."):
+                            baixados = drive_storage.sync_repo_down()
+                        st.success(f"{len(baixados)} arquivo(s) sincronizado(s) em `data/repo`.")
+                    except Exception as e:
+                        st.error(f"Falha ao baixar: {e}")
+            with c3:
+                if st.button("⬆️ Enviar banco local", width="stretch", key="drive_push_db"):
+                    try:
+                        with st.spinner("Enviando o SQLite..."):
+                            res = drive_storage.sync_db_up()
+                        st.success(f"Banco enviado: `{res.get('name')}` ({res.get('modifiedTime', '')}).")
+                    except Exception as e:
+                        st.warning(f"Não foi possível enviar: {e}")
+
+            st.divider()
+            st.markdown("#### Banco de dados")
+            st.caption("O SQLite é baixado para `data/` e usado localmente; nunca é aberto direto do Drive.")
+            conf_db = st.checkbox("Confirmo substituir o banco local pelo do Drive",
+                                  key="drive_db_conf")
+            if st.button("⬇️ Baixar banco do Drive", disabled=not conf_db, key="drive_pull_db"):
+                try:
+                    with st.spinner("Baixando o banco..."):
+                        caminho = drive_storage.sync_db_down(force=True)
+                    if caminho:
+                        st.success(f"Banco atualizado em `{caminho}`.")
+                    else:
+                        st.warning("Não encontrei `escola_ativa.db` na pasta do Drive.")
+                except Exception as e:
+                    st.error(f"Falha ao baixar o banco: {e}")
+        except Exception as e:
+            st.error(f"Drive indisponível: {e}")
+            st.caption("Configure `data/drive_credentials.json` localmente ou "
+                       "`[gcp_service_account]` + `DRIVE_FOLDER_ID` nos Secrets do Cloud.")

@@ -52,6 +52,12 @@ plugins/aulas/prontas/*.txt
 docs/*.txt
 data/credentials.json
 
+# Service account do Google Drive (conta bot) — nunca versionar
+drive_credentials.json
+data/drive_credentials.json
+*service-account*.json
+*service_account*.json
+
 dist/*
 img/*
 build/*
@@ -69,6 +75,9 @@ scripts/*
 !scripts/restore_new_supabase.py
 !scripts/migrar_excecoes_para_banco.py
 !scripts/cleanup_forum_duplicates.py
+!scripts/fix_weekly_schedule.py
+!scripts/repair_local_db.py
+!scripts/sync_lessons_from_supabase.py
 # Arquivos de IDEs e Editores
 .vscode/
 .idea/
