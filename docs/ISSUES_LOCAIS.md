@@ -121,6 +121,7 @@ Formato de ID: `IS-NNN`.
 | IS-092 | Legibilidade em telas grandes: fontes/elementos pequenos com o navegador a 100% — base do Streamlit elevada de 16px para 18px | 🟢 | 2026-10-19 |
 | IS-093 | Boxes de código/conteúdo em azul mais claro (principal e 8510): `pre/code/stCodeBlock`, textarea do plano e dropdown de planos com fundo `#152C52` e texto `#E5E7EB` | 🟢 | 2026-10-19 |
 | IS-094 | Google Drive (conta bot/service account): sync de `data/repo` (plugins/Turmas) para o Cloud, download do `escola_ativa.db`, aba ☁️ Drive no Plugins e `scripts/drive_check.py`; upload limitado pela cota do service account | 🟢 | 2026-10-19 |
+| IS-095 | Gerenciador de Notas: `float(None)` em nota do `student_scores.json` (Drive) derrubava o plugin — `_to_float` e notas saneadas | 🟢 | 2026-10-19 |
 
 ---
 
@@ -3646,6 +3647,28 @@ atualizações de um arquivo existente podem funcionar.
 
 **Validar:** `python scripts/drive_check.py` lista a pasta; `--pull <tmp>`
 baixa 109→72 arquivos úteis (~1,2 MB, sem logs/backups); `py_compile` OK.
+
+---
+
+## IS-095 — Notas: `float(None)` no JSON do Drive 🟢
+
+**Sintoma:** ao abrir **Plugins → Notas**, o plugin era interrompido com
+`float() argument must be a string or a real number, not 'NoneType'`.
+
+**Causa:** o `student_scores.json` sincronizado do Drive tem notas `null`
+(ex.: estudante `67152652023`, disciplina 8, T1/N2). O plugin fazia
+`float(nm2)` / `float(p.get('points'))` / `float(calc['total'])` direto.
+
+**Mudança:** helper `_to_float(valor, default=0.0)` no
+`student_scores.py` e uso nas médias, notas do trimestre, pontos
+qualitativos, score do sistema e bônus. As notas `None` viram `0.0`
+na planilha (editáveis normalmente).
+
+**Arquivos:** `data/repo/plugins/student_scores.py` (também atualizado no
+Drive; o Cloud baixa no boot ou em **Plugins → ☁️ Drive → Baixar repo/plugins**).
+
+**Validar:** `py_compile` OK; JSON do Drive saneado (nota `None` → `0.0`).
+Reinicie o app no Cloud ou clique em “Baixar repo/plugins”.
 
 ---
 

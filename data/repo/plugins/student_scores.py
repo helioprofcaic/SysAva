@@ -36,6 +36,15 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
+def _to_float(value, default=0.0):
+    """Converte para float tolerando None/''/texto inválido (JSON antigo)."""
+    try:
+        if value is None or value == "":
+            return default
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
 def log_message(message, type="info"):
     """Exibe mensagens no Streamlit ou no Console dependendo do contexto."""
     try:
@@ -73,11 +82,27 @@ def get_cached_student_score(username, subject_id):
         return db.get_student_score(username, filter_subject_id=subject_id)
     return {'total': 0.0}
 
+def _sem_nan(valor):
+    """Converte NaN/Infinity em null.
+
+    `NaN` não é JSON válido: gravado no caderno, quebrava o `JSON.parse` do
+    dashboard de análise de notas (IS-048)."""
+    if isinstance(valor, float):
+        if valor != valor or valor in (float("inf"), float("-inf")):
+            return None
+        return valor
+    if isinstance(valor, dict):
+        return {k: _sem_nan(v) for k, v in valor.items()}
+    if isinstance(valor, list):
+        return [_sem_nan(v) for v in valor]
+    return valor
+
 def save_json(file_path, data):
-    """Salva dados em um arquivo JSON."""
+    """Salva dados em um arquivo JSON (sem NaN — JSON estrito)."""
     try:
         with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
+            json.dump(_sem_nan(data), f, indent=4, ensure_ascii=False,
+                      allow_nan=False)
     except Exception as e:
         log_message(f"Erro ao salvar JSON: {e}", "error")
 
@@ -355,7 +380,7 @@ def get_student_qualitative_points(student_json, selected_subject_id, selected_s
         return 0.0
 
     if selected_subject_id is None or all_subjects_mode:
-        return min(6.0, round(sum(float(p.get('points', 0)) for p in all_points), 2))
+        return min(6.0, round(sum(_to_float(p.get('points')) for p in all_points), 2))
 
     sid_str = str(selected_subject_id)
     matching_ids = set(matching_subject_ids or [])
@@ -370,7 +395,7 @@ def get_student_qualitative_points(student_json, selected_subject_id, selected_s
     for p in all_points:
         p_sid = p.get('subject_id')
         p_lid = p.get('lesson_id')
-        pts = float(p.get('points', 0))
+        pts = _to_float(p.get('points'))
 
         # Se tem lesson_id mas não tem subject_id, resolve pelo mapa de aulas
         if p_sid is None and p_lid and lesson_sub_map and p_lid in lesson_sub_map:
@@ -669,7 +694,7 @@ def show_student_scores():
             nm9 = t3_data.get("N3", sub_data.get("nm9", 0.0))
 
         # --- LÓGICA DE FORMAÇÃO DE NOTAS (Simplificada) ---
-        system_score = round(float(calc['total']), 2)
+        system_score = round(_to_float(calc.get('total')), 2)
 
         # Busca bases de notas (Prioriza Avaliações Específicas > Outros > Manual)
         db_mn1 = asmt_lookup["MN1"].get(username, asmt_lookup["MN1"].get(s['name']))
@@ -681,12 +706,12 @@ def show_student_scores():
         db_ot4 = asmt_lookup["Outros4"].get(username, asmt_lookup["Outros4"].get(s['name']))
 
         val_ot1 = db_ot1 if db_ot1 is not None else db_ot3
-        base_nm1 = round(float(db_mn1 if db_mn1 is not None else (val_ot1 if val_ot1 is not None else nm1)), 2)
+        base_nm1 = round(_to_float(db_mn1 if db_mn1 is not None else (val_ot1 if val_ot1 is not None else nm1)), 2)
         
         val_ot2 = db_ot2 if db_ot2 is not None else db_ot4
-        base_nm2 = round(float(db_mn2 if db_mn2 is not None else (val_ot2 if val_ot2 is not None else nm2)), 2)
+        base_nm2 = round(_to_float(db_mn2 if db_mn2 is not None else (val_ot2 if val_ot2 is not None else nm2)), 2)
 
-        base_nm3 = round(float(db_mn3 if db_mn3 is not None else nm3), 2)
+        base_nm3 = round(_to_float(db_mn3 if db_mn3 is not None else nm3), 2)
         
         # Calcula pontos qualitativos acumulados (atividades diárias + lançamentos manuais)
         qual_manual = get_student_qualitative_points(
@@ -703,14 +728,14 @@ def show_student_scores():
         f_nm3 = base_nm3
         
         # Lógica de Média por Trimestre
-        t1_notes = [nm1, nm2, nm3]
-        t2_notes = [nm4, nm5, nm6]
-        t3_notes = [nm7, nm8, nm9]
+        t1_notes = [_to_float(nm1), _to_float(nm2), _to_float(nm3)]
+        t2_notes = [_to_float(nm4), _to_float(nm5), _to_float(nm6)]
+        t3_notes = [_to_float(nm7), _to_float(nm8), _to_float(nm9)]
 
         # Média estrita (N1 + N2 + N3) / 3 para cada trimestre
-        media_t1 = round((float(nm1) + float(nm2) + float(nm3)) / 3.0, 2)
-        media_t2 = round((float(nm4) + float(nm5) + float(nm6)) / 3.0, 2)
-        media_t3 = round((float(nm7) + float(nm8) + float(nm9)) / 3.0, 2)
+        media_t1 = round((_to_float(nm1) + _to_float(nm2) + _to_float(nm3)) / 3.0, 2)
+        media_t2 = round((_to_float(nm4) + _to_float(nm5) + _to_float(nm6)) / 3.0, 2)
+        media_t3 = round((_to_float(nm7) + _to_float(nm8) + _to_float(nm9)) / 3.0, 2)
 
         # Média calculada para o período ativo
         current_trim_view = st.session_state.get('selected_trimester', "1º Trimestre")
@@ -740,7 +765,7 @@ def show_student_scores():
             "NM8": t3_notes[1],
             "NM9": t3_notes[2],
             "Média": media_exibida,
-            "📝 Final": float(manual_score) if manual_score is not None else 0.0,
+            "📝 Final": _to_float(manual_score),
             "🎓 Conc.": manual_grade if manual_grade is not None else "",
             "⭐ Qualit.": qual_manual,
         })
@@ -1031,7 +1056,7 @@ def show_student_scores():
 
                     # Engajamento
                     calc_eng = get_cached_student_score(un, selected_subject_id)
-                    raw_eng = float(calc_eng.get('total', 0.0))
+                    raw_eng = _to_float(calc_eng.get('total'))
                     eng_val = round(raw_eng, 2) if inc_engaj else 0.0
 
                     # Qualitativo (Atividades Diárias + Lançados)
@@ -1050,28 +1075,28 @@ def show_student_scores():
                     att_info = att_stats.get(un, {})
                     freq_pct = att_info.get("freq_pct", 0.0)
 
-                    if inc_freq and bonus_max_freq > 0.0:
+                    if inc_freq and _to_float(bonus_max_freq) > 0.0:
                         if "Proporcional" in regra_freq:
-                            bonus_freq = round(float(bonus_max_freq) * (freq_pct / 100.0), 2)
+                            bonus_freq = round(_to_float(bonus_max_freq) * (freq_pct / 100.0), 2)
                         elif "Por Faixa" in regra_freq:
-                            if freq_pct >= 100.0: bonus_freq = float(bonus_max_freq)
-                            elif freq_pct >= 85.0: bonus_freq = round(float(bonus_max_freq) * 0.8, 2)
-                            elif freq_pct >= 75.0: bonus_freq = round(float(bonus_max_freq) * 0.5, 2)
+                            if freq_pct >= 100.0: bonus_freq = _to_float(bonus_max_freq)
+                            elif freq_pct >= 85.0: bonus_freq = round(_to_float(bonus_max_freq) * 0.8, 2)
+                            elif freq_pct >= 75.0: bonus_freq = round(_to_float(bonus_max_freq) * 0.5, 2)
                             else: bonus_freq = 0.0
                         else: # Exclusivo para 100%
-                            bonus_freq = float(bonus_max_freq) if freq_pct >= 100.0 else 0.0
+                            bonus_freq = _to_float(bonus_max_freq) if freq_pct >= 100.0 else 0.0
                     else:
                         bonus_freq = 0.0
 
                     # Regra de Bônus Manual: só concede bônus se o aluno tiver pelo menos 1.0 ponto de Engajamento
                     aluno_elegivel_bonus = (raw_eng >= 1.0)
-                    bonus_efetivo = float(bonus_manual) if aluno_elegivel_bonus else 0.0
+                    bonus_efetivo = _to_float(bonus_manual) if aluno_elegivel_bonus else 0.0
 
                     # Se não marcou nada e o bônus for 0, a nota zera
-                    if not inc_engaj and not inc_qualit and not inc_freq and float(bonus_manual) == 0.0:
+                    if not inc_engaj and not inc_qualit and not inc_freq and _to_float(bonus_manual) == 0.0:
                         nota_calc = 0.0
                     else:
-                        nota_calc = min(float(teto_nota), round(eng_val + q_val + bonus_freq + bonus_efetivo, 2))
+                        nota_calc = min(_to_float(teto_nota), round(eng_val + q_val + bonus_freq + bonus_efetivo, 2))
 
                     bonus_desc = f"+{bonus_efetivo:.1f}" if aluno_elegivel_bonus and bonus_manual > 0 else ("0.0 (Engaj < 1.0)" if bonus_manual > 0 else "0.0")
                     bonus_freq_desc = f"+{bonus_freq:.2f}" if bonus_freq > 0 else "0.00"
