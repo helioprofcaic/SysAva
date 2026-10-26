@@ -449,8 +449,9 @@ def group_lessons(lessons, subject_name, class_name, subject_id=None):
     for lesson in lessons:
         lesson['number'] = get_lesson_number(lesson['title'])
 
-    # Filtra aulas sem número e ordena
+    # Separa aulas numeradas (padrão "Aula N") e as sem número
     numbered_lessons = sorted([l for l in lessons if l['number'] is not None], key=lambda x: x['number'])
+    unnumbered_lessons = [l for l in lessons if l['number'] is None]
 
     grouped = {}
     for lesson in numbered_lessons:
@@ -463,6 +464,10 @@ def group_lessons(lessons, subject_name, class_name, subject_id=None):
         if group_key not in grouped:
             grouped[group_key] = []
         grouped[group_key].append(lesson)
+
+    # Aulas criadas fora do padrão "Aula N" não podem desaparecer da tela
+    if unnumbered_lessons:
+        grouped["Outras aulas (sem número)"] = unnumbered_lessons
 
     return grouped
 

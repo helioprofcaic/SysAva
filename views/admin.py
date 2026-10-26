@@ -1217,6 +1217,30 @@ def show_page():
                             st.divider()
                             st.markdown(f"### Editando: {assessment['title']} ({assessment['type']})")
 
+                            # --- Edição do nome da avaliação ---
+                            with st.expander("✏️ Editar nome da avaliação", expanded=False):
+                                with st.form(f"edit_assessment_title_form_{assessment['id']}"):
+                                    new_av_title = st.text_input(
+                                        "Nome da avaliação",
+                                        value=assessment.get('title') or "",
+                                        key=f"edit_av_title_{assessment['id']}"
+                                    )
+                                    if st.form_submit_button("Salvar nome"):
+                                        clean_title = (new_av_title or "").strip()
+                                        if not clean_title:
+                                            st.error("O nome da avaliação não pode ficar vazio.")
+                                        elif clean_title == (assessment.get('title') or ""):
+                                            st.info("O nome não foi alterado.")
+                                        else:
+                                            _, err = db.update_assessment_title(assessment['id'], clean_title)
+                                            if err:
+                                                st.error(f"Erro ao atualizar o nome: {err}")
+                                            else:
+                                                st.success("Nome da avaliação atualizado.")
+                                                # Mantém a seleção após renomear (a chave do selectbox usa tipo + título)
+                                                st.session_state["sel_edit_av"] = f"{assessment['type']} - {clean_title}"
+                                                st.rerun()
+
                             # Lista questões atuais
                             questions = db.get_assessment_questions(assessment['id'])
                             st.write(f"Questões cadastradas: {len(questions)}/10")

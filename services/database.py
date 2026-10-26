@@ -25,6 +25,31 @@ _SUPABASE_CLIENT = None
 _SUPABASE_URL = None
 _SUPABASE_KEY = None
 
+# --- Escopo por professor (IS-066): turmas visiveis conforme o docente logado ---
+# Mapa local username -> [codigos de turma]. Opcional: turmas sem o professor
+# continuam visiveis para ele nao "sumir" com a UI.
+_TEACHER_MAP_FILE = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "professores_turmas.json"
+)
+
+def _load_teacher_map():
+    try:
+        if os.path.exists(_TEACHER_MAP_FILE):
+            with open(_TEACHER_MAP_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return {}
+
+def _current_teacher_scope():
+    """Username do professor logado (fora do Streamlit -> None)."""
+    try:
+        if st.session_state.get("role") == "teacher":
+            return st.session_state.get("username")
+    except Exception:
+        pass
+    return None
+
 def get_supabase(force_reconnect: bool = False) -> Client:
     """
     Obtém ou reconecta o cliente Supabase de forma resiliente.
@@ -139,6 +164,24 @@ def get_user(username: str):
         except Exception as e2:
             print(f"[get_user] falha ao consultar app_users: {e2}")
             return None
+
+def get_user_by_ra(ra: str):
+    """Busca usuário pelo RA (permite login por RA/CPF, além do username)."""
+    if not is_db_connected(): return None
+    try:
+        response = supabase.table("app_users").select("username, password, name, role, is_active").eq("ra", ra).execute()
+        return response.data[0] if response.data else None
+    except Exception:
+        return None
+
+def get_user_ci(username: str):
+    """Busca usuário pelo login ignorando maiúsculas/minúsculas."""
+    if not is_db_connected(): return None
+    try:
+        response = supabase.table("app_users").select("username, password, name, role, is_active").ilike("username", username).execute()
+        return response.data[0] if response.data else None
+    except Exception:
+        return None
 
 def get_all_users():
     if not is_db_connected(): return []
@@ -719,7 +762,7 @@ def upsert_class(name: str, code: str, school_id: int):
     return res.data[0]['id']
 
 def get_classes():
-    """Busca todas as turmas cadastradas."""
+    """Busca as turmas cadastradas (filtra pelas do professor logado, se houver mapa)."""
     if not is_db_connected(): return []
 
     def _fetch():
@@ -730,7 +773,15 @@ def get_classes():
             print(f"Erro ao buscar turmas: {e}")
             return []
 
-    return local_cache.get_or_fetch("classes", _fetch, ttl=local_cache.TTL_BASE)
+    turmas = local_cache.get_or_fetch("classes", _fetch, ttl=local_cache.TTL_BASE)
+
+    scope = _current_teacher_scope()
+    if scope:
+        tmap = _load_teacher_map()
+        if scope in tmap:
+            codes = {str(c) for c in tmap[scope]}
+            turmas = [c for c in turmas if str(c.get("code")) in codes]
+    return turmas
 
 def get_class_by_code(code: str):
     if not is_db_connected(): return None
@@ -1324,6 +1375,15 @@ def create_assessment(subject_id: int, type: str, title: str):
         response = supabase.table("assessments").insert({
             "subject_id": subject_id, "type": type, "title": title
         }).execute()
+        return response.data, None
+    except Exception as e:
+        return None, str(e)
+
+def update_assessment_title(assessment_id: int, new_title: str):
+    """Atualiza o título (nome) de uma avaliação existente."""
+    if not is_db_connected(): return None, "Banco de dados não conectado"
+    try:
+        response = supabase.table("assessments").update({"title": new_title}).eq("id", assessment_id).execute()
         return response.data, None
     except Exception as e:
         return None, str(e)

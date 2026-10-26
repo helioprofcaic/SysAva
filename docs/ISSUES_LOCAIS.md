@@ -122,6 +122,32 @@ Formato de ID: `IS-NNN`.
 | IS-093 | Boxes de código/conteúdo em azul mais claro (principal e 8510): `pre/code/stCodeBlock`, textarea do plano e dropdown de planos com fundo `#152C52` e texto `#E5E7EB` | 🟢 | 2026-10-19 |
 | IS-094 | Google Drive (conta bot/service account): sync de `data/repo` (plugins/Turmas) para o Cloud, download do `escola_ativa.db`, aba ☁️ Drive no Plugins e `scripts/drive_check.py`; upload limitado pela cota do service account | 🟢 | 2026-10-19 |
 | IS-095 | Gerenciador de Notas: `float(None)` em nota do `student_scores.json` (Drive) derrubava o plugin — `_to_float` e notas saneadas | 🟢 | 2026-10-19 |
+| IS-096 | Monitor do laboratório: links do painel web usavam `127.0.0.1:5000` (inacessível de outros PCs) — agora usam o IP real da LAN, com override por `SYSAVA_SERVER_URL` | 🟢 | 2026-10-20 |
+| IS-097 | Roblox na bandeja/inicialização: agente limpa Run/RunOnce, Startup, StartupApproved e tarefas agendadas em todos os PCs e expõe comando no Monitor | 🟢 | 2026-10-20 |
+| IS-098 | Tela de bloqueio liberava com qualquer palavra quando o servidor falhava; agora só RA válido no servidor ou senha secreta do admin (padrão `labadmin`) | 🟢 | 2026-10-20 |
+| IS-099 | Tela de bloqueio aceita primeiro nome do aluno (sem caixa/acentos) e exige nome completo quando há homônimos (`ana` → `Ana Roberta`/`anaroberta`/`ANA ROBERTA`) | 🟢 | 2026-10-20 |
+| IS-100 | `labadmin` não fica pré-preenchido/memorizado na tela de bloqueio nem entra na lista de máquinas (`/api/auth_ra` só aceita `role=student`) | 🟢 | 2026-10-20 |
+| IS-101 | Desligar/Reiniciar remotos fecham a tela de bloqueio, restauram o Gerenciador de Tarefas e não ficam presos no `FormClosing` | 🟢 | 2026-10-20 |
+| IS-102 | Atualização do agente sem UAC (`/download/lab_agent.py` + auto-restart) e tela de bloqueio auto-atualizável via `%LOCALAPPDATA%\SysAva` | 🟢 | 2026-10-20 |
+| IS-103 | Dashboard: campo de tempo de liberação do Roblox (padrão 20 min); agente libera, fecha ao fim e mantém bloqueado até nova liberação — **substituído pelo IS-104** | ⚪ | 2026-10-20 |
+| IS-104 | Roblox deixou de ser fechado automaticamente: o watchdog o ignora e só o comando manual **Bloquear Jogos** o encerra | 🟢 | 2026-10-20 |
+| IS-105 | Servidor em conjunto (notebook + PC do laboratório): descoberta de peers, máquinas/comandos compartilhados, papel primário/assistente e auto-start no Windows | 🟢 | 2026-10-20 |
+| IS-106 | Atualizar arquivos do servidor não recarregava o código em execução: `reiniciar_servidor.ps1`, `/health` com versão e detecção de tarefa apontando para outra pasta | 🟢 | 2026-10-20 |
+| IS-107 | Novo guia rápido de Flutter (baixar/instalar/testar) em `plugins/atividades/flutter-instalar-e-testar.md`, com links nos tutoriais existentes | 🟢 | 2026-10-22 |
+| IS-108 | Tela de bloqueio: RA falhava quando a URL salva (notebook) estava offline; agora valida `/health` e cai para cache/UDP, achando o PC do laboratório | 🟢 | 2026-10-22 |
+| IS-109 | Comando **Atualizar Tela de Bloqueio (sem UAC)**: baixa a tela nova para `%LOCALAPPDATA%`, reinicia, cria Startup por usuário se preciso e evita duas telas | 🟢 | 2026-10-22 |
+| IS-110 | Dashboard: PC desligado continuava aparecendo por 5 min e a página não se atualizava; agora some em 60 s, auto-refresh de 15 s e `Cache-Control: no-store` | 🟢 | 2026-10-22 |
+| IS-111 | Servidor do monitor no PC do laboratório: auto-start no **boot** (SYSTEM) por padrão, watchdog que reinicia o receiver e grava `servidor.log`, checagem de dependências e `-Logon`/`-Remover` | 🟢 | 2026-10-23 |
+| IS-112 | Tela de bloqueio presa em “Servidor indisponível (1/5)” quando as máquinas ligam antes do PC01: agora **aguarda até 3 min** redescoberto o servidor, com contagem e sem precisar redigitar o RA | 🟢 | 2026-10-23 |
+| IS-113 | Comandos pendentes para PCs desligados executavam horas depois: **validade de 30 min** (`command_expires_at`, configurável por `COMMAND_TTL_SECONDS`), descartando Desligar/Reiniciar vencidos | 🟢 | 2026-10-23 |
+| IS-114 | Identificação frágil no painel: hostname cru e conta Windows “ALUNO” apareciam como aluno — agora mostra **rótulo da máquina** (com host abaixo), **nome completo (RA)** do lock, conta Windows só como secundária, “sem RA” quando não identificado e validade de 16 h | 🟢 | 2026-10-23 |
+| IS-115 | Tela de bloqueio: **seletor de aluno (nome + RA)** em vez de digitar, lista via `/api/alunos` com cache local, e abre o SysAva com `?ra=` para já preencher o login | 🟢 | 2026-10-23 |
+| IS-116 | Opera subindo com o Windows: agente remove o auto-start (Run/RunOnce/Startup/tarefas) sem fechar o Opera aberto manualmente e novo comando **Limpar Inicialização do Opera** | 🟢 | 2026-10-23 |
+| IS-117 | Apps Microsoft subindo com o Windows (Outlook, OneDrive, Teams, OneNote, Skype, Copilot, Office Hub, Xbox/Game Bar, Widgets): agente remove só o auto-start e novo comando **Limpar Inicialização de Apps Microsoft** | 🟢 | 2026-10-23 |
+| IS-118 | Ações **Fechar / Bloquear / Desbloquear Sites/Jogos** (YouTube, Roblox, Loki, games e redes sociais): bloqueio persistente via watchdog (fecha janelas e derruba processes) até desbloquear | 🟢 | 2026-10-23 |
+| IS-119 | Admin/Avaliações: **editar o nome (título)** de uma avaliação existente e manter a seleção após renomear | 🟢 | 2026-10-26 |
+| IS-120 | Prog. Dispositivos Móveis: aulas **33–40** do seminário (Grupo1 25–28 / Grupo2 29–32) criadas no `subject_id=5` em versão neutra (sem nomes de turma) | 🟢 | 2026-10-26 |
+| IS-121 | Aulas criadas com título fora do padrão "Aula N" apareciam no Admin mas **sumiam da página Aulas**; agora entram em "Outras aulas (sem número)" | 🟢 | 2026-10-26 |
 
 ---
 
@@ -3671,6 +3697,972 @@ Drive; o Cloud baixa no boot ou em **Plugins → ☁️ Drive → Baixar repo/pl
 Reinicie o app no Cloud ou clique em “Baixar repo/plugins”.
 
 ---
+
+## IS-096 — Monitor: links do painel web com IP real da LAN 🟢
+
+**Sintoma:** em **Plugins → Monitor**, os botões "Abrir Dashboard Web" e
+"Abrir Dashboard Web do Monitor" exibiam `http://127.0.0.1:5000/`, que só
+funciona no próprio servidor — de qualquer outro PC do laboratório o link
+não abria.
+
+**Causa:** `data/repo/plugins/lab_monitor.py` montava as URLs de exibição a
+partir de `LOCAL_RECEIVER_URL = "http://127.0.0.1:5000"`.
+
+**Mudança:** novo helper `get_local_ip()` (mesma lógica do `lab_agent.py`,
+via socket UDP para `10.255.255.255`) e `get_dashboard_base_url()`, que
+devolve `http://<IP-da-LAN>:5000`. As chamadas internas da API continuam em
+loopback (mais rápido/robusto); apenas os links exibidos usam o IP real. A
+variável de ambiente `SYSAVA_SERVER_URL` (ex.: `http://192.168.10.126:5000`)
+permite fixar uma URL quando necessário. O receiver já escuta em
+`0.0.0.0:5000`, então nada mais precisa mudar.
+
+**Arquivos:** `data/repo/plugins/lab_monitor.py`, `docs/ISSUES_LOCAIS.md`.
+
+**Validar:** abrir **Plugins → Monitor** e conferir que o link mostra o IP
+da LAN (ex.: `http://192.168.10.126:5000/`) e abre de outro PC. O IP pode
+mudar por DHCP; para fixá-lo, defina `SYSAVA_SERVER_URL` ou um IP estático.
+
+---
+
+## IS-097 — Roblox fora da bandeja/inicialização em todos os PCs 🟢
+
+**Sintoma:** após instalar o Roblox, ele deixava um inicializador que subia
+junto com o Windows e ficava na bandeja do sistema em cada PC do laboratório.
+
+**Causa:** o instalador do Roblox registra auto-inicialização (valor em
+`Run`/`RunOnce`, atalho na pasta Startup e/ou tarefa agendada). O agente só
+matava o processo quando o watchdog rodava, mas a entrada de inicialização
+permanecia e o ícone voltava no próximo logon.
+
+**Mudança:** nova função `limpar_inicializacao_roblox()` no agente, que:
+1. encerra processos com `roblox` no nome (some o ícone da bandeja);
+2. apaga valores de `Run`/`RunOnce` (HKCU/HKLM, 32/64 bits) e de
+   `StartupApproved` cujo nome ou comando contenha `roblox`;
+3. remove atalhos `.lnk`/`.url` das pastas Startup (usuário e todos os usuários);
+4. exclui tarefas agendadas com `roblox` no nome.
+
+Ela roda automaticamente no boot do agente (quando `AUTO_BLOCK=True`) e também
+pelo comando remoto **"Limpar Inicialização do Roblox (bandeja)"** no Monitor
+(inclusive em massa: "Limpar Inicialização do Roblox em TODAS"). A limpeza é
+idempotente e não afeta o SysAva (nomes não contêm `roblox`).
+
+**Arquivos:** `data/repo/plugins/lab_agent.py`,
+`data/repo/plugins/lab_agent.ps1` (cópia embutida do agente),
+`data/repo/plugins/lab_monitor.py`,
+`data/repo/plugins/lab_receiver.py`, `docs/ISSUES_LOCAIS.md`.
+
+**Validar:** no Monitor, selecionar as máquinas (ou "Selecionar TODAS") e
+executar o comando; no PC, conferir em **Gerenciador de Tarefas → Inicializar**
+e na bandeja que o Roblox não reaparece após logoff/logon. `py_compile` e
+parser do `.ps1` OK.
+
+---
+
+## IS-098 — Tela de bloqueio: só RA válido ou senha do admin 🟢
+
+**Sintoma:** na tela de bloqueio do SysAva, digitar qualquer palavra liberava
+o computador, mesmo sem ser um RA cadastrado.
+
+**Causa:** o `sysava_lock.ps1` tinha dois fallbacks que liberavam a tela:
+servidor não descoberto (`Servidor indisponivel - entrando em modo offline`) e
+exceção na requisição (ex.: rede ainda não pronta no logon). Nos dois casos
+qualquer texto era aceito e salvo como "último RA".
+
+**Mudança:** o RA agora é validado **somente** no receiver (`/api/auth_ra`),
+com até 5 tentativas de rede (1,5 s entre elas) para o logon. Se o servidor
+não responder, a tela **não abre** e orienta usar a senha do administrador.
+A senha secreta padrão é **`labadmin`** (guardada como hash SHA-256 no script,
+não em texto puro) e libera mesmo offline. Para trocar sem editar o script,
+defina `SYSAVA_ADMIN_UNLOCK` ou crie `unlock_secret.txt` ao lado do arquivo.
+O "último RA" só é salvo quando o servidor confirma que o RA existe; a senha
+do admin nunca é gravada. Após 5 RAs errados há uma pausa de 5 s.
+
+Para gerar o hash de uma nova senha:
+`[BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes("NOVA_SENHA"))).Replace("-","").ToLower()`
+
+**Arquivos:** `data/repo/plugins/sysava_lock.ps1`, `docs/ISSUES_LOCAIS.md`.
+
+**Validar:** rodar `powershell -ExecutionPolicy Bypass -File
+data\repo\plugins\sysava_lock.ps1`; RA inexistente deve continuar bloqueado
+(com servidor no ar), `labadmin` deve liberar, e desligar o receiver deve
+manter a tela bloqueada para RAs. Parser do `.ps1` OK.
+
+---
+
+## IS-099 — Tela de bloqueio: entrar com o primeiro nome do aluno 🟢
+
+**Pedido:** aceitar o primeiro nome do aluno sem caixa definida. Ex.: **Ana
+Roberta** digita `ana`; mas, se existirem várias "Ana", precisa digitar
+`anaroberta`, `Ana Roberta` ou `ANA ROBERTA`.
+
+**Mudança:** `lab_receiver.py` (`/api/auth_ra`) tenta, nesta ordem:
+1. RA/username exato (como antes);
+2. nome do aluno, normalizado (minúsculas, sem acentos/pontuação e com
+   espaços colapsados). O primeiro nome só libera se for **único** entre os
+   alunos (`role=student`); havendo mais de um, responde
+   "Varios alunos com esse nome. Digite o nome completo.";
+3. nome completo com ou sem espaços (`ana roberta`, `ANA ROBERTA`,
+   `anaroberta`) e prefixo único (`Ana Roberta` → `Ana Roberta Silva`,
+   inclusive `anaroberta` → `Ana Roberta Silva`).
+
+O retorno inclui o `ra` canônico, e o `sysava_lock.ps1` passa a exibir a
+mensagem de erro do servidor e salva o RA resolvido (não o apelido digitado).
+O label da tela virou "Digite seu RA ou nome:".
+
+**Arquivos:** `data/repo/plugins/lab_receiver.py`,
+`data/repo/plugins/sysava_lock.ps1`,
+`data/repo/plugins/lab_monitor_doc.md`, `docs/ISSUES_LOCAIS.md`.
+
+**Validar:** com o receiver reiniciado, testar `ana` (única), `ana`
+(com duas Anas → deve pedir nome completo), `anaroberta`, `Ana Roberta`,
+`ANA ROBERTA` e um nome inexistente (deve continuar bloqueado). `py_compile`
+e parser do `.ps1` OK.
+
+---
+
+## IS-100 — Admin não aparece pré-preenchido nem na lista de máquinas 🟢
+
+**Sintoma:** a senha do admin (`labadmin`) podia ficar salva em
+`%LOCALAPPDATA%\SysAva\ultimo_ra.txt` por versões antigas e era pré-preenchida
+na tela de bloqueio, expondo a senha (bastava teclar Enter). Se `labadmin`
+existisse em `app_users` como admin/professor, o `/api/auth_ra` também podia
+associá-lo à máquina em `lab_users.json`, fazendo-o aparecer no radar.
+
+**Mudança:**
+- `sysava_lock.ps1`: ao abrir, se o último valor salvo casar com a senha do
+  admin, o arquivo é apagado e o campo **não** é preenchido. A senha do admin
+  nunca é gravada (o fluxo retorna antes de `Save-UltimoRA`).
+- `lab_receiver.py`: `/api/auth_ra` só associa usuários com `role == 'student'`.
+  Admin/professor não é aceito por RA/nome (usa a senha secreta local), então
+  não entra no cache de RAs nem em `lab_users.json`.
+
+**Arquivos:** `data/repo/plugins/sysava_lock.ps1`,
+`data/repo/plugins/lab_receiver.py`, `docs/ISSUES_LOCAIS.md`.
+
+**Validar:** apagar/editar `ultimo_ra.txt` com `labadmin` e abrir a tela: o
+campo deve vir vazio. Digitar `labadmin` deve liberar pelo caminho local e
+**não** criar entrada em `lab_users.json`. `py_compile` e parser OK.
+
+---
+
+## IS-101 — Desligar/Reiniciar fecham a tela de bloqueio 🟢
+
+**Sintoma:** os comandos remotos **Desligar PC** e **Reiniciar PC** podiam
+ficar presos na tela de bloqueio: o `FormClosing` cancelava qualquer
+fechamento enquanto não houvesse desbloqueio, inclusive o encerramento
+disparado pelo Windows. Além disso, ao matar o `sysava_lock.ps1` à força, a
+política `DisableTaskMgr` podia ficar gravada como `1` no registro do usuário.
+
+**Mudança:**
+- `lab_agent.py`/`lab_agent.ps1`: nova `fechar_tela_bloqueio()` chamada antes
+  de `shutdown /l`, `/s` e `/r`. Ela remove `DisableTaskMgr` do HKCU (restaura o
+  Gerenciador de Tarefas) e encerra o processo `sysava_lock.ps1` se ainda estiver
+  aberto; o `/f` do shutdown continua fechando os demais apps.
+- `sysava_lock.ps1`: o `FormClosing` agora permite fechar quando
+  `CloseReason = WindowsShutDown`/`ApplicationExitCall` ou
+  `Environment.HasShutdownStarted`, restaurando as políticas. Fechamento por
+  usuário continua bloqueado.
+
+**Arquivos:** `data/repo/plugins/lab_agent.py`,
+`data/repo/plugins/lab_agent.ps1`, `data/repo/plugins/sysava_lock.ps1`,
+`docs/ISSUES_LOCAIS.md`.
+
+**Validar:** com a tela de bloqueio aberta, enviar **Desligar PC** ou
+**Reiniciar PC** pelo Monitor: o PC deve desligar/reiniciar sem travar e, no
+próximo logon, o Gerenciador de Tarefas deve voltar ao normal após desbloquear.
+`py_compile` (agente + cópia embutida) e parser dos `.ps1` OK.
+
+---
+
+## IS-102 — Atualizações sem UAC (agente + tela de bloqueio) 🟢
+
+**Pedido:** parar de digitar a senha de Administrador do Windows em cada
+atualização (e evitar o risco de vazamento da senha).
+
+**Agente — `Atualizar Monitor (rápido, sem UAC)`:**
+- `lab_agent.py` baixa `/download/lab_agent.py` do receiver, valida a sintaxe
+  com `compile()`, guarda um `.bak`, substitui o próprio arquivo e inicia uma
+  nova cópia (`sys.executable`) encerrando a antiga. Nada de `-Verb RunAs`.
+- A ação antiga foi dividida no Monitor e no painel web:
+  **Atualizar Monitor (rápido, sem UAC)** e **Reinstalar Monitor (com UAC)**
+  (esta continua usando o `lab_agent.ps1` para instalar dependências/autostart).
+- `DOWNLOAD_WHITELIST` agora libera `lab_agent.py`.
+- O bloco Python embutido no `lab_agent.ps1` estava **dessincronizado** em
+  relação ao `lab_agent.py` (faltavam recursos recentes). Ele foi regerado a
+  partir do `lab_agent.py` (here-string de aspas simples, sem interpolação) e
+  os fallbacks fixos de MAC/IP foram removidos; a descoberta usa cache, UDP e
+  varredura da sub-rede.
+- Limitação: a primeira máquina que receber o comando com o agente **antigo**
+  ainda executa o instalador com UAC (o código antigo não conhece o caminho
+  rápido). Depois desse primeiro push, as próximas atualizações são silenciosas.
+
+**Tela de bloqueio — auto-atualização:**
+- A cópia instalada em `C:\ProgramData\SysAva` (somente leitura para o aluno)
+  agora atua como bootstrap: baixa `sysava_lock.ps1` do servidor para
+  `%LOCALAPPDATA%\SysAva\sysava_lock.ps1` e executa essa cópia gravável com
+  `-SemAtualizar`. O download é validado pelo parser do PowerShell antes de
+  substituir a cópia local.
+- Assim, atualizar o `sysava_lock.ps1` no servidor não exige novo instalador:
+  no próximo logon o PC pega a versão nova. Se o servidor estiver fora, usa a
+  última cópia local; se não houver cópia local válida, roda o script instalado.
+- O `unlock_secret.txt` é procurado tanto em `%LOCALAPPDATA%\SysAva` quanto em
+  `C:\ProgramData\SysAva`.
+- Limitação: é preciso instalar **uma vez** esta versão do `sysava_lock.ps1`
+  (via `/setup` card 3 ou `instalar_tela_sysava.ps1`, com UAC); a partir daí as
+  atualizações da tela são sem UAC.
+
+**Arquivos:** `data/repo/plugins/lab_agent.py`,
+`data/repo/plugins/lab_agent.ps1`, `data/repo/plugins/lab_monitor.py`,
+`data/repo/plugins/lab_receiver.py`, `data/repo/plugins/sysava_lock.ps1`,
+`docs/ISSUES_LOCAIS.md`.
+
+**Validar:** executar **Atualizar Monitor (rápido, sem UAC)** em um PC com o
+agente novo: ele deve reiniciar sem UAC e continuar reportando no radar.
+Trocar o `sysava_lock.ps1` no servidor e fazer logoff/logon: a tela deve abrir
+com a versão nova (conferir `%LOCALAPPDATA%\SysAva\sysava_lock.ps1`).
+`py_compile` (agente + cópia embutida) e parser dos `.ps1` OK.
+
+---
+
+## IS-103 — Liberação temporária do Roblox (padrão 20 min) ⚪
+
+> **Substituído pelo IS-104.** O campo/ação de tempo foi removido: o Roblox
+> não é mais fechado automaticamente. Mantido aqui apenas como histórico.
+
+**Pedido:** um campo no dashboard para definir por quanto tempo o Roblox pode
+ficar aberto antes de ser fechado, com padrão de **20 minutos**.
+
+**Como ficou:**
+- Dashboard web (`lab_receiver.py`): campo **“min Roblox”** ao lado da ação,
+  com valor padrão **20**, e a ação **“Liberar Roblox (tempo do campo, min)”**.
+- Plugin Streamlit (`lab_monitor.py`): ao escolher **“Liberar Roblox (tempo do
+  campo)”**, aparece o `number_input` **Tempo de liberação do Roblox (min)**
+  (0–1440, padrão 20, passo 5). O mesmo campo é usado pelo botão em massa
+  **“Liberar Roblox em TODAS”**.
+- Agente: o comando envia os minutos em `command_msg`. `permitir_roblox(min)`
+  define `ROBLOX_ALLOW_UNTIL = agora + min*60`. O watchdog deixa o Roblox
+  rodar enquanto `agora < ROBLOX_ALLOW_UNTIL`; ao expirar, mata o processo e
+  continua bloqueando (reabrir não libera). `0` bloqueia na hora. O comando
+  **Bloquear Jogos** cancela a liberação imediatamente.
+- O timer começa quando o comando é aplicado (não quando o aluno abre o jogo).
+  Para nova janela, o professor reenvia a ação.
+
+**Arquivos:** `data/repo/plugins/lab_agent.py`,
+`data/repo/plugins/lab_agent.ps1`, `data/repo/plugins/lab_monitor.py`,
+`data/repo/plugins/lab_receiver.py`, `docs/ISSUES_LOCAIS.md`.
+
+**Validar:** enviar 20 min para uma máquina com Roblox aberto: ele continua
+por 20 min, fecha sozinho e não reabre; enviar com 0 fecha na hora; reenviar
+libera de novo. `py_compile` (agente + embutido) e parser dos `.ps1` OK.
+
+---
+
+## IS-104 — Roblox não é mais derrubado automaticamente 🟢
+
+**Sintoma:** alunos reclamavam que o Roblox fechava em segundos e “não
+carregava”. O ícone da bandeja não tem relação: o watchdog do agente matava
+qualquer processo com `roblox` a cada ~4 s (a janela do IS-103 só valia se o
+comando chegasse ao agente novo).
+
+**Mudança:** o watchdog agora ignora processos cujo nome contenha `roblox`
+(`WATCHDOG_EXCLUDE_KEYWORDS = ["roblox"]`). O Roblox **permanece aberto** e só
+é encerrado pelo comando manual **Bloquear Jogos (Fechar Roblox/Loki/Games)**.
+Os demais jogos/launchers continuam sujeitos ao auto-bloqueio. O campo “min
+Roblox” e a ação **Liberar Roblox** foram removidos do dashboard web e do
+plugin Streamlit, e as entradas de Roblox saíram do `blocked_apps.json`.
+
+**Importante:** PCs com o agente antigo continuam matando o Roblox até
+receberem esta versão. Faça um **Reinstalar Monitor (com UAC)** (ou o primeiro
+push) uma vez; depois as atualizações são sem UAC. O `lab_agent.ps1` embutido
+foi ressincronizado.
+
+**Arquivos:** `data/repo/plugins/lab_agent.py`,
+`data/repo/plugins/lab_agent.ps1`, `data/repo/plugins/lab_monitor.py`,
+`data/repo/plugins/lab_receiver.py`, `data/repo/plugins/blocked_apps.json`,
+`docs/ISSUES_LOCAIS.md`.
+
+**Validar:** abrir o Roblox e deixá-lo rodando por vários minutos: o watchdog
+não deve matá-lo (log sem `WATCHDOG: bloqueado Roblox...`). Enviar **Bloquear
+Jogos** deve fechá-lo na hora. `py_compile` e parser dos `.ps1` OK.
+
+---
+
+## IS-105 — Dois servidores em conjunto (notebook + PC do laboratório) 🟢
+
+**Pedido:** subir o servidor automaticamente com o Windows no PC do
+laboratório e fazê-lo trabalhar junto com o do notebook. Quem está online
+segura o comando; o que inicia depois vira assistente. Ambos enxergam as
+máquinas e enviam instruções.
+
+**Como funciona:**
+- Cada `lab_receiver.py` tem `SERVER_ID`/`SERVER_STARTED_AT` e anuncia-se por
+  **UDP 5002** (`SYSAVA_PEER_DISCOVER`) e também pela **UDP 5001** já liberada
+  para os agentes. Fallback manual: `peers.txt` (uma URL por linha) ou
+  `PEER_URLS=http://ip:5000,...` no `.env`.
+- A cada 5 s cada servidor consulta `/api/peer/state` do outro e guarda
+  máquinas, alunos e `started_at`. O dashboard e o `/api/status` mostram a
+  **união** das máquinas (com `_owner`/`_peer`), então o radar do Streamlit
+  também vê as duas redes.
+- Comandos do dashboard web ou do Streamlit vão para `/api/command`; o
+  servidor grava localmente se a máquina é dele e, se for do outro, encaminha
+  para `/api/peer/command`. Os dois conseguem mandar instruções.
+- **Papel:** entre os servidores online, o que tem `started_at` mais antigo é
+  **primário**; o que subiu depois é **assistente**. O papel aparece no topo do
+  dashboard e é recalculado quando o peer expira (30 s), então há failover se
+  o primário cair.
+- Os agentes continuam escolhendo um servidor pelo UDP 5001 e fazem failover
+  sozinhos se ele sumir; o outro servidor recebe o comando por encaminhamento.
+- **Auto-start:** `instalar_servidor_auto.ps1` registra a tarefa agendada
+  **SysAva Servidor**, abre TCP 5000/UDP 5001 e 5002 e inicia agora.
+  `-Remover` desfaz. (Desde o **IS-111** o padrão é boot/SYSTEM com watchdog;
+  `-Logon` mantém o modo antigo de logon do usuário.)
+- O `/servidor.zip` inclui `instalar_servidor_auto.ps1` e `lab_agent.py`; o
+  card **7** do `/setup` traz o download.
+
+**Arquivos:** `data/repo/plugins/lab_receiver.py`,
+`data/repo/plugins/instalar_servidor_auto.ps1`,
+`data/repo/plugins/INICIAR_SERVIDOR.ps1`,
+`data/repo/plugins/lab_monitor.py`, `docs/ISSUES_LOCAIS.md`.
+
+**Como aplicar no PC do laboratório:**
+1. Copiar/baixar a pasta `plugins` nova (`servidor.zip`) e criar o `.env`.
+2. Rodar `INICIAR_SERVIDOR.bat` uma vez como Administrador (Python/deps/firewall).
+3. Rodar `instalar_servidor_auto.ps1` como Administrador.
+4. Subir/reiniciar o servidor do notebook com o `lab_receiver.py` novo; ele
+   encontra o PC sozinho. Se não encontrar, use `peers.txt`.
+
+**Validar:** com os dois online, abrir o dashboard de cada um: as máquinas dos
+dois aparecem (marcadas “via <host>”), o papel aparece como primário/assistente
+e um comando enviado de qualquer um chega ao agente. `py_compile` e parser dos
+`.ps1` OK.
+
+---
+
+## IS-106 — Atualizar a pasta do servidor exige reiniciar o processo 🟢
+
+**Sintoma:** trocar o `lab_receiver.py` na pasta em uso “não mudava nada”:
+o dashboard continuava sem as funções novas (peers, versão, `/api/command`).
+O `servidor.zip` baixado também podia vir do processo antigo.
+
+**Causa:** Python carrega o `.py` em memória. Substituir o arquivo no disco
+não recarrega o processo que já está na porta 5000. Se o `lab_receiver.bat`
+(loop de auto-recuperação) ou a tarefa **SysAva Servidor** estiverem rodando,
+a instância antiga continua atendendo; uma nova tentativa de subir morre no
+check “PORTA 5000 JÁ EM USO”.
+
+**Mudança:**
+- Novo `reiniciar_servidor.ps1`: encerra `lab_receiver.py`, o loop do
+  `lab_receiver.bat` e `INICIAR_SERVIDOR.ps1`, espera a porta 5000 liberar,
+  reinicia pela tarefa **SysAva Servidor** (se ela apontar para esta pasta) ou
+  diretamente pelo Python (`.python` → `.sysenv` → PATH) e confere
+  `/health`. Use `-Parar` para só encerrar.
+- `/health` e `/api/peer/state` passaram a retornar `version`, `role`,
+  `server_id` e `peers`; o dashboard mostra `v2026-10-20-cluster`. Se o
+  `/health` não tiver `version`, o processo rodando é antigo.
+- O `/servidor.zip` agora inclui automaticamente qualquer `.ps1`/`.bat` da
+  pasta, envia `Cache-Control: no-store` e `X-SysAva-Version`; o `/setup`
+  mostra a versão em execução e o link do zip com `?v=<versao>`. Ainda assim,
+  o zip é montado pelo **processo em memória**: só após reiniciar ele passa a
+  trazer os arquivos novos.
+- O script avisa quando a tarefa agendada aponta para outra pasta/arquivo
+  (aí rode `instalar_servidor_auto.ps1` na pasta correta).
+- `reiniciar_servidor.ps1` entra no `/servidor.zip`, no whitelist de download
+  e no card 7 do `/setup`.
+
+**Se o Windows reclamar de assinatura/execução de scripts:**
+- Rode pelo **`.bat`** (`reiniciar_servidor.bat` / `instalar_servidor_auto.bat`),
+  que chama o PowerShell com `-ExecutionPolicy Bypass`.
+- Ou, no PowerShell:
+  `Unblock-File .\reiniciar_servidor.ps1`
+  `powershell -NoProfile -ExecutionPolicy Bypass -File .\reiniciar_servidor.ps1`
+- Se uma política de grupo (GPO) bloquear tudo, faça o restart inline:
+  `Get-CimInstance Win32_Process | ? { $_.CommandLine -match 'lab_receiver\.py|lab_receiver\.bat' } | % { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`
+  e `Start-ScheduledTask -TaskName "SysAva Servidor"`.
+
+**Passo a passo para atualizar o PC do laboratório:**
+1. Baixar o `servidor.zip` novo e extrair **sobre** a pasta em uso (conferir
+   que `lab_receiver.py` ficou na raiz, com a data/hora nova).
+2. Rodar `reiniciar_servidor.ps1` como Administrador.
+3. Conferir `http://127.0.0.1:5000/health` → `version: 2026-10-20-cluster`.
+
+**Arquivos:** `data/repo/plugins/lab_receiver.py`,
+`data/repo/plugins/reiniciar_servidor.ps1`,
+`data/repo/plugins/instalar_servidor_auto.ps1`, `docs/ISSUES_LOCAIS.md`.
+
+**Validar:** antes de reiniciar, `/health` sem `version`; depois, com a versão
+nova. `py_compile` e parser dos `.ps1` OK.
+
+---
+
+## IS-107 — Guia rápido de instalação do Flutter 🟢
+
+**Pedido:** um tutorial mais simples, só para baixar, instalar e testar o
+Flutter, a partir do material em `plugins/atividades`.
+
+**Mudança:** criado `plugins/atividades/flutter-instalar-e-testar.md`:
+- instalação do Git (winget ou site);
+- download do Flutter SDK stable (ZIP oficial ou `git clone`);
+- extração em `C:\src\flutter` e inclusão de `C:\src\flutter\bin` no PATH;
+- teste com `flutter --version`, `flutter doctor`, `flutter create meu_app`,
+  `flutter test` e, opcionalmente, `flutter run -d chrome`/`flutter build web`;
+- o que é normal no `flutter doctor` (X em Android/Visual Studio);
+- problemas comuns, atualização/remoção e checklist.
+
+Os tutoriais `flutter-android-e-web.md` e `Android-sdk-tools-flutter.md`
+ganharam uma nota no topo apontando para o guia curto.
+
+**Arquivos:** `plugins/atividades/flutter-instalar-e-testar.md`,
+`plugins/atividades/flutter-android-e-web.md`,
+`plugins/atividades/Android-sdk-tools-flutter.md`,
+`docs/ISSUES_LOCAIS.md`.
+
+**Validar:** seguir o guia em um PC sem Flutter e conferir o checklist final
+(`where.exe flutter`, `flutter --version`, `flutter test`).
+
+---
+
+## IS-108 — Tela de bloqueio: RA falhava com o notebook offline 🟢
+
+**Sintoma:** a tela de bloqueio não aceitava o RA dos alunos. O overlay
+tentava validar 5 vezes e terminava em “Servidor indisponivel. Use a senha do
+administrador.”
+
+**Causa:** o `sysava_lock.ps1` usava direto a URL `-Server` gravada na
+instalação (normalmente o notebook). Se o notebook estava desligado e o PC do
+laboratório era o servidor online, o lock continuava tentando o IP antigo/
+offline, sem cair para a descoberta. O endpoint `/api/auth_ra` está OK (testado
+com RA real do Supabase: 200 para aluno, 404 para RA inexistente).
+
+**Mudança:** `Get-SysAvaServer` agora:
+1. testa `/health` da URL `-Server` e só a usa se responder;
+2. senão testa o cache do agente (`C:\Local\SysVa_lab\server_cache.txt`);
+3. senão faz broadcast UDP 5001, escuta **mais de uma** resposta (notebook/PC
+   do laboratório) e testa `/health` de cada uma;
+4. só retorna vazio se nenhum servidor responder.
+
+Assim o RA valida no servidor que estiver online, inclusive quando o notebook
+cai. O `Get-SysAvaServer` também é usado pelo bootstrap de auto-atualização da
+tela, então ela baixa a versão do servidor correto.
+
+**Importante:** o PC precisa estar com a versão da tela que tem
+`Start-FromLocalCopy`/`Get-SysAvaServer` novo (IS-102/IS-108). Se a cópia
+instalada em `C:\ProgramData\SysAva` for antiga, reinstale uma vez pelo
+`/setup` card 3; depois ela se auto-atualiza no logon.
+
+**Arquivos:** `data/repo/plugins/sysava_lock.ps1`,
+`docs/ISSUES_LOCAIS.md`.
+
+**Validar:** com o notebook desligado e o PC do laboratório online, abrir a
+tela e digitar um RA válido: deve liberar. `py_compile`/parser do `.ps1` OK.
+
+---
+
+## IS-109 — Comando remoto para atualizar a tela de bloqueio 🟢
+
+**Pedido:** atualizar a tela de bloqueio nos PCs sem acessar cada máquina e
+sem UAC.
+
+**Como funciona (`Atualizar Tela de Bloqueio (sem UAC)`):**
+- O agente baixa `sysava_lock.ps1`, `wallpaper_sysava.png` e `logo_sysava.png`
+  de `/download/...` para `%LOCALAPPDATA%\SysAva`.
+- Encerra a tela antiga (`fechar_tela_bloqueio`, que também restaura
+  `DisableTaskMgr`) e abre a cópia local com `-SemAtualizar` e `-Server`.
+- Se `C:\ProgramData\SysAva\sysava_lock.ps1` já tem o bootstrap
+  (`Start-FromLocalCopy`), não cria nada extra: o bootstrap usa a cópia local
+  no próximo logon. Se não tem, cria
+  `%APPDATA%\...\Startup\SysAva Lock (usuario).vbs` apontando para a cópia
+  local (sem Administrador).
+- A tela nova tem `Close-OtherLocks`: encerra outra instância de
+  `sysava_lock.ps1` na mesma sessão nos primeiros 10 s, evitando duas telas
+  quando o CommonStartup antigo e o Startup do usuário coexistem.
+- `Restore-Policies` agora remove `DisableTaskMgr` quando o valor anterior já
+  era `1` (tela encerrada à força), em vez de deixá-lo desabilitado.
+
+**Ação:** disponível no dashboard web (`ACOES_CONTROLE`) e no plugin Streamlit
+(selectbox de ações). O agente trata antes de `Atualizar Monitor`.
+
+**Arquivos:** `data/repo/plugins/lab_agent.py`,
+`data/repo/plugins/lab_agent.ps1`, `data/repo/plugins/lab_receiver.py`,
+`data/repo/plugins/lab_monitor.py`,
+`data/repo/plugins/sysava_lock.ps1`, `docs/ISSUES_LOCAIS.md`.
+
+**Validar:** selecionar uma máquina no Monitor → **Atualizar Tela de Bloqueio
+(sem UAC)**. Conferir `%LOCALAPPDATA%\SysAva\sysava_lock.ps1` com a data nova
+e a tela abrindo. No próximo logon, deve continuar a versão nova sem UAC.
+`py_compile` (agente + embutido) e parser dos `.ps1` OK.
+
+---
+
+## IS-110 — Dashboard demorava a remover PCs desligados 🟢
+
+**Sintoma:** máquinas já desligadas continuavam no dashboard e a página não
+se atualizava sozinha; era preciso clicar em **Atualizar** (e às vezes o
+navegador ainda mostrava a versão em cache).
+
+**Causa:** o filtro do dashboard web era de **300 s (5 min)** e não havia
+auto-refresh. O fallback do plugin Streamlit lia o `lab_status.json` inteiro,
+sem filtrar os timestamps.
+
+**Mudança:**
+- `OFFLINE_SECONDS = 60` no `lab_receiver.py`: dashboard, `/api/peer/state` e
+  a escolha local/peer em `dispatch_commands` usam 60 s (o agente pinga a
+  cada 10 s). `/api/status` continua com 30 s para o radar ao vivo.
+- O dashboard recarrega sozinho a cada **15 s**, mas pausa enquanto houver
+  máquina marcada (para não perder a seleção).
+- Respostas HTML recebem `Cache-Control: no-store` (link **Atualizar** não
+  mostra mais página velha).
+- O fallback do `lab_monitor.py` (quando o receiver está fora) filtra por
+  `OFFLINE_SECONDS` em vez de devolver todo o JSON antigo.
+
+**Arquivos:** `data/repo/plugins/lab_receiver.py`,
+`data/repo/plugins/lab_monitor.py`, `docs/ISSUES_LOCAIS.md`.
+
+**Validar:** desligar uma máquina e aguardar ~60 s; com a página aberta (sem
+checkbox marcado), ela deve sumir em até ~75 s. `py_compile` OK.
+
+---
+
+## IS-111 — Servidor do monitor no PC do laboratório inicia com o Windows 🟢
+
+**Pedido:** deixar o servidor do monitor (`lab_receiver.py`) em um PC fixo do
+laboratório subindo sozinho com o Windows, sem depender de abrir o
+`INICIAR_SERVIDOR.bat` nem de um usuário logado.
+
+**Antes:** o `instalar_servidor_auto.ps1` registrava a tarefa **SysAva Servidor**
+no **logon do usuário atual**. Em PC compartilhado, ela só subia depois que
+aquele usuário entrava; se o receiver caísse, a tarefa só tentava reiniciar 3
+vezes; e o `.bat`/manual podia deixar duas instâncias disputando a porta 5000.
+O `-Port` do `INICIAR_SERVIDOR.ps1` também era ignorado (porta fixa 5000).
+
+**Mudança:**
+- `instalar_servidor_auto.ps1` agora registra por padrão **AtStartup como
+  SYSTEM** (sem exigir usuário logado). `-Logon` mantém o comportamento antigo;
+  `-System` continua aceito por compatibilidade.
+- A tarefa roda o novo `servidor_watchdog.ps1`, que reinicia o `lab_receiver.py`
+  a cada 5 s se ele encerrar e grava `servidor.log` (rotação em 5 MB).
+- Configuração da tarefa: `MultipleInstances IgnoreNew` (não duplica),
+  `RestartCount 999`, sem limite de execução, `StartWhenAvailable`, não para em
+  bateria/idle.
+- O instalador confere/instala `flask, waitress, filelock, requests, bcrypt,
+  python-dotenv`, avisa se faltar `.env` e se a pasta estiver em caminho de rede
+  (SYSTEM pode não ver a rede), abre TCP 5000/UDP 5001/5002 e testa `/health`.
+- `reiniciar_servidor.ps1` passou a encerrar o watchdog antes do Python e a
+  aceitar a tarefa apontando para o watchdog (ou para o receiver antigo).
+- O `LAB_PORT` (definido pelo `INICIAR_SERVIDOR.ps1 -Port`) agora é respeitado
+  pelo receiver (antes a porta 5000 era fixa).
+- Com os **dois servidores online** (notebook + PC01-LAB02), o
+  `dispatch_commands` passou a escolher o servidor cujo último reporte da
+  máquina é o mais recente (margem de 5 s para relógio), em vez de sempre
+  preferir o local. Assim, um comando enviado de qualquer um dos dois chega ao
+  agente mesmo quando ele trocou de servidor por failover/reinício. O papel
+  primário/assistente continua apenas informativo.
+- O auto-start deve ser instalado **no PC fixo**; no notebook, se desejado, use
+  `-Logon` (não SYSTEM). Com `PEER_TOKEN`, usar o **mesmo valor nos dois `.env`**
+  (ou deixar em branco nos dois).
+- `servidor_watchdog.ps1` entrou no `DOWNLOAD_WHITELIST` e no `/servidor.zip`
+  (que já inclui automaticamente todo `.ps1`/`.bat` novo).
+- Card 7 do `/setup` e `lab_monitor_doc.md` atualizados (boot por padrão,
+  `-Logon`, watchdog e log).
+
+**Arquivos:** `data/repo/plugins/instalar_servidor_auto.ps1`,
+`data/repo/plugins/servidor_watchdog.ps1`,
+`data/repo/plugins/reiniciar_servidor.ps1`,
+`data/repo/plugins/lab_receiver.py`,
+`data/repo/plugins/lab_monitor_doc.md`, `docs/ISSUES_LOCAIS.md`.
+
+**Como usar no PC do laboratório:**
+1. Rodar uma vez o `INICIAR_SERVIDOR.bat` na pasta do servidor (baixa Python e
+   dependências) e conferir o `.env`.
+2. Rodar `instalar_servidor_auto.bat` como Administrador (aceitar o UAC).
+3. Conferir `http://127.0.0.1:5000/health` e o `servidor.log`.
+4. Reiniciar o PC e, sem logar em nada, abrir `http://<ip-do-pc>:5000/` de outra
+   máquina.
+5. Para atualizar o código: extrair o `servidor.zip` sobre a pasta e rodar
+   `reiniciar_servidor.bat`.
+6. Para remover o auto-start: `instalar_servidor_auto.bat -Remover`.
+
+**Validar:** nos três `.ps1`, `[System.Management.Automation.Language.Parser]`
+sem erros; `python -m py_compile lab_receiver.py`; `schtasks /query /tn "SysAva
+Servidor"` mostrando `SYSTEM` + `At Start-up`; `/health` respondendo após reboot
+sem usuário logado. Observação: a máquina de desenvolvimento já tinha um
+receiver manual na porta 5000 — nesse caso o instalador avisa e não sobe uma
+segunda instância (use `reiniciar_servidor.bat` para trocar pela tarefa).
+
+---
+
+## IS-112 — Tela de bloqueio presa em “Servidor indisponível (1/5)” 🟢
+
+**Fluxo esperado:** o professor chega, liga o **PC01-LAB02** (servidor) e só
+depois os alunos usam as máquinas; o notebook fica para gerenciamento/comandos.
+Na prática, as máquinas dos alunos podem terminar o boot antes de o receiver do
+PC01 estar aceitando conexões.
+
+**Sintoma:** a tela de bloqueio encontrava o servidor pela descoberta, mas o
+`/api/auth_ra` ainda recusava/conectava; ela tentava **5 vezes (~8 s)** e
+terminava em “Servidor indisponivel. Use a senha do administrador.” — o aluno
+precisava clicar de novo (e o RA não era revalidado sozinho).
+
+**Mudança (`sysava_lock.ps1`):**
+- Se o servidor ainda não responde, a tela agora **aguarda até 3 minutos**,
+  redescoberto o servidor a cada ~2 s (URL `-Server` → cache do agente → UDP
+  5001), mostrando “Aguardando o servidor do laboratorio iniciar... (Ns)”.
+- Se encontrou o servidor mas a autenticação ainda falha por rede, mostra
+  “Servidor encontrado; aguardando liberar a tela... (Ns)” e continua tentando
+  **com o mesmo RA**, sem exigir nova digitação.
+- Nova função `Wait-UI` usa `Application.DoEvents()`: a janela continua
+  respondendo, o foco/TopMost não trava e a **senha do administrador** ainda
+  pode ser usada durante a espera (o handler checa admin antes de aguardar).
+- Guarda `$script:aguardandoServidor` evita reentrada de cliques duplicados.
+- Após 3 min sem servidor, mostra a mensagem final e permite tentar de novo.
+- O instalador do servidor não usa mais o atraso de 15 s no boot: a tarefa
+  inicia o quanto antes, reduzindo a janela de espera dos alunos.
+
+**Arquivos:** `data/repo/plugins/sysava_lock.ps1`,
+`data/repo/plugins/instalar_servidor_auto.ps1`, `docs/ISSUES_LOCAIS.md`.
+
+**Como aplicar nos PCs dos alunos:** o lock se auto-atualiza no próximo logon a
+partir do `/download/sysava_lock.ps1` do servidor. Se as máquinas estiverem
+presas com a versão antiga, use o comando **Atualizar Tela de Bloqueio (sem
+UAC)** no Monitor (IS-109) ou reinstale pelo `/setup` card 3 uma vez.
+
+**Validar:** 1) desligar o PC01 e abrir a tela em outro PC; tentar um RA e
+confirmar a mensagem de espera; 2) ligar o PC01 e, sem clicar de novo, ver a
+tela liberar quando o servidor subir; 3) digitar `labadmin` durante a espera e
+confirmar que o admin ainda libera; 4) parser do `.ps1` sem erros.
+
+---
+
+## IS-113 — Comando para PC desligado executava horas depois 🟢
+
+**Sintoma:** o professor mandava **Desligar** ou **Reiniciar** para todas as
+máquinas; as que estavam desligadas ficavam com o comando pendente no
+`lab_status.json` e o executavam no dia seguinte (ou depois de duas aulas),
+quando o aluno ligava o PC.
+
+**Causa:** `pending_command` não tinha validade. O `command_ts` era só
+`HH:MM:SS` (sem data), então não havia como saber se o comando era de agora ou
+de ontem; o `/ping` entregava qualquer pendência no próximo reporte do agente.
+
+**Mudança:**
+- Todo comando agora grava `command_created_at` e `command_expires_at`
+  (epoch). Padrão: **30 minutos** (`COMMAND_TTL_SECONDS=1800`; pode ser
+  ajustado no `.env`/ambiente do servidor).
+- No `/ping`, antes de entregar, o receiver chama `_comando_expirado()`: se
+  venceu, descarta (com log `COMANDO EXPIRADO descartado para ...`) e responde
+  sem `pending_command`.
+- Comando antigo gravado por versão anterior (sem `command_expires_at`) é
+  tratado como vencido — mais seguro do que desligar o PC do aluno horas
+  depois.
+- `lab_monitor.py` também grava os campos de validade nos fallbacks locais e
+  passou a tentar o receiver **antes** de escrever localmente (evita duplicar
+  comando em massa).
+- A resposta do `/ping` inclui `command_expires_at` (o agente atual ignora,
+  mas ajuda em diagnóstico).
+
+**Arquivos:** `data/repo/plugins/lab_receiver.py`,
+`data/repo/plugins/lab_monitor.py`, `docs/ISSUES_LOCAIS.md`.
+
+**Validar:** 1) com o PC desligado, enviar `Desligar PC (Shutdown)` e conferir
+`command_expires_at` no `lab_status.json`; 2) simular o `/ping` depois de
+vencido e confirmar que não retorna `pending_command` e que o log registra o
+descarte; 3) com o PC ligado, enviar o comando e confirmar execução normal
+(pendência entregue e limpa); 4) `py_compile` OK.
+
+---
+
+## IS-114 — Identificação de máquina e aluno no painel 🟢
+
+**Sintoma:** o painel web mostrava o **hostname cru** (`22139923-LAB-60040`,
+`DESKTOP-7H3URJE`) e usava a **conta Windows** (`ALUNO`) como se fosse o aluno
+quando não havia RA associado. Além disso, uma associação antiga podia continuar
+aparecendo para o próximo aluno.
+
+**Mudança:**
+- O painel web passou a usar o **rótulo** de `lab_labels.json`
+  (ex.: `22139923-LAB-60040 → PC04-LAB02`) como nome principal; o hostname
+  continua visível em letra pequena (chave técnica usada por comandos/agente).
+- Nova página **🏷️ Rótulos** (`/rotulos`) no painel web para editar os nomes
+  das máquinas (mesmo arquivo usado pelo Streamlit). Antes isso só existia no
+  expander do Streamlit.
+- A coluna **Aluno (RA)** mostra o nome completo + RA associado pela tela de
+  bloqueio; se não houver, mostra **“sem RA”**. A conta Windows aparece como
+  **“conta: ALUNO”** apenas como informação secundária.
+- A associação aluno↔máquina vale por **16 h** (`USER_MAP_TTL_SECONDS=57600`):
+  evita mostrar o aluno anterior depois de uma sessão antiga. O lock continua
+  sobrescrevendo no próximo RA.
+- Busca de hostname/rótulo/aluno agora é **case-insensitive** e ignora espaços,
+  evitando divergência entre `COMPUTERNAME` (tela de bloqueio) e
+  `socket.gethostname()` (agente).
+- Detalhes da máquina (`/detalhes`) usam o rótulo no título e separam
+  “Aluno (RA)” de “Conta Windows”.
+
+**Arquivos:** `data/repo/plugins/lab_receiver.py`,
+`data/repo/plugins/lab_monitor.py`, `docs/ISSUES_LOCAIS.md`.
+
+**Como usar:** abrir o painel web no notebook → **🏷️ Rótulos** → preencher os
+nomes (ex.: `PC01-LAB02`, `PC04-LAB02`) → salvar. O Streamlit continua lendo o
+mesmo `lab_labels.json`. O aluno aparece após o RA na tela de bloqueio; sem RA,
+o painel mostra “sem RA” em vez de `ALUNO`.
+
+**Validar:** painel mostrando rótulo + host, aluno “NOME (RA)” e “conta: ALUNO”
+em linha secundária; máquina sem RA mostrando “sem RA”; `/rotulos` salvando e
+refletindo no painel; associação com mais de 16 h não exibida; `py_compile` OK
+e teste do Flask client nos templates (`/`, `/detalhes`, `/rotulos`).
+
+---
+
+## IS-115 — Seletor de aluno na tela de bloqueio e RA no login 🟢
+
+**Pedido:** o aluno esquece/esquece o RA ou tem preguiça de digitar. A tela de
+bloqueio deve oferecer uma **lista de alunos** e abrir o SysAva já com o RA
+escolhido.
+
+**Mudança:**
+- Novo endpoint **`/api/alunos`** no receiver: lista `{ra, name}` dos alunos
+  (`app_users.role = student`), ordenada por nome. Cache em memória de **30 min**
+  + cópia em `alunos_cache.json` no disco do servidor, para o **PC01** servir o
+  seletor mesmo depois de reiniciar e antes de o Supabase responder — o notebook
+  não é necessário. Se o banco estiver fora, devolve a última lista conhecida.
+- `sysava_lock.ps1`: o campo de texto virou um **ComboBox** com
+  auto-complete (dá para digitar para filtrar) exibindo `NOME COMPLETO - RA`.
+  A lista é cacheada em `%LOCALAPPDATA%\SysAva\alunos.json`, então aparece mesmo
+  se o PC01 ainda estiver subindo; se não houver cache, uma timer tenta carregar
+  do servidor por até ~2 min.
+- O **último RA não é mais pré-selecionado** (evita liberar/identificar o aluno
+  anterior por engano). O aluno escolhe o próprio nome.
+- O item escolhido é convertido de volta para o RA e validado em
+  `/api/auth_ra` (o combo não substitui a validação no servidor).
+- Ao liberar, o lock abre o SysAva com **`?ra=<RA>`** (antes abria a URL sem
+  RA no início). A tela de login (`views/login.py`) lê `ra` de
+  `st.query_params` e **preenche o campo Usuário**; a senha continua sendo
+  exigida.
+- Correção de regressão: em PowerShell `$url` e `$Url` são a **mesma variável**
+  (case-insensitive). A URL local de `/api/auth_ra` sobrescrevia a URL do portal
+  e o navegador abria o **JSON da API**. Agora a variável local é `$authUrl` e a
+  função usa `$script:Url`, garantindo abrir o `sysava.streamlit.app?ra=...`.
+- O link “Abrir sysava.streamlit.app” também usa o RA selecionado, quando houver.
+- A senha do administrador continua funcionando durante a espera pelo servidor
+  e abre o portal sem RA.
+
+**Arquivos:** `data/repo/plugins/sysava_lock.ps1`,
+`data/repo/plugins/lab_receiver.py`, `views/login.py`,
+`data/repo/plugins/lab_monitor_doc.md`, `docs/ISSUES_LOCAIS.md`.
+
+**Validar:** 1) `/api/alunos` retornando nome/RA e usando cache; 2) lock com o
+combo preenchido (inclusive a partir do cache com o servidor desligado);
+3) escolher um aluno, liberar e conferir `https://sysava.streamlit.app/?ra=...`
+com o campo Usuário preenchido; 4) senha do admin ainda libera; 5) parser do
+`.ps1`, `py_compile` do receiver/login e teste Flask de `/api/alunos`.
+
+---
+
+## IS-116 — Opera subindo com o Windows 🟢
+
+**Sintoma:** o Opera abria sozinho na inicialização (Run/RunOnce ou atalho na
+pasta Startup), atrapalhando a aula e sendo reportado como janela ativa.
+
+**Mudança:**
+- `limpar_inicializacao_roblox()` foi generalizada para
+  `_limpar_inicializacao(termos, encerrar_processos=True)`, reaproveitada por:
+  - `limpar_inicializacao_roblox()` (mantém o comportamento antigo);
+  - `limpar_inicializacao_opera()` (novo).
+- O limpador do Opera remove valores em **Run/RunOnce** (HKCU/HKLM/WOW6432),
+  atalhos nas pastas **Startup** (usuário e todos) e **tarefas agendadas** com
+  “Opera” no nome — ignorando tarefas de **update/atualização** para não
+  quebrar o updater. Ele **não mata** o Opera aberto manualmente; fecha apenas
+  processos `opera.exe` que tenham `--autostart` na linha de comando.
+- O agente roda essa limpeza no início (quando `AUTO_BLOCK=True`), junto com a
+  do Roblox; assim, mesmo que o Opera reative o auto-start, ele é removido no
+  próximo logon/início do agente.
+- Novo comando **Limpar Inicialização do Opera (bandeja)** no Monitor (web e
+  Streamlit) e nas ações em massa, para aplicar na hora sem reiniciar o PC.
+- `lab_agent.ps1` (instalador com o Python embutido) recebeu as mesmas funções
+  e o mesmo tratamento de comando.
+
+**Arquivos:** `data/repo/plugins/lab_agent.py`,
+`data/repo/plugins/lab_agent.ps1`, `data/repo/plugins/lab_receiver.py`,
+`data/repo/plugins/lab_monitor.py`, `data/repo/plugins/lab_monitor_doc.md`,
+`docs/ISSUES_LOCAIS.md`.
+
+**Como aplicar:** atualizar a pasta `plugins` dos servidores (`servidor.zip`) →
+reiniciar o receiver → no Monitor selecionar as máquinas e enviar
+**Atualizar Monitor (rápido, sem UAC)** (baixa o `lab_agent.py` novo e
+reinicia). Ao reiniciar, o agente já limpa o auto-start do Opera; se quiser
+aplicar sem esperar, envie também **Limpar Inicialização do Opera (bandeja)**.
+O `blocked_apps.json` **não** inclui Opera (não é para matar o navegador).
+
+**Validar:** em um PC de teste, conferir que não há valor “Opera” em
+`HKCU\...\Run`/`RunOnce`, atalho na pasta Startup nem tarefa de inicialização;
+reiniciar o PC e confirmar que o Opera **não** abre sozinho; abrir o Opera
+manualmente e confirmar que ele **continua aberto**. `py_compile` do
+`lab_agent.py` e do Python embutido no `.ps1` OK.
+
+---
+
+## IS-117 — Apps Microsoft subindo com o Windows 🟢
+
+**Pedido:** tirar da inicialização o **Outlook, OneDrive** e outros apps da
+Microsoft que abrem sozinhos no laboratório.
+
+**Mudança:**
+- Lista `MICROSOFT_STARTUP_KEYWORDS` com: `onedrive`, `outlook`, `teams`,
+  `ms-teams`, `msteams`, `onenote`, `skype`, `copilot`, `microsoft edge`,
+  `msedge`, `yourphone`, `phoneexperiencehost`, `gamebar`, `xbox`, `widgets`,
+  `cortana`, `officehub`, `microsoft office`, `microsoft365`/`microsoft 365`.
+- Nova `limpar_inicializacao_microsoft()`: remove **Run/RunOnce**,
+  **atalhos na pasta Startup** e tarefas de **startup/logon** que casem com a
+  lista. Não fecha Outlook/OneDrive/Teams em uso; só remove o auto-start.
+- `_limpar_inicializacao()` ganhou `tarefas_startup=True`: para os apps
+  Microsoft só apaga tarefas cujo nome tenha `startup`/`logon`/`inicio`, e
+  ignora `update`/`atualiz`/`install`/`setup` — evita quebrar atualizadores e
+  instaladores (ex.: `MicrosoftEdgeUpdate`, `Teams Machine-Wide Installer`).
+- O agente aplica no início (junto com Roblox/Opera) e há o comando
+  **Limpar Inicialização de Apps Microsoft (bandeja)** no Monitor web,
+  Streamlit e ações em massa.
+- `lab_agent.ps1` (Python embutido) recebeu as mesmas mudanças.
+
+**Arquivos:** `data/repo/plugins/lab_agent.py`,
+`data/repo/plugins/lab_agent.ps1`, `data/repo/plugins/lab_receiver.py`,
+`data/repo/plugins/lab_monitor.py`, `data/repo/plugins/lab_monitor_doc.md`,
+`docs/ISSUES_LOCAIS.md`.
+
+**Como aplicar:** atualizar `servidor.zip` nos servidores → reiniciar o
+receiver → no Monitor enviar **Atualizar Monitor (rápido, sem UAC)** para baixar
+o agente novo → opcionalmente **Limpar Inicialização de Apps Microsoft
+(bandeja)** para aplicar na hora. No próximo logon o agente também limpa.
+
+**Validar:** em um PC de teste, conferir que Outlook/OneDrive/Teams não estão
+em `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` nem na pasta Startup;
+reiniciar e ver que não abrem sozinhos; abrir cada um manualmente e confirmar
+que continuam funcionando. `py_compile` do `lab_agent.py` e do Python embutido
+no `.ps1` OK.
+
+---
+
+## IS-118 — Fechar / Bloquear / Desbloquear Sites/Jogos 🟢
+
+**Pedido:** nas ações do Monitor, ter **Fechar**, **Bloquear** e
+**Desbloquear** para YouTube, Roblox, Loki, outros games e redes sociais.
+
+**Mudança:**
+- Três novas ações no Monitor web/Streamlit (e botões em massa):
+  - **Fechar Sites/Jogos (YouTube/Roblox/Loki/Games/Redes)** — fecha agora
+    (mata processos de jogos/Roblox e fecha janelas cujo título contenha
+    YouTube/Loki/games/redes); não mantém bloqueio.
+  - **Bloquear Sites/Jogos (...)** — grava `block_state.json` no PC e o
+    watchdog passa a fechar janelas e derrubar processos de jogos/Roblox a
+    cada ciclo (~4 s) **até desbloquear**.
+  - **Desbloquear Sites/Jogos (...)** — remove `block_state.json`; o watchdog
+    volta ao comportamento normal (sem fechar Roblox/YouTube sozinho).
+- Sem bloqueio ativo, o Roblox continua fora do auto-bloqueio (só o comando
+  manual “Bloquear Jogos” o fecha). Com bloqueio ativo, o watchdog inclui o
+  Roblox e fecha as janelas das categorias.
+- O estado sobrevive a reboot/atualização do agente; é local por PC. O comando
+  de bloqueio pode ser enviado para todas as máquinas de uma vez.
+
+**Limitação:** sem privilégio de Administrador o agente não altera `hosts` nem
+firewall; o “bloqueio” é por **watchdog** (fecha janelas por título e mata
+processos). Para bloquear por DNS/hosts, use `bloquear_hosts.ps1` com UAC.
+
+**Arquivos:** `data/repo/plugins/lab_agent.py`,
+`data/repo/plugins/lab_agent.ps1`, `data/repo/plugins/lab_receiver.py`,
+`data/repo/plugins/lab_monitor.py`, `data/repo/plugins/lab_monitor_doc.md`,
+`docs/ISSUES_LOCAIS.md`.
+
+**Como aplicar:** atualizar o `servidor.zip` → reiniciar o receiver → enviar
+**Atualizar Monitor (rápido, sem UAC)** para os PCs (para o agente entender as
+ações novas) → enviar **Bloquear** ou **Desbloquear** conforme a aula.
+
+**Validar:** 1) “Fechar” derruba Roblox/jogo aberto e fecha a janela do
+YouTube/Loki; 2) “Bloquear” faz o Roblox/janela voltar a ser fechado se o aluno
+reabrir; 3) “Desbloquear” permite abrir YouTube/Roblox normalmente; 4)
+`block_state.json` aparece/desaparece na pasta do agente; 5) `py_compile` do
+agente e do Python embutido no `.ps1` OK.
+
+---
+
+## IS-119 — Admin/Avaliações: editar o nome da avaliação 🟢
+
+**Pedido:** na página **Admin → Avaliações**, poder **editar o nome** (título)
+de uma avaliação já criada (ex.: `Prog_Mobile Grupo1 Aulas:25-28`).
+
+**Mudança:**
+- Nova função `db.update_assessment_title(assessment_id, new_title)` em
+  `services/database.py` (UPDATE em `assessments.title`).
+- Na seção "Editando: …", novo expander **"✏️ Editar nome da avaliação"** com
+  formulário (campo pré-preenchido com o título atual e botão **Salvar nome**).
+- Validações: não permite título vazio; avisa quando o nome não mudou; mostra
+  erro do banco, se houver.
+- Após salvar, atualiza `st.session_state["sel_edit_av"]` para `tipo - novo
+  título`, mantendo a avaliação selecionada no `selectbox` após o `rerun`.
+
+**Arquivos:** `services/database.py`, `views/admin.py`,
+`docs/ISSUES_LOCAIS.md`.
+
+**Como validar:** 1) Admin → aba de avaliações → selecionar disciplina e uma
+avaliação existente; 2) abrir **✏️ Editar nome da avaliação**, alterar o nome e
+salvar; 3) confirmar que o cabeçalho "Editando:" e o `selectbox` exibem o novo
+nome; 4) tentar salvar vazio (deve recusar); 5) `python -m py_compile
+services/database.py views/admin.py`.
+
+---
+
+## IS-120 — Seminário Prog. Dispositivos Móveis: aulas 33–40 no SysAva 🟢
+
+**Pedido:** subir ao SysAva, em aulas separadas, o seminário de Programação
+para Dispositivos Móveis — Grupo1 (pesquisa 25–28, apresentação 33–36) e Grupo2
+(pesquisa 29–32, apresentação 37–40), nas turmas 2A e 2B (carga horária 40h).
+
+**Decisão:** a disciplina `PROGRAMAÇÃO PARA DISPOSITIVOS MÓVEIS` (`subject_id=5`)
+é **compartilhada** entre 2A e 2B (`class_subjects`). Como os integrantes diferem
+por turma, foi gerada uma **versão única neutra** (sem nomes de turma) e feito o
+upsert uma vez; as duas turmas veem o mesmo material.
+
+**Mudança (dados):** aulas criadas no Supabase (`lessons`, `subject_id=5`):
+
+| ID | Título |
+|----|--------|
+| 740 | AULA 33 — Seminário: Widgets e Árvore de UI no Flutter |
+| 742 | AULA 34 — Seminário: Modularização de Projetos Flutter |
+| 743 | AULA 35 — Seminário: Debug e Performance no Flutter |
+| 744 | AULA 36 — Seminário: Layouts e Design Responsivo no Flutter |
+| 745 | Aula 37 Seminario Grupo2 A29 |
+| 746 | Aula 38 Seminario Grupo2 A30 |
+| 747 | Aula 39 Seminario Grupo2 A31 |
+| 748 | Aula 40 Seminario Grupo2 A32 |
+
+A Aula 32 (IMC) já existia (id 738). Fontes locais em
+`data/repo/.../S05` (2A) e `data/Turmas/.../S05` (2A e 2B), com H1 = título.
+
+**Como validar:** abrir o portal → Programação para Dispositivos Móveis → S05 →
+conferir as aulas 33–40; ou consultar
+`db.get_lessons_for_subject(5)` e verificar os títulos/IDs.
+
+---
+
+## IS-121 — Aula criada no Admin não aparecia na página Aulas 🟢
+
+**Sintoma:** a professora (ex.: `adriana`) criava a aula em **Admin → Aulas**
+com título fora do padrão `Aula N` (ex.: "Aula Teste", "A importância da
+retenção de clientes"). A aula aparecia na lista do Admin/`st.dataframe`, mas
+**não aparecia na página Aulas** (visão de professor).
+
+**Causa:** `views/aulas.py` → `group_lessons()` usava
+`get_lesson_number(title)` (regex `Aula\s*(\d+)`) e montava o agrupamento semanal
+**apenas com aulas numeradas**. Aulas com `number=None` eram descartadas e o
+grupo ficava vazio, então a tela não listava nada.
+
+**Correção:** `group_lessons()` agora separa `numbered_lessons` e
+`unnumbered_lessons`; as sem número entram no grupo
+**"Outras aulas (sem número)"**, garantindo que toda aula criada apareça
+(Admin, professor e aluno).
+
+**Arquivos:** `views/aulas.py`, `docs/ISSUES_LOCAIS.md`.
+
+**Validar:** criar uma aula com título sem "Aula N" em Admin → Aulas, abrir
+**Aulas** → selecionar a turma/disciplina → a aula deve aparecer em
+"Outras aulas (sem número)". Teste real: `subject 37` da turma 312076 mostrou
+"A importância da retenção de clientes" após a correção.
 
 ## Comandos úteis
 
