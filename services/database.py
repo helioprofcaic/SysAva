@@ -585,6 +585,7 @@ def add_user_history(username: str, activity: str):
         # Invalida caches derivados do histórico para refletir imediatamente
         local_cache.invalidate(f"user_history:{username}")
         local_cache.invalidate_prefix(f"student_score:{username}:")
+        local_cache.invalidate_prefix(f"completion_stats:{username}:")
         return response.data, None
     except Exception as e:
         return None, str(e)
@@ -854,6 +855,7 @@ def add_forum_post(user_name: str, message: str, lesson_id: int = None):
         except Exception:
             pass
         local_cache.invalidate(f"forum_lessons:{user_name}")
+        local_cache.invalidate_prefix("completion_stats:")
         return response.data, None
     except Exception as e:
         return None, str(e)
@@ -1725,6 +1727,83 @@ def get_user_progress_stats(username: str):
         elif "mensagem no fórum" in act:
             forum_posts += 1
     return {"lessons": len(unique_lessons), "quizzes": len(unique_quizzes), "forum": forum_posts}
+
+def get_student_completion_stats(username: str, subject_id: int = None):
+    """Contagens e percentuais de quizzes e fóruns concluídos pelo aluno."""
+    if not is_db_connected():
+        return {"quiz_done": 0, "quiz_total": 0, "quiz_pct": 0, "forum_done": 0, "forum_total": 0, "forum_pct": 0}
+
+    key = f"completion_stats:{username}:{subject_id if subject_id is not None else 'all'}"
+    return local_cache.get_or_fetch(
+        key, lambda: _compute_completion_stats(username, subject_id), ttl=local_cache.TTL_SHORT
+    )
+
+def _compute_completion_stats(username: str, subject_id: int = None):
+    empty = {"quiz_done": 0, "quiz_total": 0, "quiz_pct": 0, "forum_done": 0, "forum_total": 0, "forum_pct": 0}
+    if not is_db_connected():
+        return empty
+
+    if subject_id:
+        subject_ids = [int(subject_id)]
+    else:
+        enrollment = get_user_enrollment(username)
+        if not enrollment:
+            return empty
+        subjects = get_subjects_for_class(enrollment['class_id'])
+        subject_ids = [s['id'] for s in subjects if s.get('is_active', True)]
+    if not subject_ids:
+        return empty
+
+    total_lessons = 0
+    quiz_lesson_ids = set()
+    quiz_id_to_lesson = {}
+    for sid in subject_ids:
+        total_lessons += len(get_lessons_for_subject(sid))
+        for quiz in get_quizzes_for_subject(sid):
+            lesson_id = quiz.get('lesson_id')
+            if lesson_id is None:
+                continue
+            quiz_id_to_lesson[quiz['id']] = lesson_id
+            quiz_lesson_ids.add(lesson_id)
+
+    completed_quiz_ids = set()
+    for item in get_user_history(username):
+        act = item.get('activity', '')
+        if not act.startswith("Concluiu Quiz:"):
+            continue
+        match_sid = re.search(r'\| subject_id:(\d+)', act)
+        if match_sid and int(match_sid.group(1)) not in subject_ids:
+            continue
+        match_qid = re.search(r'\| quiz_id:(\d+)', act)
+        if match_qid:
+            qid = int(match_qid.group(1))
+            if qid in quiz_id_to_lesson:
+                completed_quiz_ids.add(qid)
+
+    completed_lessons = {quiz_id_to_lesson[qid] for qid in completed_quiz_ids}
+    quiz_total = len(quiz_lesson_ids)
+    quiz_done = min(len(completed_lessons), quiz_total)
+
+    user_data = get_user(username)
+    user_name = (user_data or {}).get('name') or username
+    forum_by_subject = get_user_forum_lessons_by_subject(user_name) or {}
+    forum_done = 0
+    for sid in subject_ids:
+        try:
+            forum_done += int(forum_by_subject.get(sid, forum_by_subject.get(str(sid), 0)) or 0)
+        except (TypeError, ValueError):
+            pass
+    forum_total = total_lessons
+    forum_done = min(forum_done, forum_total)
+
+    return {
+        "quiz_done": quiz_done,
+        "quiz_total": quiz_total,
+        "quiz_pct": round(100 * quiz_done / quiz_total) if quiz_total else 0,
+        "forum_done": forum_done,
+        "forum_total": forum_total,
+        "forum_pct": round(100 * forum_done / forum_total) if forum_total else 0,
+    }
 
 def get_student_submission(username: str, assessment_id: int):
     """Verifica se o aluno já realizou a avaliação."""

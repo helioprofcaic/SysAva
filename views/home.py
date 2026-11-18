@@ -21,8 +21,16 @@ def show_student_home():
     if subjects:
         subject_options.update({s['name']: s['id'] for s in subjects})
 
-    selected_subject_name = st.selectbox("Filtrar progresso por disciplina:", list(subject_options.keys()))
+    if st.session_state.get("home_subject_filter") not in subject_options:
+        st.session_state["home_subject_filter"] = list(subject_options.keys())[0]
+    selected_subject_name = st.selectbox(
+        "Filtrar progresso por disciplina:",
+        list(subject_options.keys()),
+        key="home_subject_filter",
+    )
     selected_subject_id = subject_options[selected_subject_name]
+    st.session_state["home_subject_name"] = selected_subject_name
+    st.session_state["home_subject_id"] = selected_subject_id
 
     # --- Score do Aluno ---
     st.subheader("Seu Progresso (Score)")

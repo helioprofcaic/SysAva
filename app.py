@@ -167,6 +167,37 @@ def main():
             try:
                 from services import database as _db
                 st.caption(f"🗄️ Banco: {_db.get_backend_label()}")
+
+                # Disciplina atual + progresso do aluno (quizzes e fóruns)
+                if st.session_state.get('role') == 'student':
+                    _page = st.session_state.get('page', 'Home')
+                    if _page in ('Home', 'Avaliações'):
+                        _sid = st.session_state.get('home_subject_id')
+                        _sname = st.session_state.get('home_subject_name')
+                    else:
+                        _sid = st.session_state.get('selected_subject_id') or st.session_state.get('home_subject_id')
+                        _sname = st.session_state.get('selected_subject_name') or st.session_state.get('home_subject_name')
+
+                    if _sid:
+                        _label = _sname or f"Disciplina {_sid}"
+                    elif _sname and 'Visao Geral' in str(_sname):
+                        _label = 'Visão Geral (todas)'
+                    elif _page in ('Home', 'Avaliações'):
+                        _label = 'Visão Geral (todas)'
+                    else:
+                        _label = 'Nenhuma selecionada'
+
+                    st.markdown(f"📚 **Disciplina atual:** {_label}")
+                    _username = st.session_state.get('username') or st.session_state.get('usuario')
+                    _stats = _db.get_student_completion_stats(_username, _sid)
+                    st.progress(
+                        _stats['quiz_pct'] / 100.0,
+                        text=f"📝 Quizzes: {_stats['quiz_done']}/{_stats['quiz_total']} ({_stats['quiz_pct']}%)",
+                    )
+                    st.progress(
+                        _stats['forum_pct'] / 100.0,
+                        text=f"💬 Fóruns: {_stats['forum_done']}/{_stats['forum_total']} ({_stats['forum_pct']}%)",
+                    )
             except Exception:
                 pass
 
