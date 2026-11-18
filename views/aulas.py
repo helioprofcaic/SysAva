@@ -294,8 +294,15 @@ def show_lesson_detail():
         st.divider()
 
     # Conteúdo da aula
-    if lesson.get('video_url'):
-        st.video(lesson['video_url'])
+    video_url = (lesson.get('video_url') or '').strip()
+    if video_url.startswith(('http://', 'https://')):
+        if re.search(r'(youtube\.com|youtu\.be|vimeo\.com|\.mp4|\.webm|\.ogg|\.m3u8)', video_url, re.IGNORECASE):
+            try:
+                st.video(video_url)
+            except Exception:
+                st.markdown(f"🎥 [Abrir vídeo]({video_url})")
+        else:
+            st.markdown(f"🔗 [Abrir recurso externo]({video_url})")
     if lesson.get('description'):
         desc = clean_svg_content(lesson['description'])
         

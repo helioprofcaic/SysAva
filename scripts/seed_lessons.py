@@ -363,10 +363,11 @@ def run_lesson_seeder():
                     for line in lines:
                         stripped = line.strip()
                         
-                        # Procura URL de vídeo (primeira ocorrência de http)
-                        if stripped.startswith("http") and not video_url:
-                            video_url = stripped
-                            continue
+                        # Procura URL de vídeo (apenas links de vídeo válidos)
+                        if not video_url and re.match(r'https?://', stripped):
+                            if re.search(r'(youtube\.com|youtu\.be|vimeo\.com|\.mp4|\.webm|\.ogg|\.m3u8)', stripped, re.IGNORECASE):
+                                video_url = stripped
+                                continue
                         
                         # Procura o Título da Aula (primeira ocorrência de # ou ##)
                         if not title_found and stripped.startswith("#"):
