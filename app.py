@@ -172,8 +172,17 @@ def main():
                 if st.session_state.get('role') == 'student':
                     _page = st.session_state.get('page', 'Home')
                     if _page in ('Home', 'Avaliações'):
+                        _sname = st.session_state.get('home_subject_filter') or st.session_state.get('home_subject_name')
                         _sid = st.session_state.get('home_subject_id')
-                        _sname = st.session_state.get('home_subject_name')
+                        if _sname and 'Visao Geral' not in str(_sname):
+                            _match = next((s for s in (_db.get_subjects() or []) if s.get('name') == _sname), None)
+                            _sid = _match['id'] if _match else _sid
+                    elif _page == 'Aulas':
+                        _sname = st.session_state.get('aulas_subject_filter') or st.session_state.get('selected_subject_name')
+                        _sid = st.session_state.get('selected_subject_id')
+                        if _sname and _sname != "-- Selecione uma disciplina --":
+                            _match = next((s for s in (_db.get_subjects() or []) if s.get('name') == _sname), None)
+                            _sid = _match['id'] if _match else _sid
                     else:
                         _sid = st.session_state.get('selected_subject_id') or st.session_state.get('home_subject_id')
                         _sname = st.session_state.get('selected_subject_name') or st.session_state.get('home_subject_name')

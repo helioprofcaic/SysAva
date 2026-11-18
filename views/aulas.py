@@ -350,10 +350,20 @@ def show_student_view(class_id):
     if st.session_state.selected_subject_name not in subject_names:
         st.session_state.selected_subject_name = subject_names[0]
 
+    # Mantém o estado do widget alinhado (a chave permite o sidebar ler antes da página)
+    if st.session_state.get("aulas_subject_filter") not in subject_names:
+        st.session_state["aulas_subject_filter"] = st.session_state.selected_subject_name
+
+    def _sync_aulas_subject():
+        name = st.session_state.get("aulas_subject_filter")
+        st.session_state.selected_subject_name = name
+        st.session_state.selected_subject_id = subject_map.get(name)
+
     selected_subject_name = st.selectbox(
-        "Disciplinas da sua turma:", 
+        "Disciplinas da sua turma:",
         subject_names,
-        index=subject_names.index(st.session_state.selected_subject_name)
+        key="aulas_subject_filter",
+        on_change=_sync_aulas_subject,
     )
     st.session_state.selected_subject_name = selected_subject_name
 

@@ -23,10 +23,17 @@ def show_student_home():
 
     if st.session_state.get("home_subject_filter") not in subject_options:
         st.session_state["home_subject_filter"] = list(subject_options.keys())[0]
+
+    def _sync_home_subject():
+        name = st.session_state.get("home_subject_filter")
+        st.session_state["home_subject_name"] = name
+        st.session_state["home_subject_id"] = subject_options.get(name)
+
     selected_subject_name = st.selectbox(
         "Filtrar progresso por disciplina:",
         list(subject_options.keys()),
         key="home_subject_filter",
+        on_change=_sync_home_subject,
     )
     selected_subject_id = subject_options[selected_subject_name]
     st.session_state["home_subject_name"] = selected_subject_name
