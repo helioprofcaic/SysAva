@@ -109,7 +109,8 @@ class GeradorAulaGemini:
                 usar_arquivos=True,
                 turma=turma,
                 disciplina=disciplina,
-                semana=semana
+                semana=semana,
+                numero_aula=numero_aula
             )
         else:
             # ROTA 1: Busca no arquivo de lista (Cronograma)
@@ -146,7 +147,7 @@ class GeradorAulaGemini:
             )
         return contexto_str
 
-    def gerar_prompt_aula(self, turma, disciplina, semana, contexto_str: str, school_name: str = "Escola Técnica Estadual", professor_name: str = "Professor(a) Assistente", numero_aula: int = None, titulo_personalizado: str = None, persona: str = None, metodologia: str = None, estrutura: str = None, is_local_model: bool = False, sem_ilustracoes: bool = False):
+    def gerar_prompt_aula(self, turma, disciplina, semana, contexto_str: str, school_name: str = "Escola Técnica Estadual", professor_name: str = "Professor(a) Assistente", numero_aula: int = None, titulo_personalizado: str = None, persona: str = None, metodologia: str = None, estrutura: str = None, is_local_model: bool = False, sem_ilustracoes: bool = False, video_url: str = None):
         """
         Gera o prompt final para o LLM a partir de um contexto já fornecido,
         usando o template estruturado que gera um plano de aula completo com quiz.
@@ -183,6 +184,14 @@ class GeradorAulaGemini:
         else:
             topic_instruction = "Inferir o TEMA principal a partir do CONTEÚDO BASE fornecido."
 
+        video_instruction = ""
+        if video_url:
+            video_instruction = (
+                f"- **Vídeo da Aula (OBRIGATÓRIO):** {video_url}\n"
+                "  Na seção 'Recursos e Links', inclua obrigatoriamente este link do vídeo "
+                "da aula, exatamente como informado aqui."
+            )
+
         # 2. Dados do Currículo
         info_curriculo = self._carregar_competencias_curriculo(disciplina)
         texto_curriculo = ""
@@ -216,13 +225,15 @@ class GeradorAulaGemini:
                 contexto_str = contexto_str[:max_context_chars] + "\n[CONTEÚDO TRUNCADO]"
 
             # Prompt compacto — quebras de linha mínimas para não desperdiçar tokens
+            linha_video = f'VÍDEO OBRIGATÓRIO (inclua em Recursos e Links): {video_url}\n' if video_url else ''
             prompt = (
                 f'Crie um plano de aula Markdown sobre "{titulo}".\n\n'
                 f'CABEÇALHO (use EXATAMENTE este formato, sem alterar):\n'
                 f'**📚 Disciplina:** {disciplina}\n'
                 f'**🎓 Turma:** {turma}\n'
                 f'**🏫 Escola:** {school_name}\n'
-                f'**👨‍🏫 Professor:** {professor_name}\n\n'
+                f'**👨‍🏫 Professor:** {professor_name}\n'
+                f'{linha_video}\n'
                 f'CONTEÚDO BASE:\n{contexto_str}\n\n'
                 f'Estrutura obrigatória:\n'
                 f'# Aula {numero_aula}: {titulo}\n'
@@ -260,6 +271,7 @@ Sua missão é criar um plano de aula completo em formato Markdown.
 - **Semana:** {semana}
 - **Aula Nº:** {numero_aula}
 - **Tema da Aula:** {topic_instruction}
+{video_instruction}
 {texto_curriculo}
 
 # MATERIAL DE APOIO (CONTEÚDO BASE)
@@ -302,7 +314,7 @@ O resultado final deve ser um único arquivo Markdown.
 *Faça um resumo dos pontos principais e reforce a importância do aprendizado.*
 
 ## 🧰 Recursos e Links
-*EXTRAÇÃO OBRIGATÓRIA: Localize e liste aqui todos os links (YouTube, artigos, etc.) encontrados no MATERIAL DE APOIO. Se não houver links, sugira termos de busca para pesquisa.*
+*EXTRAÇÃO OBRIGATÓRIA: Localize e liste aqui todos os links (YouTube, artigos, etc.) encontrados no MATERIAL DE APOIO. Inclua obrigatoriamente o link do "Vídeo da Aula" informado nos DADOS DE ENTRADA, quando houver. Se não houver links, sugira termos de busca para pesquisa.*
 
 ---
 

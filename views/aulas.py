@@ -406,7 +406,20 @@ def group_lessons(lessons, subject_name, class_name, subject_id=None):
             group_type = 'anual'
 
     if group_type == 'anual':
-        return {"Anual": lessons}
+        # Ordena pelo número extraído de "Aula N". Aulas sem número mantêm
+        # a posição relativa à última numerada (ex.: material de apoio).
+        keyed = []
+        last_num = 0
+        for lesson in lessons:
+            num = get_lesson_number(lesson.get('title') or '')
+            if num is None:
+                key = last_num + 0.5
+            else:
+                key = num
+                last_num = max(last_num, num)
+            keyed.append((key, lesson))
+        keyed.sort(key=lambda item: item[0])
+        return {"Anual": [lesson for _, lesson in keyed]}
     elif group_type == 'livre':
         return {"Aulas": lessons}
 
@@ -482,7 +495,9 @@ def show_lesson_list(subject_id, subject_name):
     username = st.session_state.get('username')
     history = db.get_user_history(username)
     quizzes = db.get_quizzes_for_subject(subject_id)
-    quiz_map = {q['lesson_id']: q for q in quizzes}
+    quizzes_by_lesson = {}
+    for quiz in sorted(quizzes, key=lambda q: q['id']):
+        quizzes_by_lesson.setdefault(quiz['lesson_id'], []).append(quiz)
     
     visited_lesson_titles = set()
     completed_quiz_titles = set()
@@ -490,6 +505,9 @@ def show_lesson_list(subject_id, subject_name):
     
     for h in history:
         act = h.get('activity', '')
+        subject_match = re.search(r'\| subject_id:(\d+)', act)
+        if subject_match and int(subject_match.group(1)) != int(subject_id):
+            continue
         if "Acessou a aula:" in act:
             title = act.split(':', 1)[1].split('|')[0].strip()
             visited_lesson_titles.add(title)
@@ -497,12 +515,12 @@ def show_lesson_list(subject_id, subject_name):
             match_qid = re.search(r'\| quiz_id:(\d+)', act)
             if match_qid:
                 completed_quiz_ids.add(int(match_qid.group(1)))
-            else:
-                raw_title = act.split(':', 1)[1].split('|')[0].strip()
-                title = re.sub(r'\s*\(\d+/\d+\)$', '', raw_title).strip()
-                # Títulos genéricos não identificam a aula: ignorados para evitar falsos positivos
-                if not db.is_generic_quiz_title(title):
-                    completed_quiz_titles.add(title)
+            raw_title = act.split(':', 1)[1].split('|')[0].strip()
+            title = re.sub(r'\s*\(\d+/\d+\)$', '', raw_title).strip()
+            # Títulos genéricos não identificam a aula: ignorados para evitar falsos positivos.
+            # O título também é registrado quando há quiz_id, para tolerar quizzes duplicados.
+            if title and not db.is_generic_quiz_title(title):
+                completed_quiz_titles.add(title)
 
     st.subheader(f"Aulas de {subject_name}")
 
@@ -523,25 +541,27 @@ def show_lesson_list(subject_id, subject_name):
     for group_title, lessons_in_group in grouped_lessons.items():
         # Se houver apenas um grupo chamado "Aulas", não usa o expander
         if len(grouped_lessons) == 1 and group_title == "Aulas":
-            render_lessons(lessons_in_group, visited_lesson_titles, completed_quiz_titles, completed_quiz_ids, quiz_map, subject_id)
+            render_lessons(lessons_in_group, visited_lesson_titles, completed_quiz_titles, completed_quiz_ids, quizzes_by_lesson, subject_id)
         else:
             with st.expander(f"**{group_title}**", expanded=True):
-                render_lessons(lessons_in_group, visited_lesson_titles, completed_quiz_titles, completed_quiz_ids, quiz_map, subject_id)
+                render_lessons(lessons_in_group, visited_lesson_titles, completed_quiz_titles, completed_quiz_ids, quizzes_by_lesson, subject_id)
 
-def render_lessons(lessons, visited_lesson_titles, completed_quiz_titles, completed_quiz_ids, quiz_map, subject_id):
+def render_lessons(lessons, visited_lesson_titles, completed_quiz_titles, completed_quiz_ids, quizzes_by_lesson, subject_id):
     """Função auxiliar para renderizar uma lista de botões de aula."""
     for lesson in lessons:
         is_visited = lesson['title'] in visited_lesson_titles
-        has_quiz = lesson['id'] in quiz_map
+        lesson_quizzes = quizzes_by_lesson.get(lesson['id'], [])
+        has_quiz = bool(lesson_quizzes)
         is_concluded = False
-        
+
         if is_visited:
             if not has_quiz:
                 is_concluded = True
             else:
-                quiz = quiz_map.get(lesson['id'])
-                if quiz and (quiz['id'] in completed_quiz_ids or quiz['title'] in completed_quiz_titles):
-                    is_concluded = True
+                is_concluded = any(
+                    (quiz['id'] in completed_quiz_ids) or (quiz['title'] in completed_quiz_titles)
+                    for quiz in lesson_quizzes
+                )
         
         if is_concluded:
             status_class = "circle-green"

@@ -2,7 +2,8 @@
 :: Define a codificação para UTF-8 para suportar acentos no console
 chcp 65001 > nul
 
-set "SCRIPT_PATH=%~dp0data\repo\plugins\lab_agent.ps1"
+set "SCRIPT_PATH=%~dp0data\repo\plugins\monitor\lab_agent.ps1"
+if not exist "%SCRIPT_PATH%" set "SCRIPT_PATH=%~dp0data\repo\plugins\lab_agent.ps1"
 set "LOG_FILE=%~dp0install_log.txt"
 
 echo ============================================================

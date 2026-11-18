@@ -112,6 +112,60 @@ def load_frequency_flags():
     except Exception:
         return {}
 
+def _previsao_frequencia(class_name, subject_id):
+    """Previsão de semanas/dias para cumprir a carga usando a grade técnica
+    (slots 'Disc.Tec.' da turma). Retorna dict ou None se não houver grade."""
+    import math
+    import sqlite3
+    try:
+        conn = sqlite3.connect(os.path.join(project_root, "data", "escola_ativa.db"), timeout=5)
+        try:
+            load = 40
+            r = conn.execute(
+                "SELECT carga_horaria, max_hours FROM subjects WHERE id = ?",
+                (str(subject_id),),
+            ).fetchone()
+            if r:
+                for v in r:
+                    try:
+                        if v:
+                            load = int(v)
+                            break
+                    except Exception:
+                        pass
+            rows = conn.execute(
+                "SELECT day_of_week, COUNT(*) FROM weekly_schedule "
+                "WHERE class_name = ? "
+                "AND REPLACE(REPLACE(UPPER(subject_name), ' ', ''), '.', '') = 'DISCTEC' "
+                "GROUP BY day_of_week",
+                (class_name,),
+            ).fetchall()
+        finally:
+            conn.close()
+    except Exception:
+        return None
+
+    per = {str(d): int(n) for d, n in rows}
+    weekly = sum(per.values())
+    if weekly <= 0:
+        return None
+    ndays = len([d for d, n in per.items() if n > 0])
+    weeks = math.ceil(load / weekly)
+    ordem = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"]
+    grade = "/".join(str(per[d]) for d in ordem if per.get(d))
+    per_label = " · ".join(f"{d[:3]} {per[d]}" for d in ordem if per.get(d))
+    return {
+        "load": load,
+        "per": per,
+        "weekly": weekly,
+        "ndays": ndays,
+        "weeks": weeks,
+        "class_days": weeks * ndays,
+        "grade": grade,
+        "per_label": per_label,
+    }
+
+
 def show_attendance_plugin():
     st.title("📅 Diário de Frequência")
 
@@ -174,6 +228,39 @@ def show_attendance_plugin():
     if not students:
         st.warning(f"Nenhum aluno encontrado na turma {selected_class_name}.")
         return
+
+    # Previsão de fechamento da carga usando a grade técnica (2/5/1 = 8/semana)
+    prev = _previsao_frequencia(selected_class_name, selected_subject_id)
+    if prev:
+        st.markdown("#### 📈 Previsão de Frequência (disciplinas técnicas)")
+        pc1, pc2, pc3 = st.columns(3)
+        pc1.metric(
+            "Grade semanal",
+            f"{prev['weekly']} aulas",
+            help=f"Pesos por dia (grade vigente): {prev['per_label']}",
+        )
+        pc2.metric(
+            "Previsão p/ carga",
+            f"{prev['weeks']} semanas",
+            help=f"{prev['load']} aulas ÷ {prev['weekly']} por semana",
+        )
+        pc3.metric(
+            "Dias com aula",
+            f"{prev['class_days']}",
+            help=f"{prev['ndays']} dias com aula por semana",
+        )
+        st.caption(
+            f"Cálculo: **{prev['load']} aulas ÷ {prev['weekly']} por semana = "
+            f"{prev['weeks']} semanas** (grade {prev['grade']} = {prev['weekly']}/semana; "
+            f"{prev['per_label']}). "
+            f"4 semanas = 20 dias úteis, mas só **{4 * prev['ndays']} dias com aula** "
+            f"({4 * prev['weekly']} aulas)."
+        )
+        st.caption(
+            "⚠️ Pesos calculados da **grade semanal vigente** (`weekly_schedule`), não fixos. "
+            "Se houver novo professor/remanejamento de horário ou dia, este cálculo se atualiza "
+            "automaticamente e os planos futuros devem ser regerados."
+        )
 
     # Ordenar alunos por nome para definir o número na lista (Nº)
     students = sorted(students, key=lambda x: x['name'])

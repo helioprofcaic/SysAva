@@ -424,6 +424,101 @@ def generate_assessment_print_html(school_name, subject_name, class_name, assess
     """
     return html
 
+def _extract_seminar_members(questions):
+    """Extrai (nome, username) da questão do seminário criada pelo plugin."""
+    members = []
+    for q in questions:
+        text = q.get('question_text') or ''
+        if 'integrantes do grupo' not in text.lower():
+            continue
+        in_block = False
+        for line in text.splitlines():
+            s = line.strip()
+            if 'integrantes do grupo' in s.lower():
+                in_block = True
+                continue
+            if not in_block:
+                continue
+            if s.startswith('- '):
+                item = s[2:].strip()
+                m = re.match(r'^(.*?)\s*\(([^)]+)\)\s*$', item)
+                if m:
+                    members.append({'name': m.group(1).strip(), 'username': m.group(2).strip()})
+                else:
+                    members.append({'name': item, 'username': None})
+            elif s == '' or s.startswith('📚') or s.lower().startswith('pesquise'):
+                if members:
+                    break
+    return members
+
+
+def render_seminar_scoring(assessment, questions, class_id):
+    """Painel de pontuação individual dos integrantes de um seminário."""
+    st.markdown("### 🎤 Pontuar Seminário (por integrante)")
+    st.caption("A nota é individual. Se o aluno ainda não tiver submissão, ela é criada ao salvar.")
+
+    members = _extract_seminar_members(questions)
+    if not members:
+        st.info("Não foi possível identificar os integrantes na questão do seminário. Use a tabela de submissões abaixo.")
+        return
+
+    students = db.get_students_by_class(class_id) if class_id else []
+    by_user = {s.get('username'): s for s in students}
+    by_name = {(s.get('name') or '').strip().upper(): s for s in students}
+
+    resolved = []
+    for m in members:
+        info = None
+        if m['username'] and m['username'] in by_user:
+            info = by_user[m['username']]
+        elif m['name'].upper() in by_name:
+            info = by_name[m['name'].upper()]
+        if info:
+            resolved.append({'name': info.get('name') or m['name'], 'username': info.get('username')})
+        else:
+            resolved.append({'name': m['name'], 'username': m['username']})
+
+    rows = []
+    for m in resolved:
+        current = None
+        if m['username']:
+            subs = db.get_student_submissions(m['username'], assessment['id'])
+            if subs:
+                current = subs[0].get('score')
+        rows.append({'Integrante': m['name'], 'Usuário': m['username'] or '', 'Nota': current})
+
+    df = pd.DataFrame(rows)
+    edited = st.data_editor(
+        df,
+        column_config={
+            'Integrante': st.column_config.TextColumn('Integrante', disabled=True, width='large'),
+            'Usuário': st.column_config.TextColumn('Usuário', disabled=True),
+            'Nota': st.column_config.NumberColumn('Nota', min_value=0.0, max_value=10.0, step=0.5, format='%.1f'),
+        },
+        hide_index=True,
+        width='stretch',
+        key=f'seminar_scores_{assessment["id"]}',
+    )
+
+    if st.button('💾 Salvar Notas do Seminário', type='primary', key=f'save_seminar_scores_{assessment["id"]}'):
+        saved, errors = 0, []
+        for _, row in edited.iterrows():
+            username = str(row.get('Usuário') or '').strip()
+            grade = row.get('Nota')
+            if not username or pd.isna(grade):
+                continue
+            _, err = db.upsert_assessment_score(username, assessment['id'], float(grade))
+            if err:
+                errors.append(f'{username}: {err}')
+            else:
+                saved += 1
+        for e in errors:
+            st.error(e)
+        if saved:
+            st.success(f'{saved} nota(s) de seminário salva(s).')
+            st.rerun()
+
+
 def show_admin_view():
     st.subheader("Area do Professor - Correcao e Notas")
 
@@ -451,6 +546,7 @@ def show_admin_view():
                 "2 Trimestre": "T2",
                 "3 Trimestre": "T3",
                 "Recuperacao": "RM",
+                "Seminários": "Seminário",
                 "Outros": "Outros"
             }
             selected_trimester_label = st.selectbox("Trimestre", list(trimester_options.keys()))
@@ -460,7 +556,7 @@ def show_admin_view():
             all_assessments = db.get_assessments_by_subject(subject_id)
             if selected_type_prefix == "Todos":
                 filtered_assessments = all_assessments
-            elif selected_type_prefix in ["RM", "Outros"]:
+            elif selected_type_prefix in ["RM", "Outros", "Seminário"]:
                 filtered_assessments = [a for a in all_assessments if a['type'] == selected_type_prefix]
             else:
                 filtered_assessments = [a for a in all_assessments if a['type'] and a['type'].startswith(selected_type_prefix)]
@@ -483,6 +579,10 @@ def show_admin_view():
                 school_info = db.get_school()
                 school_name = school_info['name'] if school_info else "Escola Tecnica"
                 questions = db.get_assessment_questions(assessment['id'])
+
+                if str(assessment.get('type', '')).strip().lower().startswith('semin'):
+                    st.divider()
+                    render_seminar_scoring(assessment, questions, class_id)
 
                 # Gera HTML da prova (com campos para aluno preencher)
                 blank_html = generate_assessment_print_html(

@@ -6,6 +6,12 @@ import os
 import re
 import time
 import unicodedata
+import requests
+
+try:
+    from services import db_sqlite
+except Exception:
+    db_sqlite = None
 try:
     from services import local_cache
 except Exception:
@@ -24,6 +30,11 @@ except Exception:
 _SUPABASE_CLIENT = None
 _SUPABASE_URL = None
 _SUPABASE_KEY = None
+# Backend efetivo do processo: cliente Supabase ou adaptador SQLite local.
+# E escolhido uma vez (auto/online/local) para evitar trocar de banco no meio
+# da sessao e misturar dados. Reinicie o app (ou use reset_backend) para mudar.
+_BACKEND = None
+_BACKEND_NAME = None
 
 # --- Escopo por professor (IS-066): turmas visiveis conforme o docente logado ---
 # Mapa local username -> [codigos de turma]. Opcional: turmas sem o professor
@@ -50,35 +61,123 @@ def _current_teacher_scope():
         pass
     return None
 
-def get_supabase(force_reconnect: bool = False) -> Client:
-    """
-    Obtém ou reconecta o cliente Supabase de forma resiliente.
-    Se a conexão anterior caiu, reinicializa um novo socket limpo.
-    """
-    global _SUPABASE_CLIENT, _SUPABASE_URL, _SUPABASE_KEY
+def _db_mode() -> str:
+    """Modo do banco: auto (padrao), online (forca Supabase) ou local (forca SQLite)."""
+    mode = ""
+    try:
+        mode = str(st.secrets.get("SYSAVA_DB_MODE") or "").strip().lower()
+    except Exception:
+        pass
+    if not mode:
+        mode = str(os.environ.get("SYSAVA_DB_MODE") or "").strip().lower()
+    return mode if mode in ("auto", "online", "local") else "auto"
 
-    if _SUPABASE_CLIENT is not None and not force_reconnect:
-        return _SUPABASE_CLIENT
 
+def _supabase_credentials():
+    global _SUPABASE_URL, _SUPABASE_KEY
     if not _SUPABASE_URL or not _SUPABASE_KEY:
         try:
-            _SUPABASE_URL = st.secrets.get("SUPABASE_URL")
-            _SUPABASE_KEY = st.secrets.get("SUPABASE_KEY")
+            _SUPABASE_URL = _SUPABASE_URL or st.secrets.get("SUPABASE_URL")
+            _SUPABASE_KEY = _SUPABASE_KEY or st.secrets.get("SUPABASE_KEY")
         except Exception:
             pass
         if not _SUPABASE_URL:
             _SUPABASE_URL = os.environ.get("SUPABASE_URL")
         if not _SUPABASE_KEY:
             _SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+    return _SUPABASE_URL, _SUPABASE_KEY
 
-    if _SUPABASE_URL and _SUPABASE_KEY:
+
+def _supabase_reachable(url: str, key: str, timeout: int = 3) -> bool:
+    """Testa o endpoint REST do Supabase. Qualquer resposta < 500 conta como online."""
+    if not url or not key:
+        return False
+    try:
+        r = requests.get(url.rstrip("/") + "/rest/v1/",
+                         headers={"apikey": key}, timeout=timeout)
+        return r.status_code < 500
+    except Exception:
+        return False
+
+
+def _new_supabase_client():
+    global _SUPABASE_CLIENT
+    url, key = _supabase_credentials()
+    if not url or not key:
+        return None
+    try:
+        _SUPABASE_CLIENT = create_client(url, key)
+        return _SUPABASE_CLIENT
+    except Exception as e:
+        print(f"[Supabase] Erro ao conectar: {e}")
+        return None
+
+
+def _resolve_backend():
+    """Escolhe o backend do processo (Supabase online ou SQLite local)."""
+    mode = _db_mode()
+    local_ok = bool(db_sqlite and db_sqlite.available())
+
+    if mode == "local":
+        return (db_sqlite.SQLiteClient(), "sqlite") if local_ok else (None, "offline")
+
+    client = _new_supabase_client()
+    url, key = _supabase_credentials()
+    if client is not None and _supabase_reachable(url, key):
+        return client, "supabase"
+
+    # Sem internet/Supabase fora: cai para o espelho SQLite, se existir.
+    if local_ok:
+        # Evita servir no modo local uma leitura antiga cacheada do Supabase.
         try:
-            _SUPABASE_CLIENT = create_client(_SUPABASE_URL, _SUPABASE_KEY)
-            return _SUPABASE_CLIENT
-        except Exception as e:
-            print(f"[Supabase] Erro ao conectar: {e}")
-            return None
-    return None
+            local_cache.invalidate()
+            local_cache.invalidate_scores()
+        except Exception:
+            pass
+        return db_sqlite.SQLiteClient(), "sqlite"
+    return None, "offline"
+
+
+def get_supabase(force_reconnect: bool = False) -> Client:
+    """Devolve o backend escolhido (Supabase ou SQLite local).
+
+    Em ``auto`` tenta o Supabase uma vez no inicio e, se nao responder, usa o
+    SQLite local pelo resto da sessao. ``force_reconnect`` recria apenas o
+    cliente Supabase (nao troca de banco no meio da sessao).
+    """
+    global _BACKEND, _BACKEND_NAME, _SUPABASE_CLIENT
+    if _BACKEND is not None:
+        if force_reconnect and _BACKEND_NAME == "supabase":
+            _SUPABASE_CLIENT = None
+            novo = _new_supabase_client()
+            if novo is not None:
+                _BACKEND = novo
+        return _BACKEND
+
+    _BACKEND, _BACKEND_NAME = _resolve_backend()
+    return _BACKEND
+
+
+def reset_backend():
+    """Limpa a escolha (usado ao trocar de modo; exige novo rerun)."""
+    global _BACKEND, _BACKEND_NAME
+    _BACKEND = None
+    _BACKEND_NAME = None
+    return get_backend_name()
+
+
+def get_backend_name() -> str:
+    if _BACKEND is None:
+        get_supabase()
+    return _BACKEND_NAME or "offline"
+
+
+def get_backend_label() -> str:
+    return {
+        "supabase": "Supabase (nuvem)",
+        "sqlite": "SQLite local (offline)",
+        "offline": "offline",
+    }.get(get_backend_name(), get_backend_name())
 
 
 def safe_execute(func, default=None, max_retries: int = 3):
@@ -147,41 +246,47 @@ def check_db_structure():
         return False
 
 # --- Funções de Usuário ---
-def get_user(username: str):
-    if not is_db_connected(): return None
+def is_user_blocked(user) -> bool:
+    """Conta com acesso bloqueado pelo professor (status='blocked')."""
+    if not isinstance(user, dict):
+        return False
+    return str(user.get("status") or "").strip().lower() == "blocked"
+
+def _consulta_usuario(coluna: str, valor: str, ci: bool = False):
+    """Busca um usuario com status (acesso) e fallback para bancos antigos."""
     try:
-        response = supabase.table("app_users").select("username, password, name, role, is_active").eq("username", username).execute()
+        q = supabase.table("app_users").select(
+            "username, password, name, role, is_active, status")
+        q = q.ilike(coluna, valor) if ci else q.eq(coluna, valor)
+        response = q.execute()
         return response.data[0] if response.data else None
     except Exception:
-        # Fallback para bancos sem a coluna is_active. Nunca deixa o erro
-        # de banco derrubar o login (ex.: cota/instabilidade do Supabase).
         try:
-            response = supabase.table("app_users").select("username, password, name, role").eq("username", username).execute()
+            q = supabase.table("app_users").select(
+                "username, password, name, role, is_active")
+            q = q.ilike(coluna, valor) if ci else q.eq(coluna, valor)
+            response = q.execute()
             data = response.data[0] if response.data else None
             if data:
-                data['is_active'] = True
+                data.setdefault('status', 'active')
             return data
-        except Exception as e2:
-            print(f"[get_user] falha ao consultar app_users: {e2}")
+        except Exception as e:
+            print(f"[_consulta_usuario:{coluna}] falha ao consultar app_users: {e}")
             return None
+
+def get_user(username: str):
+    if not is_db_connected(): return None
+    return _consulta_usuario("username", username)
 
 def get_user_by_ra(ra: str):
     """Busca usuário pelo RA (permite login por RA/CPF, além do username)."""
     if not is_db_connected(): return None
-    try:
-        response = supabase.table("app_users").select("username, password, name, role, is_active").eq("ra", ra).execute()
-        return response.data[0] if response.data else None
-    except Exception:
-        return None
+    return _consulta_usuario("ra", ra)
 
 def get_user_ci(username: str):
     """Busca usuário pelo login ignorando maiúsculas/minúsculas."""
     if not is_db_connected(): return None
-    try:
-        response = supabase.table("app_users").select("username, password, name, role, is_active").ilike("username", username).execute()
-        return response.data[0] if response.data else None
-    except Exception:
-        return None
+    return _consulta_usuario("username", username, ci=True)
 
 def get_all_users():
     if not is_db_connected(): return []
@@ -189,26 +294,42 @@ def get_all_users():
     def _fetch():
         try:
             # Nunca baixa o hash de senha para listagens
-            response = supabase.table("app_users").select("username, name, ra, role, is_active, is_portal").execute()
+            response = supabase.table("app_users").select("username, name, ra, role, is_active, is_portal, status").execute()
             return response.data
         except Exception:
             try:
-                # Compatibilidade com bancos que ainda não têm is_portal.
-                response = supabase.table("app_users").select("username, name, ra, role, is_active").execute()
+                # Compatibilidade com bancos que ainda não têm status.
+                response = supabase.table("app_users").select("username, name, ra, role, is_active, is_portal").execute()
                 for u in response.data:
-                    u['is_portal'] = True
+                    u.setdefault('status', 'active')
                 return response.data
             except Exception:
                 try:
-                    # Fallback para bancos antigos sem as colunas novas de status.
-                    response = supabase.table("app_users").select("username, name, ra, role").execute()
+                    # Compatibilidade com bancos que ainda não têm is_portal.
+                    response = supabase.table("app_users").select("username, name, ra, role, is_active, status").execute()
                     for u in response.data:
-                        u['is_active'] = True
                         u['is_portal'] = True
                     return response.data
-                except Exception as e:
-                    print(f"DEBUG: Erro em get_all_users: {e}")
-                    return []
+                except Exception:
+                    try:
+                        # Sem status nem is_portal (bancos antigos).
+                        response = supabase.table("app_users").select("username, name, ra, role, is_active").execute()
+                        for u in response.data:
+                            u['is_portal'] = True
+                            u.setdefault('status', 'active')
+                        return response.data
+                    except Exception:
+                        try:
+                            # Fallback para bancos antigos sem as colunas novas.
+                            response = supabase.table("app_users").select("username, name, ra, role").execute()
+                            for u in response.data:
+                                u['is_active'] = True
+                                u['is_portal'] = True
+                                u['status'] = 'active'
+                            return response.data
+                        except Exception as e:
+                            print(f"DEBUG: Erro em get_all_users: {e}")
+                            return []
 
     return local_cache.get_or_fetch("app_users:v2", _fetch, ttl=local_cache.TTL_MEDIUM)
 
@@ -216,9 +337,12 @@ def create_user(username: str, hashed_password: str, name: str, ra: str, role: s
     if not is_db_connected(): return None, "Banco de dados não conectado"
     try:
         response = supabase.table("app_users").insert({
-            "username": username, "password": hashed_password, "name": name, "ra": ra, "role": role
+            "username": username, "password": hashed_password, "name": name,
+            "ra": ra, "role": role, "status": "active"
         }).execute()
         local_cache.invalidate("app_users:v2")
+        local_cache.invalidate("app_users_flags:v1")
+        local_cache.invalidate_prefix("students_by_class:")
         return response.data, None
     except Exception as e:
         return None, str(e)
@@ -229,6 +353,9 @@ def delete_user(username: str):
     try:
         response = supabase.table("app_users").delete().eq("username", username).execute()
         local_cache.invalidate("app_users:v2")
+        local_cache.invalidate("app_users_flags:v1")
+        local_cache.invalidate(f"enrollment:{username}")
+        local_cache.invalidate_prefix("students_by_class:")
         return response.data, None
     except Exception as e:
         return None, str(e)
@@ -239,6 +366,34 @@ def toggle_user_active(username: str, is_active: bool):
     try:
         response = supabase.table("app_users").update({"is_active": is_active}).eq("username", username).execute()
         _invalidate_frequency_caches()
+        return response.data, None
+    except Exception as e:
+        return None, str(e)
+
+def set_user_access_blocked(username: str, blocked: bool):
+    """Bloqueia/libera o login sem mexer nos flags de frequencia.
+
+    Usa app_users.status: 'blocked' barra o login; ao liberar volta para
+    'active'. is_active/is_portal continuam controlando a chamada (Falta/
+    Inativo), por isso um aluno 'Falta' continua entrando no portal.
+    """
+    if not is_db_connected(): return None, "Banco de dados não conectado"
+    novo = "blocked" if blocked else "active"
+    try:
+        response = supabase.table("app_users").update({"status": novo}).eq("username", username).execute()
+        local_cache.invalidate("app_users:v2")
+        _invalidate_frequency_caches()
+        local_cache.invalidate_prefix("students_by_class:")
+        return response.data, None
+    except Exception as e:
+        return None, str(e)
+
+def update_user_password(username: str, hashed_password: str):
+    """Troca a senha de um usuario (hash bcrypt)."""
+    if not is_db_connected(): return None, "Banco de dados não conectado"
+    try:
+        response = supabase.table("app_users").update(
+            {"password": hashed_password}).eq("username", username).execute()
         return response.data, None
     except Exception as e:
         return None, str(e)
@@ -333,6 +488,15 @@ def set_frequency_flag(username: str, frequencia_status: str, motivo: str = ""):
         user_update = {"is_active": False, "is_portal": True, "status": "active"}
     else:
         user_update = {"is_active": False, "is_portal": False, "status": "inactive"}
+
+    # Nao desbloqueia uma conta cujo acesso foi barrado pelo professor.
+    try:
+        atual = supabase.table("app_users").select("status").eq(
+            "username", username).limit(1).execute()
+        if atual.data and is_user_blocked(atual.data[0]):
+            user_update.pop("status", None)
+    except Exception:
+        pass
 
     try:
         response = supabase.table("app_users").update(user_update).eq("username", username).execute()
@@ -766,14 +930,18 @@ def get_classes():
     if not is_db_connected(): return []
 
     def _fetch():
-        try:
-            response = supabase.table("classes").select("*").order("name").execute()
-            return response.data
-        except Exception as e:
-            print(f"Erro ao buscar turmas: {e}")
-            return []
+        # A excecao sobe de proposito: get_or_fetch cai no cache antigo em vez
+        # de gravar uma lista vazia como se fosse fresca (IS-128).
+        response = supabase.table("classes").select("*").order("name").execute()
+        return response.data or []
 
-    turmas = local_cache.get_or_fetch("classes", _fetch, ttl=local_cache.TTL_BASE)
+    try:
+        turmas = local_cache.get_or_fetch(
+            "classes", _fetch, ttl=local_cache.TTL_BASE, cache_empty=False
+        )
+    except Exception as e:
+        print(f"Erro ao buscar turmas: {e}")
+        return []
 
     scope = _current_teacher_scope()
     if scope:
@@ -811,13 +979,18 @@ def get_subjects():
     if not is_db_connected(): return []
 
     def _fetch():
-        try:
-            response = supabase.table("subjects").select("*").execute()
-            return response.data
-        except Exception:
-            return []
+        # Mesma regra de get_classes: falha de rede não pode virar lista vazia
+        # cacheada por horas (IS-128).
+        response = supabase.table("subjects").select("*").execute()
+        return response.data or []
 
-    return local_cache.get_or_fetch("subjects", _fetch, ttl=local_cache.TTL_BASE)
+    try:
+        return local_cache.get_or_fetch(
+            "subjects", _fetch, ttl=local_cache.TTL_BASE, cache_empty=False
+        )
+    except Exception as e:
+        print(f"Erro ao buscar disciplinas: {e}")
+        return []
 
 def enroll_student(username: str, class_id: int):
     """Matricula um aluno em uma turma."""
@@ -1047,9 +1220,10 @@ def update_training_links(subject_id: int, new_class_ids: list):
 
 # --- Funções de Aulas e Conteúdo ---
 # Listagem leve: metadados usados em menus, contagens e mapas (não baixa textos longos).
-_LESSON_LIST_COLUMNS = "id, title, week, subject_id, video_url"
-# Conteúdo completo: inclui campos de texto maciços (description/full_content). Use apenas quando a aula for aberta.
-_LESSON_FULL_COLUMNS = "id, title, week, subject_id, video_url, description, objective, resources, full_content"
+_LESSON_LIST_COLUMNS = "id, title, week, subject_id, video_url, status"
+# Conteúdo completo: inclui campos de texto maciços (description/full_content). Use apenas
+# quando a aula for aberta.
+_LESSON_FULL_COLUMNS = "id, title, week, subject_id, video_url, description, objective, resources, full_content, status"
 
 def get_lessons():
     if not is_db_connected(): return []
@@ -1058,7 +1232,7 @@ def get_lessons():
         res = safe_execute(lambda sb: sb.table("lessons").select("id, title, subject_id, week").order("id").execute())
         return res.data if res and res.data else []
 
-    return local_cache.get_or_fetch("lessons_light", _fetch, ttl=local_cache.TTL_MEDIUM)
+    return local_cache.get_or_fetch("lessons_light", _fetch, ttl=local_cache.TTL_MEDIUM, cache_empty=False)
 
 def get_lessons_for_subject(subject_id: int):
     """Listagem leve das aulas de uma disciplina (apenas metadados, sem conteúdo)."""
@@ -1066,9 +1240,11 @@ def get_lessons_for_subject(subject_id: int):
 
     def _fetch():
         res = safe_execute(lambda sb: sb.table("lessons").select(_LESSON_LIST_COLUMNS).eq("subject_id", subject_id).order("id").execute())
-        return res.data if res and res.data else []
+        data = res.data if res and res.data else []
+        # Aulas com status 'arquivada' são duplicatas ocultadas da listagem (IS-159).
+        return [l for l in data if str(l.get("status") or "").strip().lower() != "arquivada"]
 
-    return local_cache.get_or_fetch(f"lessons_subject:{subject_id}", _fetch, ttl=local_cache.TTL_MEDIUM)
+    return local_cache.get_or_fetch(f"lessons_subject:{subject_id}", _fetch, ttl=local_cache.TTL_MEDIUM, cache_empty=False)
 
 def get_lessons_for_subject_full(subject_id: int):
     """Listagem completa das aulas (com description/full_content/objective/resources).
@@ -1077,9 +1253,10 @@ def get_lessons_for_subject_full(subject_id: int):
 
     def _fetch():
         res = safe_execute(lambda sb: sb.table("lessons").select(_LESSON_FULL_COLUMNS).eq("subject_id", subject_id).order("id").execute())
-        return res.data if res and res.data else []
+        data = res.data if res and res.data else []
+        return [l for l in data if str(l.get("status") or "").strip().lower() != "arquivada"]
 
-    return local_cache.get_or_fetch(f"lessons_full:{subject_id}", _fetch, ttl=local_cache.TTL_MEDIUM)
+    return local_cache.get_or_fetch(f"lessons_full:{subject_id}", _fetch, ttl=local_cache.TTL_MEDIUM, cache_empty=False)
 
 def get_lesson_by_id(lesson_id: int):
     if not is_db_connected(): return None
@@ -1115,7 +1292,7 @@ def get_all_quizzes_summary():
         res = safe_execute(lambda sb: sb.table("quizzes").select("id, lesson_id, title").execute())
         return res.data if res and res.data else []
 
-    return local_cache.get_or_fetch("quizzes_summary", _fetch, ttl=local_cache.TTL_MEDIUM)
+    return local_cache.get_or_fetch("quizzes_summary", _fetch, ttl=local_cache.TTL_MEDIUM, cache_empty=False)
 
 def get_quizzes_for_subject(subject_id: int):
     if not is_db_connected(): return []
@@ -1132,7 +1309,7 @@ def get_quizzes_for_subject(subject_id: int):
             print(f"Erro ao buscar quizzes da disciplina {subject_id}: {e}")
             return []
 
-    return local_cache.get_or_fetch(f"quizzes_subject:{subject_id}", _fetch, ttl=local_cache.TTL_MEDIUM)
+    return local_cache.get_or_fetch(f"quizzes_subject:{subject_id}", _fetch, ttl=local_cache.TTL_MEDIUM, cache_empty=False)
 
 def get_quiz_by_id(quiz_id: int):
     if not is_db_connected(): return None
@@ -1158,7 +1335,7 @@ def get_quiz_questions(quiz_id: int):
             print(f"Erro ao buscar questões do quiz {quiz_id}: {e}")
             return []
 
-    return local_cache.get_or_fetch(f"quiz_questions:{quiz_id}", _fetch, ttl=local_cache.TTL_MEDIUM)
+    return local_cache.get_or_fetch(f"quiz_questions:{quiz_id}", _fetch, ttl=local_cache.TTL_MEDIUM, cache_empty=False)
 
 def create_lesson(title: str, subject_id: int, description: str, video_url: str, week: str = None, full_content: str = None, objective: str = None, resources: str = None):
     """Cria uma nova aula no banco."""
@@ -1704,6 +1881,35 @@ def update_submission_score(submission_id: int, new_score: float):
     if not is_db_connected(): return None, "Offline"
     try:
         response = supabase.table("student_assessments").update({"score": new_score}).eq("id", submission_id).execute()
+        return response.data, None
+    except Exception as e:
+        return None, str(e)
+
+def upsert_assessment_score(username: str, assessment_id: int, score: float):
+    """Cria ou atualiza a nota de um aluno em uma avaliação.
+
+    Usado pela pontuação de seminário: se o aluno ainda não tiver submissão,
+    cria uma com status 'graded'; se já tiver, atualiza a mais recente.
+    """
+    if not is_db_connected(): return None, "Banco de dados não conectado"
+    try:
+        existing = supabase.table("student_assessments")\
+            .select("id")\
+            .eq("user_username", username)\
+            .eq("assessment_id", assessment_id)\
+            .order("submitted_at", desc=True)\
+            .limit(1)\
+            .execute()
+        if existing.data:
+            sub_id = existing.data[0]['id']
+            response = supabase.table("student_assessments").update({"score": score}).eq("id", sub_id).execute()
+            return response.data, None
+        response = supabase.table("student_assessments").insert({
+            "user_username": username,
+            "assessment_id": assessment_id,
+            "status": "graded",
+            "score": score,
+        }).execute()
         return response.data, None
     except Exception as e:
         return None, str(e)

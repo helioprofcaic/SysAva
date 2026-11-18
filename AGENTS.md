@@ -16,13 +16,22 @@ O SysAva é um portal de apoio educacional construído em **Streamlit** integrad
 * **`apps/down_seductec/down_seductec_streamlit.py`**: Download de PDFs e links de vídeo do portal SeducTec para `data/repo/<turma>/<disciplina>/S0X/seductec/` (porta 8504).
 
 ### 📦 Repositório aninhado `syava-apps`:
-* A pasta **`apps/`** é um **repositório Git próprio** (<https://github.com/hiseg10/syava-apps>), versionando só os apps Streamlit + docs (`README.md`, `ISSUES.md` com IDs `AP-NNN`, `AGENTS.md`, `run_apps.bat`).
+* A pasta **`apps/`** é um **repositório Git próprio** (<https://github.com/hiseg10/syava-apps>), versionando os apps Streamlit, a pasta **`apps/bots/`** (autômatos Selenium do iSeduc: `registrar_aulas`, `registrar_notas`, `grade_scraper`, `bot_raspagem`, `inspector_*` — antes em `apps/api/tools/`) e docs (`README.md`, `ISSUES.md` com IDs `AP-NNN`, `AGENTS.md`, `run_apps.bat`).
 * O `.gitignore` do SysAva ignora `apps/` por completo — os dois repositórios não conflitam. **Nunca** tente versionar `apps/` a partir da raiz do SysAva.
 * Fora de escopo do repo novo (e bloqueados pelo `.gitignore` dele): `apps/api/`, `apps/apis_gemini_key/`, `apps/data/`, backups `.db`, `.csv`, `html/`, logs. Detalhes em `apps/AGENTS.md`.
 
 ### 🔌 Inicialização:
 * **Atalho Unificado (`run.bat`):** Sempre execute este arquivo bat na raiz. Ele abre um menu interativo que gerencia o ambiente virtual, atualiza dependências e permite escolher qual dos apps Streamlit iniciar (portas: 8501 principal, 8502 duplicatas, 8503 monitor, 8504 Down SeducTec, 8510 planejamento).
 * **Bootloader dos apps (`apps/run_apps.bat`):** menu próprio do repositório syava-apps, que detecta/cria o mesmo venv `.sysenv`.
+
+### 🖥️ Runtime do Monitor:
+* Todos os arquivos do servidor/agente/tela/bandejas do monitor ficam em **`data/repo/plugins/monitor/`** (receiver, `lab_agent`, `sysava_lock`, trays, diagnóstico, `emails.json`, `lab_users.json`, `acesso_coletivos.json`, logs, `.atividades/`, `.relatorios/`, assets).
+* O código versionado do plugin Streamlit continua em `plugins/monitor_rede/`; `views/plugins.py` carrega de lá e o plugin resolve o runtime em `data/repo/plugins/monitor/` (`SYSAVA_PLUGIN_DIR` sobrescreve).
+* Scripts dentro de `monitor/` sobem **quatro níveis** até a raiz (`..\..\..\..`) para achar `.sysenv`/`.env`/`data/Turmas`.
+* **Bandejas:** `tray_servidor.ps1` mostra/atualiza o IP, abre o **2º servidor** (peer via `/api/peer/state`) e traz **Abrir SysAva (8501)** + **Apps** (Streamlit local ou portal na nuvem) + **Parar todos os apps**. `tray_aluno.ps1` mostra **nome + RA** e copia o RA (API/cache ou `%LOCALAPPDATA%\SysAva\ultimo_ra.txt`), abre o **SysAva com o RA** e tem **Sair da conta** (limpa `tela_ok.json`/`ultimo_ra.txt`, chama `POST /api/logout_ra` e reabre o `sysava_lock.ps1`), **Abrir tela de bloqueio**, **Atualizar meus dados** e **Sair do Windows (logoff)**. O logout remove a associação do PC em `lab_users.json` e propaga aos peers (`/api/peer/logout`), liberando o RA na hora. **Atualizar Bandeja do Aluno** (Controle) baixa os arquivos e reinicia a instância antiga; para mudanças manuais no script, feche e reabra o `tray_aluno.bat`.
+* **Usuários no painel web:** a aba **Usuários** (porta 5000) cria contas, desativa/reativa o acesso (`app_users.status='blocked'`) e remove cadastros. Professor gerencia apenas alunos; administrador gerencia qualquer função. O bloqueio não altera `is_active`/`is_portal` (frequência) e o login do painel também recusa contas bloqueadas.
+* **Ferramentas → Texto e Comando:** painel web e plugin Streamlit têm campos para enviar **texto/alerta** e **comando digitado** aos PCs marcados. No web, a rota é `POST /ferramenta_texto_comando`; o texto dispara `Enviar Alerta Visual` e, ao executar um comando, também é enviado antes como alerta (quando não é o próprio alerta).
+* **Preferência de servidor:** o **PC01 do laboratório** (`PC01*`) tem prioridade. O `/health` publica `hostname`/`preferred`; `lab_agent.py`, `sysava_lock.ps1`, `sysava_tray.ps1`, `tray_aluno.ps1` e `tray_servidor.ps1` escolhem primeiro o PC01 e, no cluster, ele fica **primário** mesmo subindo depois do notebook. Sem o PC01, vale quem iniciou primeiro. Ajuste com `SYSAVA_PREFERRED_SERVERS` (ex.: `PC01*,PC02*`; vazio desliga). O agente subiu para **build 20** (alerta maior, texto selecionável e botão Copiar).
 
 ---
 
@@ -84,6 +93,24 @@ project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(_
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 ```
+
+---
+
+## 🔐 Regras de Acesso do Laboratório (tela de bloqueio)
+
+Arquivos principais: `data/repo/plugins/monitor/sysava_lock.ps1` (tela), `data/repo/plugins/monitor/lab_receiver.py` (`/api/auth_ra`, `/api/alunos`), `data/repo/plugins/monitor/acesso_coletivos.json` e `data/repo/plugins/monitor/lab_users.json`.
+
+* **RA único:** um RA comum não pode estar logado em dois PCs ao mesmo tempo. O `/api/auth_ra` responde **400** com o PC onde ele já está; ao deslogar/desligar a origem (~60s sem ping) o RA é liberado. Não remova essa checagem em `_autorizar_login_ra` sem prever uma forma de liberação.
+* **Contas coletivas:** `7anoA`, `7anoB`, `8ano`, `9ano`, `1alunoEja`, `Alunos_EJA_Noite` ficam fora da regra de RA único. A lista fica em `acesso_coletivos.json` (`coletivos`). Novas contas coletivas devem ser adicionadas lá **e** criadas em `app_users` (Supabase) com `role=student`.
+* **Janela EJA:** contas em `acesso_coletivos.json` → `eja.contas` só entram das **17h às 23h** (hora do servidor). A checagem existe no receiver (`_eja_pode_entrar`) e no `sysava_lock.ps1` (offline). A janela vale para **novos logins**.
+* **PC mestre:** a senha administrativa (`unlock_secret.txt`/`SYSAVA_ADMIN_UNLOCK`, padrão `labadmin`) e o bypass da lista só valem em hostnames configurados (padrão `PC01*`) via `SYSAVA_MASTER_HOSTS` ou `C:\ProgramData\SysAva\master_hosts.txt`. Nos demais PCs apenas nome/RA da lista libera.
+* **Professores na tela:** `acesso_coletivos.json` → `professores` (ex.: `["adriana"]`) libera docentes por login, RA ou nome **apenas nos PCs mestres** (`PC01*`). O `/api/auth_ra` aceita o professor e associa ao PC; `/api/alunos?maquina=...` inclui esses professores no seletor somente no mestre. Professores não entram na regra de RA único. Nos demais PCs a tela continua exigindo nome/RA de aluno ou a senha admin.
+* **Tela reaberta (agente build 15+):** ao validar o RA, `sysava_lock.ps1` grava `%LOCALAPPDATA%\SysAva\tela_ok.json` (RA + epoch). O `lab_agent.py` relança a tela quando o processo desaparece **sem** token válido para a sessão atual do Windows (`psutil.users().started`); não relança se o professor liberou (`tela_liberada.json`) ou se o aluno já validou. Mantenha essa distinção ao mexer na tela/agente.
+* **Jogos:** o watchdog fecha jogos (Roblox, Fortnite/Epic, League of Legends) e janelas de sites de jogos (Loki, Poki, Friv, Temple Run...) **quando o bloqueio persistente (`block_state.json`) está ativo**. Com **Desbloquear Sites/Jogos**, esses processos ficam livres (`WATCHDOG_EXCLUDE_KEYWORDS`); o comando manual **Bloquear Jogos** fecha uma vez, sem manter bloqueio. Fortnite precisa continuar em `BLOCKED_PROCESS_KEYWORDS`, `BLOCKED_SITE_KEYWORDS`, `JOGO_KEYWORDS` (receiver) e `bloquear_hosts.ps1`.
+* **Backup de atividades:** solicitado pela aba Ferramentas (Streamlit e painel web). O agente procura `%USERPROFILE%\Documents\SysAva` e alternativas (perfis/OneDrive/Public); se não achar, devolve erro claro. Os ZIPs ficam em `data/repo/plugins/monitor/.atividades/` e são servidos em `/atividades`.
+* **Ações do Controle:** o painel web aceita **várias ações** por envio (`name="acao"` repetido). O receiver enfileira em `pending_queue` no `lab_status.json` e entrega **uma por ping** (~10 s, na ordem marcada); não volte a sobrescrever `pending_command` sem preservar a fila. O Streamlit usa `st.multiselect` + presets e envia um POST por ação.
+* **Ferramentas e Portal com RA:** a aba Ferramentas do painel web é dividida em sub-abas (Atividades, Sites e RA, Tela, Manutenção). **Ferramentas → Sites e RA → Abrir SysAva com RA** (`POST /abrir_sysava`) associa o RA ao PC, propaga aos peers e envia **"Abrir SysAva (RA)"** com `{url, browser, ra}`; o agente **build 16+** abre `?ra=...` no navegador escolhido (Chrome/Edge/Firefox/Brave/Opera) e usa o padrão do Windows se não achar. Mantenha `AGENT_BUILD_MIN_SYSAVA=16` e o `lab_agent.ps1` sincronizado com o `.py`.
+* Ao mexer nesses fluxos, atualize este `AGENTS.md`, o `plugins/monitor_rede/README.md` e registre em `docs/ISSUES_LOCAIS.md`.
 
 ---
 

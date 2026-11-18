@@ -145,9 +145,83 @@ Formato de ID: `IS-NNN`.
 | IS-116 | Opera subindo com o Windows: agente remove o auto-start (Run/RunOnce/Startup/tarefas) sem fechar o Opera aberto manualmente e novo comando **Limpar Inicialização do Opera** | 🟢 | 2026-10-23 |
 | IS-117 | Apps Microsoft subindo com o Windows (Outlook, OneDrive, Teams, OneNote, Skype, Copilot, Office Hub, Xbox/Game Bar, Widgets): agente remove só o auto-start e novo comando **Limpar Inicialização de Apps Microsoft** | 🟢 | 2026-10-23 |
 | IS-118 | Ações **Fechar / Bloquear / Desbloquear Sites/Jogos** (YouTube, Roblox, Loki, games e redes sociais): bloqueio persistente via watchdog (fecha janelas e derruba processes) até desbloquear | 🟢 | 2026-10-23 |
+| IS-125 | Comando **Definir Volume em 30%** (e restaurar 100%) nos PCs: script Core Audio, sem UAC, roda na sessão do aluno e desmuta | 🟢 | 2026-10-23 |
 | IS-119 | Admin/Avaliações: **editar o nome (título)** de uma avaliação existente e manter a seleção após renomear | 🟢 | 2026-10-26 |
 | IS-120 | Prog. Dispositivos Móveis: aulas **33–40** do seminário (Grupo1 25–28 / Grupo2 29–32) criadas no `subject_id=5` em versão neutra (sem nomes de turma) | 🟢 | 2026-10-26 |
 | IS-121 | Aulas criadas com título fora do padrão "Aula N" apareciam no Admin mas **sumiam da página Aulas**; agora entram em "Outras aulas (sem número)" | 🟢 | 2026-10-26 |
+| IS-122 | IA: duas aulas de seminário (Aulas 36 e 37) para 2A e 2B — temas 20–24 e 25–28, grupos do seminário anterior | 🟢 | 2026-10-26 |
+| IS-123 | DevOps: 3 aulas geradas dos PDFs da S01 para a turma I-A e versão própria para a I-B (nova disciplina) | 🟢 | 2026-10-26 |
+| IS-124 | Gerador de Aulas: opção DeepSeek Cloud com pré-preenchimento de `DEEPSEEK_API_KEY` em modo local | 🟢 | 2026-10-26 |
+| IS-126 | Gerador de Aulas: vídeo da aula (`links_aulas.md`) não entrava no contexto nem no plano gerado | 🟢 | 2026-10-28 |
+| IS-127 | Replicação para a turma B caía na disciplina compartilhada; aulas 4–8 importadas na disciplina própria da I-B | 🟢 | 2026-10-28 |
+| IS-128 | "Nenhuma turma cadastrada" com todas as turmas no banco: cache local gravava lista vazia de uma falha de rede | 🟢 | 2026-10-28 |
+| IS-129 | Servidor auxiliar (PC01-LAB02) não sobe no boot e não aparece no monitor: bandeja (tray) + diagnóstico | 🟢 | 2026-10-28 |
+| IS-130 | Monitor em abas (Radar/Controle/Ferramentas/Massa/Histórico/Diagnóstico) + estrutura `turma\disciplina\aluno\Aula_NN` (espaços → `_`) + pacote de atualização | 🟢 | 2026-10-28 |
+| IS-131 | Baixar as atividades dos alunos zipadas no notebook (ZIP por PC em `.atividades`, lista e "baixar todos" no painel) | 🟢 | 2026-10-28 |
+| IS-132 | Designar o aluno (RA) de um PC pelo painel do notebook (associação igual à da tela de bloqueio) | 🟢 | 2026-10-28 |
+| IS-133 | Bandeja (tray) do SysAva e apps no notebook, estilo LM Studio, com status e "Iniciar com o Windows" | 🟢 | 2026-10-28 |
+| IS-134 | Organização dos plugins: monitor movido para `plugins/monitor_rede/` (código separado do runtime) | 🟢 | 2026-10-28 |
+| IS-135 | Tela de bloqueio: modo offline (lista local/Drive + carência de 15 min + fila de sincronização) | 🟢 | 2026-10-28 |
+| IS-136 | Guia de acesso remoto ao laboratório com Tailscale (subnet router; substitui a ideia de DDNS) | 🟢 | 2026-10-28 |
+| IS-138 | Post da Aula 01 de DevOps no fórum: Tailscale com a conta institucional (passo a passo) | 🟢 | 2026-10-28 |
+| IS-139 | Abrir site (Prova Motriz) no navegador dos PCs: ação no painel, URL livre e build 7 do agente | 🟢 | 2026-10-28 |
+| IS-140 | Bandeja do aluno nos PCs + copiar e-mail institucional (`emails.json` das pastas da turma) | 🟢 | 2026-10-29 |
+| IS-141 | Faxina (limpeza segura) nos PCs pelo painel: temporários, restos do SysAva, logs e caches opcionais | 🟢 | 2026-10-29 |
+| IS-142 | WPS Office e apps de segundo plano: remover da inicialização, encerrar helpers e desativar widgets/Copilot/Game Bar | 🟢 | 2026-10-29 |
+| IS-143 | Copilot vem habilitado na inicialização: desativar por política (HKCU) + startup + processo | 🟢 | 2026-10-29 |
+| IS-144 | Tela de bloqueio: status do servidor (conectado/desconectado) e aviso para ligar o PC01 | 🟢 | 2026-10-29 |
+| IS-145 | Tela de bloqueio: aviso em destaque e seta para baixo/Page Down abrindo a lista de alunos | 🟢 | 2026-10-29 |
+| IS-146 | Chrome: remover da inicialização e desligar o modo segundo plano (não fecha o navegador do aluno) | 🟢 | 2026-10-29 |
+| IS-147 | Conta compartilhada `Alunos_EJA_Noite` (aluno) criada no Supabase e disponível na tela de bloqueio | 🟢 | 2026-10-29 |
+| IS-148 | Liberar a tela de bloqueio remotamente (caso excepcional) com expiração automática | 🟢 | 2026-10-29 |
+| IS-149 | Dashboard do servidor mostra o status da tela de bloqueio por PC (liberada/bloqueada/sem tela) | 🟢 | 2026-10-29 |
+| IS-150 | "Abrir site": a última URL usada fica salva no servidor (`site_padrao.json`) | 🟢 | 2026-10-29 |
+| IS-151 | Aluno (RA) vencido não some mais: mostra “último em dd/mm” / “Não logado” no painel e no Streamlit | 🟢 | 2026-11-03 |
+| IS-152 | DevOps (Aulas 07/08): 3 projetos de CI/CD por aula publicados no fórum (I-A e I-B) | 🟢 | 2026-11-03 |
+| IS-153 | DevOps (Aula 09): atividade de automação com pipeline — chatbot FAQ + execução agendada (I-A e I-B) | 🟢 | 2026-11-03 |
+| IS-154 | Monitor: “Designar aluno” vale na hora nos peers e prévia mostra aluno/pasta (2 primeiros nomes) por PC | 🟢 | 2026-11-04 |
+| IS-155 | Monitor: bot?o de backup de atividades no plugin + comandos n?o se perdem mais (concorr?ncia) | 🟢 | 2026-11-04 |
+| IS-156 | Tela de bloqueio: so nome/RA da lista libera; senha admin apenas no PC mestre (PC01) | 🟢 | 2026-11-05 |
+| IS-157 | Tela de bloqueio: RA unico (nao pode estar logado em dois PCs ao mesmo tempo) | 🟢 | 2026-11-05 |
+| IS-158 | Contas coletivas (8ano, 9ano, 1alunoEja) + janela EJA 17h-23h | 🟢 | 2026-11-05 |
+| IS-159 | MENTORIAS TEC II: deduplicar Aulas 21–35 (arquivar cópias) e ordenar por "Aula N" | 🟢 | 2026-11-09 |
+| IS-160 | DevOps 2º ano: arquivar duplicatas do I-A e criar Aulas 17–20 nas duas turmas | 🟢 | 2026-11-09 |
+| IS-161 | iSeduc: gerar/validar planos de outubro/2026 de IA, Mentorias Tech II e PC II (I-A e I-B) | 🟢 | 2026-11-09 |
+| IS-162 | iSeduc: lançar notas de Programação Web Front-End (I-B T1/T2/T3 e I-A T2/T3) com T2/T3 = T1 e Alice (licença) 6,0 | 🟢 | 2026-11-10 |
+| IS-163 | Bandeja: painel do servidor busca o servidor atual na rede (porta local, cache, peers.txt e UDP 5001) e abre | 🟢 | 2026-11-12 |
+| IS-164 | Bloqueio rígido: Fortnite/Epic + Roblox/Loki fechados sempre; tela de bloqueio reaberta sem login (token `tela_ok.json`) | 🟢 | 2026-11-12 |
+| IS-165 | Controle: várias ações por envio (chips agrupados, presets, fila `pending_queue` de 1 ação por ping) | 🟢 | 2026-11-12 |
+| IS-169 | Monitor: runtime movido para `data/repo/plugins/monitor/` (receiver, agente, tela, bandejas, dados) e paths corrigidos | 🟢 | 2026-11-12 |
+| IS-170 | Ferramentas: abas internas (Atividades/Sites e RA/Tela/Manutenção) + "Abrir SysAva com RA" no navegador escolhido (agente build 16) | 🟢 | 2026-11-12 |
+| IS-171 | Bandejas: servidor mostra/atualiza IP e abre 2º servidor (peer); aluno mostra e copia o RA | 🟢 | 2026-11-12 |
+| IS-172 | Roblox não desbloqueava: watchdog fechava jogos sempre; agora só com "Bloquear Sites/Jogos" ativo (agente build 17) | 🟢 | 2026-11-12 |
+| IS-173 | Gerador de aulas: "Pasta não encontrada" em Microsserviços I-A (pasta no disco sem o "V": `MICROSSERIÇOS`) | 🟢 | 2026-11-13 |
+| IS-174 | Monitor: preferencia de servidor pelo PC01 do laboratorio (agente build 18) | 🟢 | 2026-11-16 |
+| IS-175 | Arquitetura de Microsserviços: PDFs do S01 tratam de testes; 8 aulas corretas geradas (I-A e I-B) | 🟢 | 2026-11-16 |
+| IS-176 | Monitor: aba Ferramentas ganhou "Texto e Comando" (alerta + comando digitado) no painel web e no Streamlit | 🟢 | 2026-11-16 |
+| IS-177 | PC01: ATUALIZAR_PC01.bat sem IP fixo (descoberta por UDP/cache + `descobrir_servidor.ps1`) | 🟢 | 2026-11-16 |
+| IS-178 | PC01: `CORRIGIR_ACESSO_PC01.bat` (firewall 5000/8501/5001, Tailscale Private, relatório de acesso) | 🟢 | 2026-11-16 |
+| IS-179 | PC01 autônomo sem notebook: RA valida pelo `alunos_cache.json` e cache incluído no `servidor.zip` | 🟢 | 2026-11-16 |
+| IS-180 | Tela de bloqueio: letras de mensagem/status maiores, aviso de servidor sem resposta e descoberta UDP do PC01 no status | 🟢 | 2026-11-16 |
+| IS-181 | Bandeja: "Iniciar servidor neste PC" volta a funcionar mesmo com o notebook online (regressão do buscador de servidores) | 🟢 | 2026-11-16 |
+| IS-182 | Bandeja: busca de servidores inclui peers do Tailscale (PC01 acessível de casa/4G) | 🟢 | 2026-11-16 |
+| IS-183 | Arquitetura de Microsserviços: aulas 09-10 de laboratório (projeto SysLoja em FastAPI) | 🟢 | 2026-11-16 |
+| IS-184 | Arquitetura de Microsserviços: aulas 11-13 de laboratório (Docker, Compose e CI/CD) | 🟢 | 2026-11-16 |
+| IS-185 | Arquitetura de Microsserviços: bloco 1 fechado (aulas 14-19 + AV1 na 20) e `plano.txt` | 🟢 | 2026-11-16 |
+| IS-186 | Alerta do Monitor: janela com texto selecionável e botão Copiar (agente build 19) | 🟢 | 2026-11-16 |
+| IS-187 | Monitor: página `/instrucoes` com comandos copiáveis e alerta Tk com texto selecionável/maior | 🟢 | 2026-11-16 |
+| IS-188 | Notas iSeduc: replicação T1 → T2/T3 lendo o próprio portal (Fundamentos UI/UX I-A) | 🟢 | 2026-11-17 |
+| IS-189 | Notas iSeduc: recuperações RPT (RM do SysAva) em UI/UX I-A e I-B | 🟢 | 2026-11-17 |
+| IS-190 | Notas iSeduc: Programação Mobile I-A — T1/T2/T3 do plugin Notas lançados e ficha | 🟢 | 2026-11-17 |
+| IS-191 | Registro de aulas: Mobile I-B — 10 aulas de 23/07 a 30/07 (Aulas 13–22) | 🟢 | 2026-11-17 |
+| IS-192 | Registro de aulas: Mobile 40/40 (I-A/I-B) + sync do histórico e limpeza da fila | 🟢 | 2026-11-17 |
+| IS-137 | Projeto Feira das Profissões: 6 aulas em `plugins/atividades/Atividades_florestan/` | 🟢 | 2026-10-29 |
+| IS-193 | Bandeja do aluno: sair da conta, reabrir a tela de bloqueio e liberar o RA | 🟢 | 2026-11-18 |
+| IS-194 | Monitor: Atualizar Bandeja do Aluno reinicia a instância antiga | 🟢 | 2026-11-18 |
+| IS-195 | Gestão de Usuários: adicionar, desativar acesso e remover contas | 🟢 | 2026-11-18 |
+| IS-196 | Painel do monitor: aba Usuários (criar, desativar, remover contas) | 🟢 | 2026-11-18 |
+| IS-197 | Tela de bloqueio: professora Adriana liberada no PC01 | 🟢 | 2026-11-18 |
+| IS-198 | Aulas: status não ficava verde por quizzes duplicados (Microsserviços) | 🟢 | 2026-11-18 |
 
 ---
 
@@ -294,7 +368,7 @@ mesma chave `id:X` — não perde ponto nem conta em dobro.
 
 **Validar:**
 ```powershell
-python -c "from services import database as db; print(db.get_student_score('73166069283', filter_subject_id=8))"
+python -c "from services import database as db; print(db.get_student_score('[RA]', filter_subject_id=8))"
 ```
 Deve retornar `quiz` > 0 (no caso, 41).
 
@@ -313,7 +387,7 @@ turma. Valores já salvos **não** são sobrescritos.
 **Arquivos:** `data/repo/plugins/student_attendance.py`
 
 **Validar:** Plugins → Frequência → turma `2ª SÉRIE - Turma I-B (Técnico DS)`:
-`GUSTAVO RAFAEL FRIGERI`, `ISADORA FERNANDA DA SILVA`, `LÁZARO DE SOUSA SILVA`
+`GUSTAVO RAFAEL FRIGERI`, `ISADORA FERNANDA DA SILVA`, `[ALUNO] DE SOUSA SILVA`
 e `JANAYRA SOARES BRANDÃO` devem iniciar como **Falta**.
 
 **Observação:** `data/excecoes_alunos.json` está no `.gitignore` (é local). Se o
@@ -1478,9 +1552,9 @@ tinha UI de edição: era mantido à mão).
    com `data_editor` (Normal/Falta/Inativo + motivo), resumo por status e
    gravação + regeneração do espelho.
 4. **Migração (`scripts/migrar_excecoes_para_banco.py`, whitelist no
-   `.gitignore`):** `--dry-run` mostrou YASMIN `46775155700` e LÁZARO
-   `61607251604` **ativos no banco mas na lista do JSON** → migrados para
-   `falta`; FABIANO `68958439432` já `inativo`; ALUNO TESTE `88888888888`
+   `.gitignore`):** `--dry-run` mostrou [ALUNO] `[RA]` e [ALUNO]
+   `[RA]` **ativos no banco mas na lista do JSON** → migrados para
+   `falta`; [ALUNO] `[RA]` já `inativo`; ALUNO TESTE `[RA]`
    só no banco (mantido). Espelho regerado: **8 `blacklist`, 7
    `blacklist_names`, 1 `dropouts`**.
 5. **Plugins:** `student_attendance.py` lê o banco primeiro e cai no JSON só
@@ -1496,8 +1570,8 @@ tinha UI de edição: era mantido à mão).
 `scripts/migrar_excecoes_para_banco.py`, `docs/ADD_USER_PROFILES_FREQUENCIA.sql`,
 `.gitignore`, `data/excecoes_alunos.json` (espelho, não versionado).
 
-**Validar:** I-A → FABIANO fora da lista (22 → 20 no plano), Falta em
-GUILHERME/LUARA/YASMIN; I-B → Falta em ISADORA/GUSTAVO/JANAYRA/LÁZARO;
+**Validar:** I-A → [ALUNO] fora da lista (22 → 20 no plano), Falta em
+GUILHERME/LUARA/[ALUNO]; I-B → Falta em ISADORA/GUSTAVO/JANAYRA/[ALUNO];
 `python scripts/migrar_excecoes_para_banco.py --dry-run` → sem alterações
 pendentes; no Cloud (sem o JSON) a chamada e os planos repetem o mesmo
 resultado; aluno com `is_active=false` ainda consegue logar.
@@ -2847,7 +2921,7 @@ criação. Novo `scripts/criar_turma_professor.py` (dry-run por padrão, `--appl
 espelha `seed_data.py`/`seed_students.py` (MockSecrets + `.env`).
 
 **Executado (`--apply`):**
-- Professora `adriana` (name=FRANCISCA ADRIANA COUTINHO PASSOS, ra=CPF `66900069304`,
+- Professora `adriana` (name=[PROFESSORA], ra=CPF `[RA]`,
   role=teacher, senha inicial = RA).
 - Turma `312076` → `classes.id=3`: name `1ª SÉRIE - Turma I-B (Técnico Marketing)`,
   `official_name=EMTPMARK-DIG-1ª SERIE - INTEGRAL-I-B`, `portal_name=...1a SERIE...`.
@@ -2910,7 +2984,7 @@ ON CONFLICT DO NOTHING;
 ## IS-067 — Login tolerante (RA/CPF e maiúsculas) 🟢
 
 **Sintoma:** a professora `adriana` não conseguia logar. Diagnóstico: a conta está
-correta (`check_password("66900069304", hash)=True`, `is_active=True`, `role=teacher`);
+correta (`check_password("[RA]", hash)=True`, `is_active=True`, `role=teacher`);
 `get_user` é case-sensitive e usa só `username` — o CPF (RA) não era aceito.
 
 **Solução:** `views/login.py` passou a tentar, em ordem: `get_user(user)` →
@@ -2920,8 +2994,8 @@ correta (`check_password("66900069304", hash)=True`, `is_active=True`, `role=tea
 
 **Arquivos:** `services/database.py`, `views/login.py`
 
-**Validar:** login OK com `adriana`, `Adriana`, `ADRIANA` e `66900069304` (senha =
-`66900069304`). `py_compile` OK.
+**Validar:** login OK com `adriana`, `Adriana`, `ADRIANA` e `[RA]` (senha =
+`[RA]`). `py_compile` OK.
 
 **Atenção:** o fallback é código novo — só vale no app local (ou após redeploy no
 Cloud). De todo modo, `adriana` + senha já funcionavam no banco.
@@ -3682,7 +3756,7 @@ baixa 109→72 arquivos úteis (~1,2 MB, sem logs/backups); `py_compile` OK.
 `float() argument must be a string or a real number, not 'NoneType'`.
 
 **Causa:** o `student_scores.json` sincronizado do Drive tem notas `null`
-(ex.: estudante `67152652023`, disciplina 8, T1/N2). O plugin fazia
+(ex.: estudante `[RA]`, disciplina 8, T1/N2). O plugin fazia
 `float(nm2)` / `float(p.get('points'))` / `float(calc['total'])` direto.
 
 **Mudança:** helper `_to_float(valor, default=0.0)` no
@@ -4664,6 +4738,1309 @@ grupo ficava vazio, então a tela não listava nada.
 "Outras aulas (sem número)". Teste real: `subject 37` da turma 312076 mostrou
 "A importância da retenção de clientes" após a correção.
 
+---
+
+## IS-122 — IA: aulas de seminário 36 e 37 (2A e 2B) 🟢
+
+**Pedido:** criar duas aulas de Inteligência Artificial no formato Seminário,
+com os temas das aulas **20–24** e **25–28**, para as duas turmas, usando os
+grupos do seminário anterior.
+
+**Mudança (dados):** 4 aulas no `subject_id=11` (INTELIGÊNCIA ARTIFICIAL), com
+título por turma (a disciplina é compartilhada):
+
+| ID | Título | Grupo |
+|----|--------|-------|
+| 756 | Aula 36 Seminário IA 1 (Aulas 20-24) - 2A | Grupo2 (2A) |
+| 757 | Aula 37 Seminário IA 2 (Aulas 25-28) - 2A | Grupo1 (2A) |
+| 758 | Aula 36 Seminário IA 1 (Aulas 20-24) - 2B | Grupo2 (2B) |
+| 759 | Aula 37 Seminário IA 2 (Aulas 25-28) - 2B | Grupo1 (2B) |
+
+Cada aula tem: organização dos tempos (60 min), objetivos, pesquisa das aulas
+correspondentes, ilustrações (ASCII/Mermaid), roteiro cronometrado, perguntas,
+checklist e referências. Fontes locais em
+`data/Turmas/.../INTELIGÊNCIA ARTIFICIAL/S05/`.
+
+**Como validar:** no portal, abrir Inteligência Artificial e conferir as aulas
+36/37 de cada turma; ou `db.get_lessons_for_subject(11)` (IDs 756–759).
+
+## IS-123 — DevOps: aulas 1–3 da S01 a partir dos PDFs (I-A e I-B) 🟢
+
+**Pedido:** gerar as aulas a partir dos PDFs de aprofundamento
+`texto_aprofundamento_aula_1.pdf`, `aula_2.pdf` e `aula_3.pdf` da pasta
+`data/Turmas/2ª SÉRIE - Turma I-A (Técnico DS)/INTRODUÇÃO AO ECOSSISTEMA DEVops/S01/seductec`,
+salvando no banco e no disco. Em seguida, criar a versão da turma
+**2ª SÉRIE - Turma I-B (Técnico DS)**.
+
+**Mudança (dados):**
+
+| Turma | Disciplina | Aulas | IDs |
+|-------|------------|-------|-----|
+| I-A | `subject_id=9` (compartilhada) | 1, 2 e 3 | 900, 901, 902 |
+| I-B | `subject_id=41` (nova, só I-B) | 1, 2 e 3 | 903, 904, 905 |
+
+- A aula quebrada `id=899` (erro 404 do Gemini, sem conteúdo) foi removida.
+- A disciplina nova da I-B foi criada como
+  `INTRODUÇÃO AO ECOSSISTEMA DEVops (2ª SÉRIE - Turma I-B (Técnico DS))`
+  e vinculada apenas à turma I-B (`class_id=2`), para não sobrescrever a I-A.
+- Cada aula tem: objetivos, introdução, conteúdo teórico baseado no PDF,
+  exemplo prático em Python executável, conclusão, links/referências e quiz
+  com 4 perguntas × 4 alternativas (`4 questões` validadas por aula).
+- Arquivos `.md` gravados em:
+  - `data/Turmas/2ª SÉRIE - Turma I-A (Técnico DS)/INTRODUÇÃO AO ECOSSISTEMA DEVops/S01/`
+  - `data/Turmas/2ª SÉRIE - Turma I-B (Técnico DS)/INTRODUÇÃO AO ECOSSISTEMA DEVops/S01/`
+
+**Como validar:** abrir a disciplina no portal e conferir as aulas 1–3 de cada
+turma; ou `db.get_lessons_for_subject(9)` (900–902) e
+`db.get_lessons_for_subject(41)` (903–905), verificando `week="S01"` e o quiz
+com 4 questões.
+
+## IS-124 — Gerador de Aulas: DeepSeek Cloud 🟢
+
+**Pedido:** adicionar a opção **DeepSeek Cloud** no Gerador de Aulas. A chave
+deve ser buscada na variável `DEEPSEEK_API_KEY` e preenchida automaticamente
+quando o app estiver rodando em modo local.
+
+**Mudança (código):**
+
+- `views/gerador_aulas.py`
+  - nova opção `DeepSeek Cloud (Nuvem)` no seletor de IA;
+  - `ia_source="deepseek"`, campo de chave e seletor de modelo
+    (`deepseek-chat` / `deepseek-reasoner`);
+  - helpers `_is_local_mode()` e `_deepseek_default_key()`: a chave só é
+    pré-preenchida localmente (`.env` presente e sem marcadores de nuvem),
+    lendo `DEEPSEEK_API_KEY` do ambiente ou de `st.secrets`;
+  - DeepSeek entrou no limite de contexto de nuvem (32.000 caracteres) e no
+    prompt completo de nuvem (não é tratado como modelo local).
+- `services/ai_generation.py`
+  - nova `generate_content_with_deepseek()` usando a API compatível com OpenAI
+    (`https://api.deepseek.com`), com tratamento de erro amigável.
+
+**Como validar:** no Gerador de Aulas, selecionar **DeepSeek Cloud (Nuvem)** e
+conferir que a chave aparece preenchida em modo local; gerar uma aula e
+verificar a resposta. Para testar sem interface:
+`python -c "import views.gerador_aulas as g; print(bool(g._deepseek_default_key()))"`.
+
+## IS-125 — Comando para definir o volume em 30% 🟢
+
+**Pedido:** um comando no Monitor para deixar o volume de som dos PCs em 30%
+(útil no início da aula), e outro para restaurar.
+
+**Mudança:**
+- Novo script `data/repo/plugins/definir_volume.ps1` usando a **Core Audio API**
+  (`IAudioEndpointVolume.SetMasterVolumeLevelScalar` + `SetMute(false)`):
+  `-Percent 30` deixa o volume em 30% e desmuta o dispositivo padrão de saída.
+- O agente baixa esse script para `%LOCALAPPDATA%\SysAva\definir_volume.ps1`
+  (com validação básica do conteúdo) e executa na **sessão do aluno**, sem UAC.
+- Novas ações no Monitor web/Streamlit: **Definir Volume em 30%** e
+  **Restaurar Volume (100%)**; botões em massa “Volume 30%/100% em TODAS”.
+- `definir_volume.ps1` entrou no `DOWNLOAD_WHITELIST` e no `/servidor.zip`
+  (que já inclui .ps1 automaticamente). O agente também tem as mesmas funções
+  no Python embutido do `lab_agent.ps1`.
+
+**Arquivos:** `data/repo/plugins/definir_volume.ps1`,
+`data/repo/plugins/lab_agent.py`, `data/repo/plugins/lab_agent.ps1`,
+`data/repo/plugins/lab_receiver.py`, `data/repo/plugins/lab_monitor.py`,
+`docs/ISSUES_LOCAIS.md`.
+
+**Como aplicar:** atualizar o `servidor.zip` → reiniciar o receiver (para
+liberar `/download/definir_volume.ps1`) → enviar **Atualizar Monitor (rápido,
+sem UAC)** aos PCs → enviar **Definir Volume em 30%** (ou 100%).
+
+**Validar:** enviar o comando e conferir o ícone de volume do Windows em 30% e
+desmutado; o script retorna 0; testar também o 100%. A leitura/escrita da API
+foi validada localmente lendo e reaplicando o volume atual; não deixei o volume
+do PC de desenvolvimento em 30% durante o teste.
+
+## IS-126 — Gerador de Aulas: vídeo da aula via `links_aulas.md` 🟢
+
+**Pedido:** o plano gerado não incluía o vídeo da aula que está no
+`links_aulas.md` da pasta `seductec`.
+
+**Causa:** o `links_aulas.md` não era sugerido por padrão na seleção de arquivos
+da Rota 2 (o nome não contém o número da aula/semana) e, quando lido, o prompt
+não informava qual vídeo correspondia à aula gerada.
+
+**Mudança:**
+- `services/contexto_aulas.py`
+  - `links_aulas.md` passou a ser **sempre sugerido** e sempre lido na Rota 2;
+  - novo `obter_link_video_aula(turma, disciplina, semana, numero_aula)`, que
+    localiza a seção `### Aula_0N` e devolve o link correspondente;
+  - a Rota 2 recebe `numero_aula` e adiciona o “VÍDEO OBRIGATÓRIO DA AULA N” ao
+    contexto.
+- `services/generate_lessons_gemini.py`
+  - `gerar_prompt_aula(..., video_url=...)` inclui o vídeo nos dados de entrada
+    e exige que ele apareça em “Recursos e Links”.
+- `views/gerador_aulas.py`
+  - busca o vídeo antes de montar o prompt e garante o link no Markdown final
+    com `_ensure_video_link()` (mesmo se o modelo omitir).
+
+**Como validar:** gerar uma aula da semana e conferir a seção
+`## 🧰 Recursos e Links` com o link do vídeo da aula; ou
+`obter_link_video_aula("2ª SÉRIE - Turma I-A (Técnico DS)", "INTRODUÇÃO AO ECOSSISTEMA DEVops", 1, 2)`
+→ `https://www.youtube.com/watch?v=urIikjGkjXo`.
+
+## IS-127 — Replicação para a I-B na disciplina errada 🟢
+
+**Pedido:** as aulas 4–8 replicadas para a **2ª SÉRIE - Turma I-B** não
+apareciam na disciplina própria da I-B (`subject_id=41`).
+
+**Causa:** a replicação escolhia a primeira disciplina com nome compatível.
+Como a disciplina compartilhada (`subject_id=9`) também estava vinculada à I-B,
+as aulas caíam nela; a disciplina específica da I-B ficava só com as aulas 1–3.
+
+**Mudança:**
+- `views/gerador_aulas.py`: ao replicar, a disciplina de destino agora prioriza
+  a que contém o nome da turma (ex.: `... (2ª SÉRIE - Turma I-B ...)`) antes da
+  compartilhada.
+- Aulas **4–8** importadas para `subject_id=41` (I-B) como IDs **916–920**,
+  com `week="S01"`, vídeo e **quiz de 4 questões** (dados dos `.md` replicados).
+- A disciplina compartilhada `subject_id=9` foi **desvinculada da I-B**
+  (`class_subjects`), deixando só a disciplina própria. A I-A continua com a 9.
+- `services/quiz_parser.py`: passou a reconhecer numeração com emoji
+  (`1️⃣`), cabeçalhos `### ❓ Questão N`, gabaritos em negrito (`**1. B**`) e
+  perguntas em que o texto está na linha seguinte.
+
+**Como validar:** abrir a I-B e conferir a disciplina
+`INTRODUÇÃO AO ECOSSISTEMA DEVops (2ª SÉRIE - Turma I-B (Técnico DS))` com as
+8 aulas da S01; `db.get_lessons_for_subject(41)` deve retornar 903–905 e
+916–920, todas com quiz de 4 questões.
+
+## IS-128 — "Nenhuma turma cadastrada" mesmo com turmas no Supabase 🟢
+
+**Sintoma:** ao abrir o app por outro dispositivo da rede (celular/repetidor
+Wi-Fi, `http://10.224.244.171:8501`) a aba **Aulas** exibia
+"Nenhuma turma cadastrada no sistema", embora as 3 turmas existissem no
+Supabase e o cache tivesse `subjects`/`lessons`/`app_users` atualizados.
+
+**Causa:** `get_classes()` engolia a exceção da consulta e devolvia `[]`; o
+`local_cache.get_or_fetch()` tratava esse `[]` como resultado **válido** e o
+gravava com `TTL_BASE` (6 h). Uma oscilação de rede na primeira carga (08:00)
+deixou `classes` = `[]` em cache até 14:00 para **todas** as sessões. O
+`python-dotenv` também reclamava da linha 10 do `.env` (chave truncada
+`DEEPSEEK_API_KEY="`) e o `run.bat` subia uma segunda API de modelos que
+falhava com `WinError 10048` na porta 8001.
+
+**Mudança:**
+- `services/local_cache.py`: `get_or_fetch(..., cache_empty=False)` — resultado
+  vazio/`None` não é gravado; se existir cache anterior não vazio, ele é
+  preferido (evita esconder dados válidos por oscilação).
+- `services/database.py`: `get_classes()` e `get_subjects()` deixam a exceção
+  subir (fallback para cache antigo) e usam `cache_empty=False`; listas de
+  aulas e quizzes também passaram a usar `cache_empty=False`.
+- `.env`: removidas a linha solta `DeepSeeks` e a chave `DEEPSEEK_API_KEY="`
+  truncada (a chave real duplicada mais abaixo foi mantida).
+- `run.bat`: só inicia a API de modelos (porta 8001) se a porta estiver livre.
+
+**Como validar:** limpar a entrada `classes` do cache, reiniciar o app e abrir
+`http://<ip-da-lan>:8501` no celular; a lista de turmas deve aparecer. No
+terminal não deve haver `could not parse statement` nem `WinError 10048`.
+
+## IS-129 — Servidor auxiliar não sobe no boot e não aparece no monitor 🟢
+
+**Sintoma:** no PC do laboratório (`PC01-LAB02`) o servidor auxiliar
+(`lab_receiver`) não subia com o Windows e o monitor do SysAva mostrava
+`peers: 0` (nenhum servidor auxiliar). Não havia `servidor.log` na pasta,
+sinal de que a tarefa/watchdog nunca chegou a rodar.
+
+**Causa:** o auto-start dependia só da tarefa agendada `SysAva Servidor`
+(boot como SYSTEM). Quando a tarefa não está registrada, aponta para uma pasta
+antiga (Drive/sync moveu o caminho), o SYSTEM não tem acesso à pasta de nuvem
+ou o Python não está disponível, nada avisa o usuário — o servidor simplesmente
+não sobe e o monitor fica sem peer. Não havia como ver o estado nem o motivo
+na máquina.
+
+**Mudança (em `data/repo/plugins/`):**
+- `tray_servidor.ps1` + `tray_servidor.vbs` + `tray_servidor.bat`: ícone na
+  **bandeja do Windows** (verde = online, amarelo = porta ocupada sem resposta,
+  vermelho = offline). Sobe o servidor pelo `servidor_watchdog.ps1` se a porta
+  5000 estiver livre e **nunca abre segunda instância**. Menu: abrir painel,
+  abrir log, reiniciar, iniciar/parar, **Iniciar com o Windows** (atalho na
+  pasta Inicializar, sem Administrador) e sair. `-Status` mostra o estado no
+  console; `-Instalar`/`-Remover` controlam o atalho.
+- `diagnostico_servidor.ps1` + `.bat`: relatório no PC do servidor com
+  arquivos/atributos (detecta "somente online" do OneDrive/Drive),
+  Python/dependências, porta/`/health`, peers, tarefa agendada (estado, último
+  resultado e pasta de destino), atalho da bandeja, firewall, log e rede,
+  terminando com as prováveis causas. Salva `diagnostico_servidor.txt`.
+- `lab_monitor.py`: a faixa de status do radar agora mostra claramente
+  **online (primário/auxiliar) | peers | máquinas | versão**, avisa quando não
+  há servidor auxiliar conectado e alerta quando o servidor local está offline
+  (antes a falha era silenciosa).
+- `lab_monitor_doc.md`: seção de auto-start atualizada com bandeja e diagnóstico.
+
+**Como validar (no PC do laboratório):**
+1. `tray_servidor.bat` → ícone aparece ao lado do relógio; menu →
+   **Iniciar com o Windows**; reiniciar o PC e conferir o ícone verde.
+2. `diagnostico_servidor.bat` → seção 4 mostra a tarefa e o último resultado;
+   seção 3 mostra `/health OK` e peers.
+3. No notebook, aba **Plugins → Monitor**: a faixa deve mostrar
+   `peers: 1` quando o PC estiver online.
+
+## IS-130 — Monitor em abas + estrutura de pastas de atividades + pacote de atualização 🟢
+
+**Pedido:** o painel concentrava todas as ações no mesmo `selectbox`
+("Ação de Controle") **nos dois dashboards**: o web do receiver (porta 5000) e a
+aba **Plugins → Monitor** do Streamlit. A criação de pastas usava caminho fixo
+`C:\Projetos\<Escola>\<Turma>\<Disciplina>\<Aluno>`. Era preciso: separar as
+funções em **abas**, criar na aba **Ferramentas** a ação que escolhe **turma** e
+**disciplina** e gera **`<turma>\<disciplina>\<aluno>\Aula_NN`** no PC do aluno, e
+disponibilizar o **pacote de atualização** para download no dashboard.
+
+**Mudança:**
+- `data/repo/plugins/lab_receiver.py` (**painel web**, `DASHBOARD_TEMPLATE`):
+  layout em **abas** 📊 Monitor (cards + tabela) / 🕹️ Controle (ação + mensagem)
+  / 🧰 Ferramentas (estrutura de pastas + pacote). A aba ativa fica no `#hash`.
+  Novas rotas: `POST /estruturar` (monta o JSON e chama `dispatch_commands`) e
+  `GET /api/disciplinas?class_id=` (selects em cascata). Turmas/disciplinas do
+  Supabase com **cache de 10 min** (`_load_classes`/`_load_disciplinas`) para não
+  gastar egress a cada reload.
+- `data/repo/plugins/lab_monitor.py` (Streamlit): `show_lab_monitor()` em
+  **6 abas** — 📊 Radar, 🕹️ Controle, 🧰 Ferramentas, ⚡ Ações em Massa,
+  📜 Histórico e 🔍 Diagnóstico; a barra lateral ficou só com utilitários.
+- **Ferramentas (ambos):** **Turma**, **Disciplina**, **Aulas** (`1-32`) e
+  **Pasta base** (`%USERPROFILE%\Documents\SysAva`, expandida no PC do aluno —
+  sem Administrador). No web, marcar PCs na aba Monitor ou “todas as online”.
+  O comando `Estruturar Pastas` leva JSON (`build_estrutura_payload`/rota
+  `/estruturar`) e é registrado no histórico.
+- `lab_agent.py` (e a cópia embutida em `lab_agent.ps1`, agora sincronizada):
+  `_criar_estrutura_atividades()` cria `<base>/<turma>/<disciplina>/<aluno>/Aula_NN`
+  (uma pasta por aluno, pois o PC do laboratório é compartilhado; o nome usa só
+  os **dois primeiros nomes, sem sobrenome** — `PEDRO HENRIQUE PEREIRA GARCIAS`
+  → `PEDRO_HENRIQUE`),
+  **trocando espaços por `_`** em todos os nomes de pasta (ex.:
+  `2ª_SÉRIE_-_Turma_I-A_(Técnico_DS)`), sanitiza nomes inválidos do Windows
+  (`_pasta_segura`), aceita o **JSON novo** e o **formato antigo**
+  `escola|turma|disciplina|aluno|aulas` (ignora escola/aluno) e mostra um balão
+  com o resultado. O agente passou a enviar `agent_version`, `last_cmd` e
+  `last_result` no `/ping` (diagnóstico no painel). `AGENT_VERSION` =
+  `2026-10-28-pastas2`.
+- `lab_receiver.py`: `SERVER_VERSION = "2026-10-28-ferramentas"`; o
+  `/servidor.zip` passou a incluir **tray/bandeja**, **diagnóstico** e `.vbs`
+  (auto-inclusão de `.ps1`/`.bat`/`.vbs`); link **⬇️ Pacote de atualização** no
+  topo do painel web e na aba Ferramentas.
+- `reiniciar_servidor.ps1` / `diagnostico_servidor.ps1`: a checagem de versão
+  passou a ler `SERVER_VERSION` do `lab_receiver.py` local (não fica mais presa a
+  uma string fixa).
+- `tests/test_lab_agent_estrutura.py`: cobre a criação das pastas (JSON, formato
+  antigo, sanitização), o contrato dashboard → agente e garante que a cópia do
+  agente embutida no instalador está idêntica ao `lab_agent.py`.
+
+**Como validar:**
+1. `http://<ip>:5000/` (após `reiniciar_servidor.bat`): topo mostra
+   `v2026-10-28-ferramentas` e **⬇️ Pacote de atualização**; aparecem as abas
+   **Monitor / Controle / Ferramentas**.
+2. Aba **Ferramentas** → escolher turma/disciplina, `1-3`, marcar “todas” ou PCs
+   na aba Monitor → **Criar estrutura de pastas**; no PC do aluno deve existir
+   `%USERPROFILE%\Documents\SysAva\<turma>\<disciplina>\<aluno>\Aula_01..03`
+   (espaços viram `_`, ex.: `2ª_SÉRIE_-_Turma_I-A/PEDRO_HENRIQUE/Aula_01`).
+3. `Plugins → Monitor`: 6 abas; "Ação de Controle" não lista mais "Estruturar
+   Pastas".
+4. Topo do painel web ou aba Ferramentas → o `servidor.zip` contém
+   `tray_servidor.*` e `diagnostico_servidor.*` (31 arquivos).
+5. `python -m pytest -q` (25 testes) e `py_compile` dos arquivos alterados.
+
+## IS-131 — Baixar as atividades dos alunos zipadas no notebook 🟢
+
+**Pedido:** baixar, em ZIP, as pastas de atividades dos PCs dos alunos para o
+notebook, para backup e revisão das atividades.
+
+**Mudança:**
+- `lab_agent.py`: novo comando **Enviar Atividades** — `_zipar_atividades()`
+  compacta a pasta (`%USERPROFILE%\Documents\SysAva`, ou a `base` enviada) e
+  `_enviar_atividades_zip()` faz `POST` multipart em `/upload/atividades`.
+  O resultado (`ok: X MB`) aparece em **Último comando por PC**.
+  `AGENT_VERSION = 2026-10-28-backup1`.
+- `lab_receiver.py`: `POST /upload/atividades` salva em
+  `data/repo/plugins/.atividades/<maquina>.zip` (limite de 500 MB por envio);
+  `GET /atividades` lista os recebidos; `GET /atividades/<arquivo>` baixa um;
+  `GET /atividades.zip` baixa todos; `POST /backup_atividades` pede o ZIP aos
+  PCs marcados (ou “todas”).
+- Painel web: link **📦 Atividades** no topo e seção **📦 Backups de atividades**
+  na aba Ferramentas (botão *Solicitar ZIP* + *Ver/baixar recebidos*).
+  No Streamlit, link para a mesma página.
+- `.gitignore`: `.atividades/` e `.relatorios/` (dados de alunos não vão pro Git).
+
+**Como validar:**
+1. Aba Ferramentas → marcar os PCs → **📦 Solicitar ZIP das atividades**.
+2. Em ~10–60 s (depende do tamanho), **📦 Atividades** lista cada PC com tamanho
+   e hora; **Baixar todos** gera `atividades_sysava.zip` no notebook.
+3. Os ZIPs individuais contêm `<turma>/<disciplina>/<ALUNO>/Aula_NN/...`.
+
+**Trava por versão do agente (build):** o agente passou a enviar `agent_build`
+(6 = pasta do aluno + dois nomes + backup ZIP). O painel mostra
+`agente v… (build N)` ou `agente antigo (build N) — atualize`, e as ações
+**ignoram** PCs com agente antigo, avisando no flash
+(“N com agente antigo (ignorados)”) em vez de criar pasta no formato errado.
+`AGENT_BUILD = 6` / `AGENT_VERSION = 2026-10-28-backup2`.
+
+## IS-132 — Designar o aluno (RA) de um PC pelo painel do notebook 🟢
+
+**Pedido:** escolher do notebook qual RA será “logado”/associado em cada PC
+(sem precisar ir até o PC digitar na tela de bloqueio).
+
+**Mudança:**
+- `lab_receiver.py`: nova rota `POST /designar_aluno` — valida o RA na lista de
+  alunos (ou no Supabase), grava em `lab_users.json` pela mesma função da tela de
+  bloqueio (`_associar_usuario_maquina`) e registra no histórico/log.
+- Aba **Controle** do painel: seção **👤 Aluno do PC (designar RA)** com dois
+  seletores (PC e Aluno) e o botão *Designar aluno ao PC*. Com isso o radar
+  mostra **Aluno (RA)** e a criação de pastas usa o nome do aluno
+  (`PEDRO_HENRIQUE`), mesmo sem o aluno ter passado pelo lock.
+- `_lista_alunos()` extraído de `/api/alunos` (cache de 30 min + disco), então o
+  seletor funciona também com o Supabase instável (72 alunos na base).
+
+**Limite:** isso associa o aluno ao PC (radar/histórico/pastas) — **não**
+desbloqueia a tela de bloqueio. Para desbloquear de longe seria preciso a
+`sysava_lock.ps1` consultar o servidor por um RA designado (próximo passo).
+
+**Como validar:** Controle → escolher PC e aluno → *Designar aluno ao PC* →
+Monitor passa a mostrar o nome/RA na linha e a próxima criação de pastas usa o
+nome do aluno.
+
+## IS-133 — Bandeja (tray) do SysAva e apps no notebook 🟢
+
+**Pedido:** uma bandeja parecida com a do LM Studio (ícone ao lado do relógio,
+menu com status, abrir apps, submenu e Sair) que suba junto com o Windows no
+notebook.
+
+**Mudança (novos arquivos na raiz):**
+- `sysava_tray.ps1` — ícone na bandeja com:
+  - cabeçalho **SysAva | IP** e status do app 8501;
+  - **Abrir SysAva (8501)**;
+  - **Apps >** Verificador de Duplicatas (8502), Monitor do Supabase (8503),
+    Down SeducTec (8504), Planejamento/Registro (8510), Análise de Notas (8511)
+    e **Parar todos os apps**. Cada item inicia o Streamlit na porta se estiver
+    parado e abre o navegador; uma **•** indica o app online;
+  - **Servidor do laboratório (5000) >** abrir painel / iniciar / parar;
+  - **Copiar URL do SysAva**, **Abrir pasta do projeto**;
+  - **Abrir o SysAva ao iniciar a bandeja** (flag em `%LOCALAPPDATA%\SysAva`),
+    **Iniciar com o Windows** (atalho na pasta Inicializar) e **Sair**.
+- `sysava_tray.vbs` + `sysava_tray.bat` — abre a bandeja sem janela de console.
+- Ícone usa `logo_sysava.png` (fallback: círculo colorido). Instância única
+  (mutex) e monitor de portas em runspace (não trava o menu).
+
+**Como validar:**
+1. `sysava_tray.bat` → ícone aparece; menu mostra o status e os apps.
+2. Marcar **Iniciar com o Windows** (ou `powershell -File sysava_tray.ps1 -Instalar`)
+   e reiniciar o notebook → a bandeja volta sozinha.
+3. `powershell -File sysava_tray.ps1 -Status` lista as portas 8501..8511, 5000
+   e 8001.
+
+## IS-134 — Organização dos plugins: monitor em `plugins/monitor_rede/` 🟢
+
+**Pedido:** parar de misturar tudo em `data/repo/plugins` e migrar de forma
+gradativa, começando pelo plugin de monitoramento.
+
+**Mudança (fase 1):**
+- `data/repo/plugins/lab_monitor.py` → **`plugins/monitor_rede/lab_monitor.py`**.
+- `data/repo/plugins/lab_monitor_doc.md` → **`plugins/monitor_rede/README.md`**.
+- `lab_monitor.py`: `PLUGIN_DIR` agora resolve a pasta de **runtime**
+  (`SYSAVA_PLUGIN_DIR` → `data/repo/plugins` → pasta do arquivo), então
+  `lab_status.json`, `lab_labels.json`, `lab_users.json` e o `lab_receiver.py`
+  continuam sendo lidos do deploy.
+- `views/plugins.py`: carrega `plugins/monitor_rede/lab_monitor.py` (fallback
+  para o caminho antigo).
+- `plugins/README.md`: estrutura alvo e fases 2 (servidor) e 3 (agente/
+  ferramentas). `data/repo/plugins` fica como pasta de **deploy/runtime**
+  (plana, gitignored), porque o receiver serve os arquivos de lá.
+
+**Como validar:** Plugins → Monitor abre normalmente; `AppTest` do arquivo novo
+não gera exceções; o radar mostra as máquinas do receiver.
+
+## IS-135 — Tela de bloqueio com modo offline 🟢
+
+**Pedido:** o PC do aluno não pode ficar preso quando o servidor/internet cai.
+Ter alternativas (lista em cache, pasta sincronizada do Drive e carência de
+15 min) para liberar a tela com a credencial do aluno.
+
+**Mudança (`data/repo/plugins/sysava_lock.ps1`):**
+- Novos parâmetros `-GraceMin` (padrão 15; 0 = imediato) e `-SemOffline`
+  (mantém o comportamento antigo: só libera com servidor ou senha admin).
+- Se o servidor não responder em 3 min, `Invoke-LiberacaoOffline` procura o
+  RA/nome na lista local: cache `%LOCALAPPDATA%\SysAva\alunos.json` + cópias
+  sincronizadas (`C:\Local\servidor_sysava\alunos_cache.json`,
+  `C:\SysAva\plugins\alunos_cache.json`, `SYSAVA_ALUNOS_CACHE`).
+- Enquanto espera, tenta o servidor a cada 5 s (se voltar, valida normal).
+  Esgotada a carência, libera com o RA do aluno em **modo offline**.
+- Login offline é gravado em `%LOCALAPPDATA%\SysAva\desbloqueios_offline.log` e
+  na fila `logins_offline.jsonl`; quando o servidor volta, `Sync-LoginsOffline`
+  envia cada um para `/api/auth_ra` (histórico/radar) e limpa a fila.
+
+**Limite:** ainda não valida direto no Supabase (precisa das credenciais no PC;
+próximo passo: `cloud.json` distribuído pelo instalador/atualizador). O modo
+offline confia na lista local — aceitável no laboratório (RA como credencial).
+
+**Como validar:** com o servidor desligado, digitar um RA que esteja na lista
+local: após a carência a tela libera e o log offline registra; ao religar o
+servidor, o histórico recebe o login.
+
+## IS-136 — Acesso remoto com Tailscale (guia) 🟢
+
+**Pedido:** entender/viabilizar manutenção dos PCs do laboratório de fora da
+escola sem depender de DDNS nem de abrir portas.
+
+**Decisão:** o Google Drive **não** funciona como DDNS (IPs `192.168.x` são
+privados; Drive tem latência e conflitos de escrita) e a chave da service
+account não pode ir para os PCs. O acesso remoto fica com **Tailscale**
+(mesh WireGuard) e um **subnet router** no PC01-LAB02, que anuncia a faixa
+`192.168.10.0/23`; o inventário (`pc_registry`) é assunto separado.
+
+**Entregue:** `docs/TAILSCALE.md` com a explicação da essência, diagrama,
+passo a passo (instalar no notebook e no PC01, `--advertise-routes`,
+aprovar a rota no admin, `--accept-routes`, testes de fora), segurança,
+limitações e problemas comuns. Nenhuma mudança de código: o agente, a tela de
+bloqueio e o painel continuam iguais (o Tailscale só muda o caminho).
+
+## IS-137 — Projeto Feira das Profissões (6 aulas) 🟢
+
+**Pedido:** colocar em `plugins/atividades/Atividades_florestan/` as **seis
+aulas** do projeto *Feira das Profissões: dos orçamentos ao cronograma*,
+integrando a Profa. Adriana (Técnico em Marketing) e o Prof. Raylson
+(Robótica), com as turmas **1ª B** (Marketing) e **2ª A / 2ª B**
+(Desenvolvimento de Sistemas).
+
+**Entregue:** guia geral + 6 planos de aula em Markdown:
+
+- `00_LEIA-ME_Feira_das_Profissoes.md` — visão geral, áreas de incubação,
+  distribuição por turma, papéis dos parceiros, cronograma e rubrica geral;
+- `AULA_01_Abertura_e_Formacao_das_Equipes.md` — áreas, equipes e papéis;
+- `AULA_02_Problema_Publico_e_Proposta_de_Valor.md` — pesquisa e Canvas;
+- `AULA_03_Orcamento_e_Viabilidade.md` — custos, receita e ponto de equilíbrio;
+- `AULA_04_Cronograma_e_Gestao_de_Tarefas.md` — EAP, marcos, Kanban e riscos;
+- `AULA_05_Prototipo_Identidade_e_Pitch.md` — MVP, comunicação e pitch;
+- `AULA_06_Feira_Avaliacao_e_Retrospectiva.md` — feira, rubrica e relatório.
+
+As quatro áreas de incubação (Agroindústria, compra e venda local, IA aplicada
+à Indústria e Robótica) estão distribuídas com vocação por turma, sem engessar
+as equipes. Nenhuma alteração de código: é conteúdo pedagógico versionado no
+repositório.
+
+**Como validar:** abrir a pasta e conferir os 7 arquivos; cada aula tem
+objetivos, desenvolvimento com tempos, entregável, rubrica e adaptação por
+turma.
+
+## IS-138 — Post do fórum (Aula 01 DevOps): Tailscale com conta institucional 🟢
+
+**Pedido:** material em Markdown para publicar no fórum da Aula 01 de DevOps,
+usando o **Gmail institucional** (não a conta pessoal) no notebook e no PC01.
+
+**Entregue:** `docs/FORUM_AULA01_DEVOPS_TAILSCALE.md` — post didático com
+objetivo, ideia em 30 s, diagrama, pré-requisitos (conta institucional e
+liberação do Workspace, se houver bloqueio), instalação nos dois PCs, descoberta
+da sub-rede, `--advertise-routes`, aprovação da rota no admin, `--accept-routes`,
+teste de fora (4G), segurança, problemas comuns, checklist e próximo passo
+(`pc_registry`). `docs/TAILSCALE.md` ganhou a nota para usar a conta
+institucional nos dois dispositivos.
+
+## IS-139 — Abrir site (Prova Motriz) nos PCs 🟢
+
+**Pedido:** uma ação para abrir `prova-motriz.jovensgenios.com/entrar` em todos
+os PCs do laboratório.
+
+**Mudança:**
+- `lab_agent.py`: `AGENT_BUILD = 7` / `AGENT_VERSION = 2026-10-28-abrir1`;
+  `_normalizar_url()` (adiciona `https://` se faltar) e `_abrir_url()` via
+  `os.startfile` (abre no navegador padrão da sessão do aluno). Comando
+  **Abrir Prova Motriz (jovensgenios)** ou **Abrir Site** com
+  `command_msg` = `{"url": "..."}` (ou a URL pura). Resultado no
+  *Último comando por PC* (`ok: aberto https://...`).
+- `lab_receiver.py`: `ACOES_CONTROLE` ganhou o preset; nova rota
+  `POST /abrir_site` (URL livre, respeita máquinas marcadas ou “todas”) com
+  trava `AGENT_BUILD_MIN_SITE = 7` (ignora agentes antigos e avisa no flash).
+- Painel web: seção **🌐 Abrir site nos PCs** na aba Ferramentas (campo URL já
+  com a Prova Motriz) e link no topo; Ações em Massa não tem botão próprio (use
+  a seleção “todas” da Ferramentas).
+- Streamlit (`plugins/monitor_rede/lab_monitor.py`): ação no seletor de Controle
+  e botão **🌐 Abrir Prova Motriz em TODAS** nas Ações em Massa.
+- `tests/test_lab_agent_estrutura.py`: cobre `_normalizar_url`.
+
+**Como validar:** Ferramentas → marcar “todas” → **🌐 Abrir site** (ou Controle →
+Abrir Prova Motriz). O navegador dos PCs abre a página de entrada da Prova
+Motriz; o resultado aparece em *Último comando por PC*. Requer agente build 7
+(Controle → Atualizar Monitor rápido).
+
+## IS-140 — Bandeja do aluno + e-mail institucional 🟢
+
+**Pedido:** uma bandeja nos PCs do laboratório (como a do notebook) e uma forma
+de o aluno **copiar o e-mail institucional**; os e-mails estão em `.txt` nas
+pastas das turmas (`data/Turmas/<turma>/emails*.txt`).
+
+**Mudança:**
+- `lab_receiver.py`: `emails.json` (nome normalizado → nome/email/turma) gerado
+  por `_construir_mapa_emails()` a partir dos `emails*.txt`; rota
+  `POST /publicar_emails` (login; gera o arquivo) e `GET /api/email`
+  (`?maquina=` resolve pela tela de bloqueio, ou `?ra=`/`?nome=`).
+  Aba **Ferramentas → 📧 Lista de e-mails institucionais** mostra a contagem e o
+  botão *Publicar lista*. `emails.json` entrou no `servidor.zip` e no
+  `/download`.
+- `tray_aluno.ps1` + `.vbs` + `.bat`: ícone ao lado do relógio com
+  **Mostrar meu e-mail**, **Copiar meu e-mail** (área de transferência),
+  **Abrir SysAva**, **Abrir Gmail**, **Iniciar com o Windows** e **Sair**.
+  Descobre o servidor pelo cache do agente (`C:\Local\SysVa_lab\server_cache.txt`),
+  UDP 5001 ou `127.0.0.1:5000`; guarda cópia em
+  `%LOCALAPPDATA%\SysAva\meu_email.txt` para funcionar com o servidor fora.
+- `lab_agent.py` (build 8 / `2026-10-29-bandeja1`): comando
+  **Atualizar Bandeja do Aluno** — baixa `tray_aluno.*` + logo para
+  `%LOCALAPPDATA%\SysAva`, cria o atalho `SysAva Aluno.lnk` na Startup e inicia.
+  Ação disponível em **ACOES_CONTROLE**.
+- `tests`: 26 testes passando (inclui `_normalizar_url` e sincronização do
+  instalador do agente).
+
+**Como validar:**
+1. No notebook: Ferramentas → **Publicar lista de e-mails** (41 alunos hoje).
+2. Controle → PCs com agente build 8 → **Atualizar Bandeja do Aluno**.
+3. No PC do aluno: ícone na bandeja → **Copiar meu e-mail** (cola no Gmail).
+   Com o servidor fora, usa a cópia local.
+4. Aluno sem associação (tela de bloqueio) ou fora da lista → aviso "não
+   encontrado"; associe pelo painel (Designar aluno) ou confira o `.txt` da turma.
+
+## IS-141 — Faxina (limpeza segura) nos PCs 🟢
+
+**Pedido:** alguns PCs demoram para iniciar; rodar uma “faxina” para limpar
+arquivos acumulados.
+
+**Mudança:**
+- `lab_agent.py` (build 9 / `2026-10-29-faxina1`): comando **Faxina (limpeza)** →
+  `_faxina(cfg)` limpa, sem UAC e sem tocar no Windows/inicialização:
+  1. `%TEMP%`, `%LOCALAPPDATA%\Temp` (itens com mais de 1 dia; arquivos em uso são ignorados);
+  2. restos de atualização em `%LOCALAPPDATA%\SysAva` (`*.novo`, `*.bak`, `*.old`, `*.tmp`);
+  3. logs do agente (`agent_runtime.log`/`install_debug.log` truncados; `*.bak`/`*.log.1` removidos);
+  4. **opcional** caches de navegador (Chrome/Edge, só com o navegador fechado);
+  5. **opcional** esvaziar a lixeira.
+  Devolve `ok: X MB liberados, N itens` no *Último comando por PC*.
+- `lab_receiver.py`: rota `POST /faxina` (máquinas marcadas ou “todas”, trava
+  build 9) e seção **🧹 Faxina nos PCs** na aba Ferramentas (checkboxes de
+  caches/lixeira). Ação **Faxina (limpeza)** também no seletor de Controle.
+- Streamlit: ação no Controle e botão **🧹 Faxina em TODAS** nas Ações em Massa.
+- `tests`: `_apagar_conteudo` coberto (27 testes).
+
+**Como validar:** Ferramentas → marcar “todas” → **🧹 Fazer faxina**; em cada PC o
+resultado aparece em *Último comando por PC* (ex.: `ok: 820 MB liberados, 143 itens`).
+
+**Nota sobre inicialização lenta:** a faxina remove acúmulo, mas o que mais
+atrasa o logon são programas de inicialização (Opera/Roblox/OneDrive/Teams) —
+use também **Limpar Inicialização …** no Controle. Se continuar lento, o próximo
+passo é um diagnóstico de boot (tempo de logon + itens de inicialização).
+
+## IS-142 — WPS Office e apps de segundo plano 🟢
+
+**Pedido:** o WPS Office (e outros apps do Windows) sobe sozinho e fica na RAM;
+desativar a inicialização e os apps desnecessários.
+
+**Mudança (`lab_agent.py`, build 10 / `2026-10-29-wps1`):**
+- `WPS_STARTUP_KEYWORDS` + `limpar_inicializacao_wps()`: remove o WPS do
+  auto-start (Run/RunOnce, Startup, tarefas de logon) **sem fechar** o documento
+  aberto (`wps.exe`/`et.exe`/`wpp.exe`); encerra só os helpers de segundo plano
+  (`wpscloudsvr`, `wpscenter`, `wpsupdate`, `wpsnotify`, `ksomisc`, `kdocs`,
+  `wpscloud`). Também roda no start do agente (como Roblox/Opera/Microsoft).
+- `_aplicar_tweaks_windows()` (HKCU, sem admin): desativa **Widgets**
+  (`TaskbarDa`), **Copilot** (`ShowCopilotButton`), **Chat/Teams pessoal**
+  (`TaskbarMn`) e **Game Bar/DVR** (`AutoGameModeEnabled`, `GameDVR_Enabled`).
+  (Widgets/Copilot somem após reiniciar o Explorer/logon.)
+- Comandos novos em `ACOES_CONTROLE`:
+  **Limpar Inicialização do WPS (bandeja)** e
+  **Desativar Apps em Segundo Plano (WPS/Microsoft/Opera)** — este último também
+  aplica os tweaks e reporta `ok: N itens de inicializacao, M ajustes`.
+- Streamlit: as duas ações no seletor de Controle.
+
+**Como validar:** Controle → PCs com agente build 10 → *Limpar Inicialização do
+WPS* (ou *Desativar Apps em Segundo Plano*). No PC: Gerenciador de Tarefas não
+mostra mais os helpers do WPS e, após logoff/logon, Widgets/Copilot/Game Bar
+ficam desligados. O `server_cache`/resultado aparece em *Último comando por PC*.
+
+## IS-143 — Desativar o Copilot na inicialização 🟢
+
+**Pedido:** o Copilot aparece habilitado na inicialização de todos os PCs.
+
+**Causa:** o Copilot do Windows 11 não é uma entrada “Run” clássica; muitas
+vezes é um *startup task* do shell e continua elegível mesmo removendo os
+atalhos.
+
+**Mudança (`lab_agent.py`, build 11 / `2026-10-29-copilot1`):**
+- `_desativar_copilot()`:
+  - política do usuário `HKCU\Software\Policies\Microsoft\Windows\WindowsCopilot`
+    → `TurnOffWindowsCopilot=1` (desliga o Copilot);
+  - `ShowCopilotButton=0` e `...\Shell\Copilot\BingChat\IsUserEligible=0`;
+  - entradas do Copilot em `StartupApproved\Run|Run32|StartupFolder` marcadas
+    como **desativadas** (blob `03 00 …`);
+  - encerra o processo `copilot*` se estiver rodando.
+- Roda em: **Limpar Inicialização de Apps Microsoft** (e no start do agente) e
+  no novo comando **Desativar Copilot (Windows)**; o comando
+  **Desativar Apps em Segundo Plano** também aplica (`_aplicar_tweaks_windows`).
+- `_set_dword_hkcu()` centraliza a escrita no registro (testado com chave
+  temporária; 28 testes passando).
+
+**Como validar:** Controle → *Desativar Copilot (Windows)* em todos; fazer
+logoff/logon (ou reiniciar o Explorer). Em *Configurações → Aplicativos →
+Inicializar* o Copilot não deve mais ficar habilitado, e o botão some da barra.
+Como é HKCU, vale para a conta usada no laboratório (ex.: `ALUNO`).
+
+## IS-144 — Status do servidor na tela de bloqueio 🟢
+
+**Pedido:** a tela de bloqueio deve mostrar se o servidor está **conectado** ou
+**desconectado** e pedir para **ligar o PC01**.
+
+**Mudança (`data/repo/plugins/sysava_lock.ps1`):**
+- Novo rótulo `$lblServidor` no cartão (abaixo da mensagem), atualizado por um
+  **runspace** a cada 6 s: testa `/health` nos candidatos
+  (`-Server`, cache do agente `C:\Local\SysVa_lab\server_cache.txt`,
+  `%LOCALAPPDATA%\SysAva\servidor.txt`, `127.0.0.1:5000`) e grava o estado num
+  hashtable sincronizado.
+- Um timer de UI (1,5 s) só troca o texto/cor: **“Servidor conectado”** (verde)
+  ou **“Servidor desconectado - ligue o PC01 (servidor do laboratorio)”**
+  (laranja). Não trava a tela: a verificação fica em segundo plano.
+- `FormClosing` encerra o timer e o runspace.
+
+**Como validar:** com o PC01 desligado, a tela mostra o aviso; ligando o PC01,
+em ~6 s muda para “Servidor conectado”. O login continua funcionando com o modo
+offline (IS-135) quando o servidor está fora.
+
+**Deploy:** Controle → *Atualizar Tela de Bloqueio (sem UAC)* (ou o próximo
+logon, que baixa a versão nova automaticamente).
+
+## IS-145 — Aviso em destaque e seta para baixo na tela de bloqueio 🟢
+
+**Pedido:** destacar o aviso “Selecione seu nome ou …” e usar a seta para baixo
+(ou Page Down) do teclado para abrir a lista, facilitando o acesso.
+
+**Mudança (`data/repo/plugins/sysava_lock.ps1`):**
+- `$lblSub`: 13 pt **negrito** na cor âmbar (`255,214,90`) e texto
+  “Selecione seu nome ou RA (seta para baixo abre a lista)”.
+- `$txt` (ComboBox) e o formulário (`KeyPreview`) tratam **Down/PageDown**:
+  se a lista estiver fechada, abrem (`DroppedDown = $true`) e consomem a tecla;
+  se já estiver aberta, a navegação normal continua.
+- Clicar no aviso também foca e abre a lista (cursor de mão).
+
+**Como validar:** na tela de bloqueio, apertar ↓ (ou Page Down) abre os nomes;
+digitar filtra (autocomplete) e Enter confirma. Deploy: Controle →
+*Atualizar Tela de Bloqueio (sem UAC)*.
+
+## IS-146 — Chrome fora da inicialização e sem modo segundo plano 🟢
+
+**Pedido:** desativar a inicialização do Chrome junto com os demais apps.
+
+**Mudança (`lab_agent.py`, build 12 / `2026-10-29-chrome1`):**
+- `limpar_inicializacao_chrome()`: remove o Chrome do auto-start
+  (Run/RunOnce, pasta Inicializar e tarefas de logon) **sem fechar** o navegador
+  aberto pelo aluno e aplica a política
+  `HKCU\Software\Policies\Google\Chrome\BackgroundModeEnabled=0` (impede o Chrome
+  de continuar na RAM depois de fechado).
+- Roda no start do agente (junto com Roblox/Opera/Microsoft/WPS).
+- Comandos: **Limpar Inicialização do Chrome (bandeja)** e inclusão no
+  **Desativar Apps em Segundo Plano (WPS/Chrome/Microsoft/Opera)**.
+
+**Como validar:** Controle → *Limpar Inicialização do Chrome*; em
+`chrome://settings/system` o “continuar executando apps em segundo plano” fica
+desligado e o Chrome não aparece mais em *Inicializar* após logoff/logon.
+
+## IS-147 — Conta compartilhada `Alunos_EJA_Noite` 🟢
+
+**Pedido:** criar a conta `Alunos_EJA_Noite` (turma do EJA à noite).
+
+**Feito:** inserida em `app_users` (Supabase) como **aluno compartilhado**:
+- `username`/`ra`: `Alunos_EJA_Noite`
+- `name`: `Alunos EJA - Noite`
+- `role`: `student`, `is_active: true`
+- senha inicial definida pelo professor (trocar no Admin se necessário) e
+  hash bcrypt no mesmo formato do login.
+
+**Observações:**
+- Login aceita o usuário **ou** o RA (iguais), sem diferenciar maiúsculas.
+- Aparece no seletor da tela de bloqueio (`/api/alunos` → 73 alunos) e no Admin
+  (cache `app_users:v2` foi invalidado; `alunos_cache.json` regenerado).
+- Ainda **não** está matriculada em turma (`student_enrollments`) — matricular
+  no Admin quando a turma do EJA existir.
+- A pasta de atividades do agente usará `ALUNOS_EJA` (dois primeiros nomes) se
+  essa conta estiver associada a um PC.
+
+## IS-148 — Liberar a tela de bloqueio remotamente 🟢
+
+**Pedido:** em casos excepcionais (ex.: a turma do EJA à noite não consegue
+desbloquear), o professor deve conseguir, **de casa**, liberar as máquinas.
+
+**Mudança (agente build 13 / `2026-10-29-liberar1` + tela nova):**
+- Agente: comando **Liberar Telas (desativar bloqueio)** → `_liberar_tela(cfg)`
+  grava `tela_liberada.json` em `%LOCALAPPDATA%\SysAva` e `C:\ProgramData\SysAva`
+  com `expira_em` (epoch). Duração: minutos do comando ou **fim do dia (23:59)**
+  por padrão. Devolve `ok: telas liberadas ate HH:MM`.
+- **Reativar Telas (bloqueio)**: apaga o arquivo — o bloqueio volta no próximo
+  logon.
+- `sysava_lock.ps1`: `Test-TelaLiberada()` na inicialização (não abre a tela) e
+  no timer de status (se estava aberta, fecha sozinha via `$form.Close()`, o que
+  restaura as políticas, ex.: Gerenciador de Tarefas).
+- Painel: seção **🔓 Liberar telas (caso excepcional)** na aba Ferramentas
+  (fim do dia / 2h / 4h / 8h / 24h + botões Liberar e Reativar) e as duas ações
+  no seletor de Controle; trava build 13.
+
+**Ordem de deploy:** PC01 → *Atualizar Monitor (rápido)* até **build 13** →
+**Atualizar Tela de Bloqueio (sem UAC)** (necessário para a tela ler o arquivo)
+→ Ferramentas → *Liberar telas*.
+
+**Segurança:** a liberação expira sozinha; o arquivo fica no perfil do usuário
+(e em `ProgramData`, se gravável). Para uso excepcional, prefira “fim do dia”.
+
+## IS-149 — Status das telas de bloqueio no dashboard 🟢
+
+**Pedido:** saber no dashboard do servidor o estado das telas dos PCs.
+
+**Mudança (`lab_agent.py` build 14 / `2026-10-29-status-tela1`):**
+- `_status_tela()`: verifica se o `sysava_lock.ps1` está rodando (psutil, lendo a
+  linha de comando) e lê o `tela_liberada.json` (expiração válida).
+- O `/ping` passou a enviar `lock_running` (bool) e `lock_released_until` (epoch).
+- Painel web: nova coluna **Tela** na tabela do Monitor, com selos:
+  **liberada até HH:MM** (verde), **bloqueada** (vermelho), **sem tela** (cinza)
+  e **-** para agente antigo. `/detalhes` mostra “Tela de bloqueio: …”.
+- Streamlit (`plugins/monitor_rede`): coluna **Tela** no radar.
+
+**Como validar:** Controle → PCs build 14. A tabela mostra “bloqueada” quando a
+tela está aberta, “liberada até …” depois de usar *Liberar telas* e “sem tela”
+quando o lock não está rodando.
+
+## IS-150 — “Abrir site” lembra a última URL 🟢
+
+**Pedido:** deixar gravada no servidor a URL do “Abrir site” (ex.:
+`http://192.168.11.99:5000/download/ATUALIZAR_PC01.bat`) para não redigitar.
+
+**Mudança (`lab_receiver.py`):**
+- `site_padrao.json` na pasta do receiver guarda `{"url", "atualizado_em"}`.
+- O campo **URL** da aba Ferramentas carrega `_load_site_padrao()` (padrão:
+  `http://192.168.11.99:5000/download/ATUALIZAR_PC01.bat`).
+- `POST /abrir_site` grava a URL usada (`_save_site_padrao`) — a próxima visita
+  já abre com ela.
+- Sem `site_padrao.json`, o padrão continua sendo a Prova Motriz.
+
+**Atenção:** “Abrir site” abre a URL no **navegador** dos PCs selecionados. Para
+um `.bat`, o navegador **baixa** o arquivo (não executa). Para efetivamente
+atualizar o PC01, rode o `ATUALIZAR_PC01.bat` nele.
+
+## IS-151 — Aluno (RA) vencido não some mais do painel: mostra "último em dd/mm" 🟢
+
+**Sintoma:** depois de `USER_MAP_TTL_SECONDS` (16 h), o painel web do receiver
+trocava o aluno por **“sem RA”**, mesmo havendo uma associação anterior
+(ex.: `PC03-LAB03-V02` com VICTOR em 29/10 e `22139923-LAB-50137` com a conta
+compartilhada `Alunos_EJA_Noite`). No Streamlit a célula ficava **vazia**.
+
+**Mudança:**
+- `lab_receiver.py`: novo `_aluno_exibicao()` mantém o último RA conhecido e
+  acrescenta **“— último em dd/mm”** quando a associação venceu; sem nenhuma
+  associação a coluna mostra **“Não logado”** (antes “sem RA”). `/detalhes` idem.
+- `_fmt_aluno()` agora delega a `_aluno_exibicao()` (mesmo texto no dashboard e
+  nos detalhes).
+- Streamlit (`plugins/monitor_rede/lab_monitor.py` e cópia
+  `data/repo/plugins/lab_monitor.py`): mesma regra; célula vazia vira
+  **“Não logado”**.
+
+**Arquivos:** `data/repo/plugins/lab_receiver.py`,
+`plugins/monitor_rede/lab_monitor.py`, `data/repo/plugins/lab_monitor.py`,
+`docs/ISSUES_LOCAIS.md`.
+
+**Validar:** abrir o painel com uma máquina cuja associação tenha > 16 h —
+mostra `NOME (RA) — último em dd/mm`; máquina sem nenhuma associação mostra
+`Não logado`; associação recente continua só `NOME (RA)`; `py_compile` e render
+do template OK.
+
+## IS-152 — DevOps (Aulas 07 e 08): 3 projetos de CI/CD por aula no fórum 🟢
+
+**Pedido:** criar, no plugin **Atividades**, atividades das aulas 07 (Integração
+Contínua) e 08 (Entrega Contínua) de DevOps com GitHub e CI/CD, em equipes de 3,
+com tutorial passo a passo no VSCode (Python ou Node): criar repositório,
+rodar o projeto, subir por terminal/VSCode e cada integrante fazer commit ou
+issue. Três projetos por aula.
+
+**Feito:**
+- Script `scripts/seed_atividades_devops_ci_cd.py` publica **3 posts por aula**
+  (um por projeto), como `EduBot 🤖`, no fórum das aulas:
+  - I-A (subject 9): Aula 07 = lesson 912, Aula 08 = lesson 914.
+  - I-B (subject 41): Aula 07 = lesson 919, Aula 08 = lesson 920.
+- **Aula 07 — CI:** (1) Python + pytest + Actions; (2) Node + Jest + Actions;
+  (3) fluxo profissional com branches, 3 Issues e Pull Requests com matriz de CI.
+- **Aula 08 — CD:** (1) Python gera relatório e publica **Release** em tag `v*`;
+  (2) Node faz build e **deploy no GitHub Pages**; (3) pipeline
+  build → deploy com **ambiente `producao` e aprovação manual**.
+- Cada post traz divisão da equipe de 3 (A dono do repo, B branch/PR, C issue +
+  review/merge), comandos, arquivos, workflow YAML, critérios (3 commits +
+  1 issue + 1 PR + pipeline verde) e erros comuns.
+- Seed **idempotente** (pula pelo título do projeto); `--dry-run` para conferir,
+  `--apply` para gravar. Total publicado: **12 posts** (6 projetos × 2 turmas).
+
+**Arquivos:** `scripts/seed_atividades_devops_ci_cd.py`, `docs/ISSUES_LOCAIS.md`.
+
+**Validar:** abrir Aulas → disciplina DevOps → Aula 7/8 → fórum com 3 posts de
+projeto; reexecutar o script deve informar `12 já existiam` (sem duplicar).
+
+## IS-153 — DevOps (Aula 09): atividade de automação com pipeline 🟢
+
+**Pedido:** pensar/criar uma atividade da Aula 09 (“Automação em TI: o motor da
+eficiência e segurança no ecossistema DevOps”) envolvendo automação com
+pipeline — podendo ser chatbot ou outra automação.
+
+**Feito:** uma atividade publicada no fórum (uma por turma), como `EduBot 🤖`:
+- I-A (subject 9): lesson 927.
+- I-B (subject 41): lesson 928.
+
+**Projeto:** **chatbot de atendimento (FAQ) automatizado por GitHub Actions**.
+- `bot.py` responde por similaridade sobre `faq.json` (normaliza acentos/caixa).
+- `run_batch.py` executa o bot em lote sobre `casos_teste.json`, gera
+  `relatorio/relatorio.html` e **falha o pipeline** se a taxa de acerto < 80%.
+- Pipeline com 2 jobs: `testes` (push/PR) e `automacao`
+  (`schedule` diário em UTC + `workflow_dispatch`) que publica o relatório como
+  **artefato** `relatorio-automacao`.
+- Equipe de 3 (A bot/repo, B lote/PR, C workflow agendado + issue + review) e
+  desafio extra: trocar por bot que lista issues com `GITHUB_TOKEN` (sem
+  segredos externos), mantendo os 2 jobs.
+
+**Arquivos:** `scripts/seed_atividade_devops_a09_automacao.py`,
+`docs/ISSUES_LOCAIS.md`.
+
+**Validar:** Aulas → DevOps → Aula 9 → fórum com o post do projeto; reexecutar o
+script deve informar `2 já existiam`.
+
+## IS-154 — Monitor: “Designar aluno” precisa valer na criação das pastas 🟢
+
+**Sintoma:** designar **Julia** a um PC (`Controle → Aluno do PC`) e depois
+criar a estrutura de pastas resultava em `7_Ano` (aluno anterior), não
+`JULIA_GABRIELLA`.
+
+**Diagnóstico (dados de 04/11):** a designação da Julia foi gravada
+(`lab_users.json`, 08:35:30). O `7_Ano` veio de **outros PCs** que estavam
+designados com a conta `7 Ano A` (08:38) e foram incluídos na criação (a ação usa
+os PCs marcados na aba Monitor / “todas”). A pasta usa os **dois primeiros
+nomes** de propósito (regra do agente `_nome_pasta_aluno`).
+
+**Mudança (sem mexer na regra de 2 nomes):**
+- `lab_receiver.py`: a aba **Ferramentas** ganhou a prévia
+  **👥 Aluno e pasta que serão usados em cada PC** (Rótulo · Aluno designado ·
+  Pasta), deixando claro o que cada PC vai criar. A pasta usa os **dois
+  primeiros nomes** (`JULIA GABRIELLA...` → `JULIA_GABRIELLA`; `7 Ano A` →
+  `7_Ano`).
+- `designar_aluno()` agora **propaga a designação na hora** para os servidores
+  auxiliares (novo `POST /api/peer/user`, com `PEER_TOKEN`), sem esperar o sync
+  de 5 s. Assim, criar pastas no painel de outro servidor usa o aluno novo.
+- `_associar_usuario_maquina(..., registrar_historico=False)` no peer evita
+  gravar o histórico em duplicidade.
+- `estruturar()` registra no log
+  `ESTRUTURAR: <PC> -> aluno '<nome>' pasta '<pasta>'`, para conferir o nome real
+  usado.
+- `SERVER_VERSION` → `2026-11-04-designar-aluno`.
+
+**Arquivos:** `data/repo/plugins/lab_receiver.py`,
+`plugins/monitor_rede/lab_monitor.py`, `docs/ISSUES_LOCAIS.md`.
+
+**Validar:** designar Julia ao PC X → Ferramentas → abrir a prévia e conferir
+`X → JULIA GABRIELLA... → JULIA_GABRIELLA` → marcar **só o PC X** (ou usar
+“todas” ciente de que cada PC usa o seu aluno) → *Criar estrutura* → pasta
+`...\JULIA_GABRIELLA\Aula_01`. Teste do Flask: payload de um PC designado para
+Julia leva `JULIA GABRIELLA DE OLIVEIRA SALES` (agente corta em
+`JULIA_GABRIELLA`). Reiniciar o receiver (`reiniciar_servidor.bat`).
+
+## IS-163 — Bandeja: busca o servidor atual antes de abrir o painel 🟢
+
+**Pedido:** o item **Servidor do laboratório (5000) → Abrir painel do monitor**
+abria sempre `http://<IP deste PC>:5000`. Em PCs que não são o servidor (ou
+quando o servidor mudou de IP por DHCP ou está no notebook/PC auxiliar), o
+navegador caía em página vazia.
+
+**Mudança (`sysava_tray.ps1`):**
+- Nova descoberta em camadas (`Find-ServidorUrl`), na mesma ordem do agente:
+  1. porta 5000 local (este PC é o servidor);
+  2. cache da bandeja `%LOCALAPPDATA%\SysAva\servidor_tray.txt`;
+  3. cache do agente (`plugins/server_cache.txt`, normaliza o sufixo `/ping`);
+  4. URLs de `plugins/peers.txt`;
+  5. **broadcast UDP 5001** (`SYSAVA_DISCOVER` → `SYSAVA_SERVER ip:porta`),
+     também em `192.168.10.255`/`192.168.11.255`.
+- Cada candidato só é aceito se `GET /health` responder `status=online`; a URL
+  encontrada é gravada no cache da bandeja.
+- **Abrir painel do monitor** e o novo **Buscar servidor na rede** usam essa
+  descoberta. O item do menu passa a mostrar `online (IP)`/`offline`, o tooltip
+  inclui o servidor e o monitor em segundo plano (runspace) relê os caches a
+  cada ~10 s — o ícone fica verde/amarelo mesmo com o servidor em outro PC.
+- **Iniciar servidor** só fica habilitado quando nenhum servidor é encontrado
+  (evita abrir uma segunda instância); **Parar servidor** só com a porta 5000
+  local ativa.
+- `-Status` agora mostra a linha **Servidor atual**.
+
+**Arquivos:** `sysava_tray.ps1`, `docs/ISSUES_LOCAIS.md`.
+
+**Validar:** `powershell -File sysava_tray.ps1 -Status` → linha **Servidor
+atual** com a URL correta (ou `nao encontrado`). Na bandeja: **Servidor do
+laboratório → Abrir painel do monitor** abre o painel mesmo com a porta 5000
+fechada neste PC; **Buscar servidor na rede** mostra `Servidor encontrado:
+http://...:5000`. Desligar o servidor e reabrir → aviso de servidor não
+encontrado. Reiniciar a bandeja para carregar o código novo.
+
+## IS-164 — Bloqueio rígido de jogos e tela reaberta sem login 🟢
+> ⚠️ A parte de *jogos sempre fechados* foi ajustada pela **IS-172**: agora os jogos só são fechados com o bloqueio persistente ativo.
+
+**Sintoma:** PCs com aluno jogando **Roblox** e **Loki/Poki** apareciam no painel
+como `Roblox`/`Games` mas continuavam ativos; **Fortnite** não era fechado e a
+tela de bloqueio podia ser encerrada sem o aluno validar o RA.
+
+**Mudança (`lab_agent.py`, build 15 / `2026-11-12-bloqueio2`):**
+- `BLOCKED_PROCESS_KEYWORDS` agora inclui **Fortnite** (`fortnite`,
+  `fortnitelauncher`) e o launcher da **Epic**; `BLOCKED_SITE_KEYWORDS` cobre
+  Fortnite/Epic, Roblox, Loki/Poki/Friv/Y8/ClickJogos/Gartic, Temple Run,
+  Subway Surf, Among Us, Free Fire, Valorant/CS/Minecraft etc.
+- O **watchdog** derruba esses processos e fecha as janelas de jogos **sempre**
+  (`WATCHDOG_EXCLUDE_KEYWORDS` vazio), sem depender de "Bloquear Sites/Jogos".
+  Esse bloqueio persistente (`block_state.json`) fica só para redes sociais/YouTube.
+- `get_category()` detecta jogos também por **processo** (Roblox/Fortnite/LoL),
+  não só pelo título da janela.
+- **Tela de bloqueio:** `sysava_lock.ps1` grava
+  `%LOCALAPPDATA%\SysAva\tela_ok.json` ao validar (aluno, admin ou modo offline).
+  O agente comparar o `em` com o **início da sessão do Windows**
+  (`psutil.users().started`) e **relança a tela** quando o processo some sem
+  token válido (cooldown de 30 s; não relança se o professor liberou via
+  `tela_liberada.json`). O payload passou a enviar `lock_ok`/`lock_ok_ra`; o
+  painel mostra **liberada (aluno)** em vez de "sem tela".
+- `bloquear_hosts.ps1` ganhou Fortnite/Epic e os portais de jogos.
+- `lab_agent.ps1` foi **ressincronizado** (cópia embutida idêntica ao `.py`).
+
+**Arquivos:** `data/repo/plugins/lab_agent.py`, `lab_agent.ps1`,
+`sysava_lock.ps1`, `lab_receiver.py`, `plugins/monitor_rede/lab_monitor.py`,
+`bloquear_hosts.ps1`, `blocked_apps.json`, `AGENTS.md`,
+`plugins/monitor_rede/README.md`.
+
+**Validar:** rodar **Atualizar Monitor (rápido)** nos PCs (painel mostra build
+15). Abrir Roblox/Fortnite → processo encerrado em até ~4 s. Fechar a tela de
+bloqueio sem validar → ela reabre em até ~30 s; validar o RA → painel mostra
+**liberada (aluno)** e a tela não volta até o próximo logon.
+
+## IS-165 — Controle com várias ações simultâneas 🟢
+
+**Pedido:** às vezes é preciso aplicar duas ações juntas (ex.: fechar jogos +
+alerta), mas a aba Controle só tinha **um** `selectbox`.
+
+**Mudança (`lab_receiver.py`):**
+- Ações viraram **chips agrupados** (Avisos, Jogos/sites, Limpeza, Tela/áudio,
+  Sistema) com `name="acao"` repetido, **Marcar/desmarcar todas**, contador e
+  **presets** de 1 clique (Anti-jogo, Aula focada, Liberar aula, Faxina, Fim da
+  aula). O formulário aceita `request.form.getlist('acao')`.
+- `_write_local_commands()` passa a **enfileirar** em `pending_queue` (limite de
+  50 por PC, dedup do mesmo par ação/mensagem, expira em `COMMAND_TTL_SECONDS`).
+  O `/ping` entrega **uma ação por ciclo** (~10 s) e devolve `queue_left`; o
+  fallback `pending_command` de agentes/versões antigas continua funcionando.
+- O plugin Streamlit (`plugins/monitor_rede/lab_monitor.py`) trocou o
+  `selectbox` por `st.multiselect` + os mesmos presets e envia um POST por ação.
+
+**Arquivos:** `data/repo/plugins/lab_receiver.py`,
+`plugins/monitor_rede/lab_monitor.py`, `plugins/monitor_rede/README.md`,
+`AGENTS.md`.
+
+**Validar:** aba Controle → marcar 2+ ações (ou clicar em **Anti-jogo**) →
+*Executar nas selecionadas*; a mensagem mostra `N ação(ões)` e o PC recebe uma a
+cada ~10 s (log do agente `Comando recebido...`). Repetir a mesma ação não
+duplica na fila.
+
+## IS-169 — Runtime do monitor movido para `data/repo/plugins/monitor/` 🟢
+
+**Pedido:** concentrar todos os arquivos do sistema de monitoramento em uma pasta
+`monitor/` e corrigir os caminhos de apontamento, conferindo o que ficou fora.
+
+**Mudança de layout (runtime, `data/repo/plugins/monitor/`):**
+- Scripts: `lab_receiver.py`, `lab_receiver.bat`, `lab_agent.py/.ps1`,
+  `lab_monitor.py`, `lab_monitor_doc.md`, `sysava_lock.ps1`, `tray_servidor.*`,
+  `tray_aluno.*`, `diagnostico_servidor.*`, `reiniciar_servidor.*`,
+  `INICIAR_SERVIDOR.*`, `instalar_servidor_auto.*`, `servidor_watchdog.ps1`,
+  `bloquear_hosts.*`, `ATUALIZAR_PC01.*`, `check_sysava.bat`, `audit_log.py`.
+- Dados/apoio movidos para a mesma pasta: `acesso_coletivos.json`,
+  `alunos_cache.json`, `blocked_apps.json`, `emails.json`, `lab_users.json`,
+  `lab_status.json`, `lab_labels.json`, `site_padrao.json`,
+  `receiver_secret.key`, `logo_sysava.png`, `wallpaper_sysava.png`,
+  `definir_volume.ps1`, `aplicar_papel_parede.ps1`,
+  `aplicar_dns_seguro.ps1`, `config.env.example`, `gerar_logo_sysava.py`,
+  `categorias/`, `.atividades/`, `.relatorios/`.
+- O restante de `data/repo/plugins/` (notas, frequência, planos, auditoria,
+  backups) ficou onde estava — não é runtime do monitor.
+
+**Paths corrigidos:**
+- `lab_receiver.py`: `PROJECT_ROOT` e a leitura de `data/Turmas` passaram a subir
+  **quatro** níveis (monitor → plugins → repo → data → raiz); `.env` continua
+  sendo lido da raiz. O receiver agora serve `/download/*` e `/servidor.zip` da
+  pasta `monitor/` (todos os arquivos da whitelist e do zip estão lá).
+- `lab_monitor.py` (Streamlit): resolução robusta (`SYSAVA_PLUGIN_DIR` →
+  `data/repo/plugins/monitor` → `data/repo/plugins`), achando a raiz por
+  `app.py`/`data/repo/plugins`; a cópia de runtime foi sincronizada.
+- `.sysenv`/`.env`: `lab_receiver.bat`, `tray_servidor.ps1`,
+  `reiniciar_servidor.ps1`, `instalar_servidor_auto.ps1` e
+  `diagnostico_servidor.ps1` passaram a procurar quatro níveis acima (mantendo
+  o caminho antigo como fallback).
+- `ATUALIZAR_PC01.bat`, `check_serv.py`, `run_installer.bat`,
+  `servidor_instalacao.bat` e `sysava_tray.ps1` (receiver/logo/peers) apontam
+  para `monitor/` com fallback para a pasta antiga.
+- `SERVER_VERSION` → `2026-11-12-monitor-pasta`.
+
+**Arquivos:** `data/repo/plugins/monitor/*`, `plugins/monitor_rede/lab_monitor.py`
+e `README.md`, `check_serv.py`, `run_installer.bat`, `servidor_instalacao.bat`,
+`sysava_tray.ps1`, `AGENTS.md`, `plugins/README.md`, `docs/PLUGINS.md`.
+
+**Validar:** `python -m py_compile` nos `.py`; parser do PowerShell nos `.ps1`;
+receiver iniciado de `monitor/` responde `/health` (versão
+`2026-11-12-monitor-pasta`); `/download/lab_agent.py`, `logo_sysava.png`,
+`emails.json`, `definir_volume.ps1` e `config.env.example` retornam 200;
+`/servidor.zip` contém `lab_receiver.py`, `audit_log.py`, `emails.json`,
+`blocked_apps.json`, `categorias/LEIA-ME.txt` e `check_sysava.bat`.
+
+## IS-170 — Ferramentas em abas + abrir SysAva com RA no navegador 🟢
+
+**Pedido:** a aba **Ferramentas** do painel web era uma página longa e cansativa.
+Separar por funcionalidade, com abas/controles, e criar um recurso para abrir o
+SysAva já com o RA do aluno no navegador escolhido — sem reiniciar o PC ao
+trocar de estudante.
+
+**Mudança (painel web, `data/repo/plugins/monitor/lab_receiver.py`):**
+- A seleção de PCs (e **Aplicar em todas**) ficou fixa no topo; abaixo entraram
+  **sub-abas**: **📁 Atividades**, **🌐 Sites e RA**, **🔒 Tela** e
+  **🧹 Manutenção**. A seção "Último comando por PC" virou um `details`
+  recolhível. O visual usa chips/abas no mesmo estilo da aba Controle.
+- **🌐 Sites e RA → Abrir SysAva com o RA do aluno:** escolhe **aluno (RA)**,
+  **navegador** (padrão, Chrome, Edge, Firefox, Brave ou Opera) e a **URL**
+  (padrão `https://sysava.streamlit.app`, ou `SYSAVA_PORTAL_URL` no `.env`);
+  grava a última URL em `sysava_padrao.json`.
+  - A rota `POST /abrir_sysava` monta `?ra=<RA>`, associa o aluno ao PC
+    (`lab_users.json`) e propaga aos peers, e envia o comando
+    **"Abrir SysAva (RA)"** com `{url, browser, ra}`. Requer **agente build 16+**
+    (PCs antigos são ignorados com aviso).
+- **🌐 Abrir site** ganhou o mesmo seletor de navegador (`navegador_site`); o
+  JSON agora leva `browser`. O agente build 16 usa o navegador escolhido; os
+  anteriores continuam abrindo no padrão.
+- **Agente (`lab_agent.py` 16 / `2026-11-12-sysava-ra`):** novo branch
+  **"Abrir SysAva (RA)"**, `_abrir_url(url, navegador)` e
+  `_encontrar_navegador` (Chrome/Edge/Firefox/Brave/Opera em Program Files/
+  LocalAppData + `shutil.which`), com fallback para `os.startfile`.
+  `lab_agent.ps1` foi ressincronizado.
+- A tabela do Monitor passou a usar `agent_build_min=16`, sinalizando
+  **"agente antigo — atualize"** nos PCs com build anterior.
+- **🔄 Atualizar lista de alunos**: botão em **Ferramentas → Sites e RA** e em
+  **Controle → Aluno do PC**. `POST /atualizar_alunos` chama
+  `_lista_alunos(forcar=True)`, ignora o cache de 30 min e relê
+  `app_users` (`role=student`); a lista atualiza o seletor de RA e a tela de
+  bloqueio (`/api/alunos`). Em falha de Supabase, mantém o cache e avisa.
+
+**Arquivos:** `data/repo/plugins/monitor/lab_receiver.py`, `lab_agent.py`,
+`lab_agent.ps1`, `docs/ISSUES_LOCAIS.md`, `AGENTS.md`,
+`plugins/monitor_rede/README.md`.
+
+**Validar:** (1) `py_compile`/parser OK; (2) render do dashboard com 4 sub-abas
+e 1 campo `todas`; (3) teste do `/abrir_sysava` com dispatch fake devolve
+`{"url": "...?ra=123", "browser": "chrome"}` e associa o RA; (4) no painel,
+atualizar os agentes (build 16) e usar **Ferramentas → Sites e RA → Abrir
+SysAva com RA** em um PC; o navegador escolhido abre a página com o RA.
+
+## IS-171 — Bandejas: IP/2º servidor e RA do aluno 🟢
+
+**Pedido:** a bandeja do servidor não atualizava o IP nem abria a janela do
+segundo servidor (só mostrava o IP encontrado); a bandeja do aluno precisava
+mostrar o RA para copiar.
+
+**Mudança (`data/repo/plugins/monitor/`):**
+- **`tray_servidor.ps1`**: o título/tooltip/menu passam a mostrar o **IP atual**
+  (atualizado a cada ~15 s) e o item **Abrir painel web (IP:5000)**. Novo item
+  **Abrir painel do 2º servidor** consulta `/api/peer/state` e abre o peer
+  (notebook ou PC auxiliar). `-Status` mostra o IP. Também ganhou os atalhos
+  **Abrir SysAva (8501)** e **Apps** (inicia o Streamlit local quando `.sysenv`/
+  `app.py` existem; senão abre o portal na nuvem) e **Parar todos os apps**.
+- **`sysava_tray.ps1`** (bandeja do notebook): além do servidor principal, o
+  menu agora lista **todos os servidores encontrados** (local + peers + UDP),
+  com **Abrir painel do 2º servidor** e submenu por IP; o título mostra o IP do
+  servidor atual (não só o IP local). A descoberta roda em runspace a cada 20 s.
+  O **IP local e o `ServidorIp` são recalculados a cada ~25 s** e cada candidato
+  só entra na lista se `/health` responder — o IP antigo da escola
+  (`192.168.11.x`) deixa de aparecer como online quando o notebook muda para
+  `192.168.0.x`; o servidor local atual (`192.168.0.8`) é detectado por UDP.
+  **A bandeja antiga precisa ser reiniciada** para carregar essa versão.
+- **`tray_aluno.ps1`**: o título mostra **nome + RA**; novos itens **Mostrar meu
+  RA** e **Copiar meu RA** (além do e-mail). O RA vem da API/cache
+  (`meu_email.txt`) ou de `%LOCALAPPDATA%\SysAva\ultimo_ra.txt` (gravado pelo
+  `sysava_lock.ps1`). `-Status` mostra o RA.
+
+**Arquivos:** `sysava_tray.ps1`, `data/repo/plugins/monitor/tray_servidor.ps1`,
+`data/repo/plugins/monitor/tray_aluno.ps1`, `plugins/monitor_rede/README.md`,
+`AGENTS.md`.
+
+**Validar:** `powershell -File ...\tray_servidor.ps1 -Status` mostra o IP;
+`tray_aluno.ps1 -Status` mostra o RA (após passar pela tela de bloqueio). Na
+bandeja, o item do 2º servidor abre o painel do peer; o aluno copia o RA pelo
+menu. Reinicie as bandejas para carregar o script novo (ou use **Atualizar
+Bandeja do Aluno** no painel).
+
+## IS-172 — Roblox não desbloqueava (watchdog) 🟢
+
+**Sintoma:** depois de "Desbloquear Sites/Jogos", o Roblox continuava sendo
+encerrado a cada ~4 s. Causa: na IS-164 o watchdog passou a derrubar
+Roblox/Fortnite/League **sempre**, ignorando o `block_state.json`; o
+"Desbloquear" só apagava o arquivo de estado.
+
+**Correção (`lab_agent.py` 17 / `2026-11-12-desbloqueio`):**
+- O watchdog volta a respeitar o estado: com `block_state.json` **inativo**,
+  processos em `WATCHDOG_EXCLUDE_KEYWORDS` (**roblox**, **fortnite**,
+  **leagueclient**, **epicgameslauncher**) ficam livres.
+- Janelas de jogos/sites só são fechadas quando o bloqueio está **ativo**; com
+  "Desbloquear Sites/Jogos" param de ser fechadas.
+- O comando manual **Bloquear Jogos** continua fechando uma vez (sem manter).
+- `lab_agent.ps1` foi ressincronizado. A tabela do painel passa a mostrar
+  build 17.
+
+**Como liberar um PC agora:**
+1. **Controle → Atualizar Monitor (rápido, sem UAC)** para instalar o agente 17.
+2. **Controle → Jogos → Desbloquear Sites/Jogos** (remove o `block_state.json`).
+3. Se o painel não estiver acessível, no PC: apague
+   `C:\Local\SysVa_lab\block_state.json`, substitua o `lab_agent.py` pelo novo
+   (`/download/lab_agent.py`) e reinicie o agente/logon.
+
+**Arquivos:** `data/repo/plugins/monitor/lab_agent.py`,
+`data/repo/plugins/monitor/lab_agent.ps1`, `plugins/monitor_rede/README.md`,
+`AGENTS.md`, `docs/ISSUES_LOCAIS.md`.
+
+**Validar:** com `block_state.json` ausente, o watchdog não mata
+`RobloxPlayerBeta.exe`; com o arquivo ativo, volta a matar e fecha janelas;
+"Desbloquear" remove o arquivo e libera.
+
+## IS-188 - Notas iSeduc: replicação entre trimestres lendo o portal 🟢
+
+**Contexto:** Fundamentos de UI/UX (I-A) estava com notas só no 1º trimestre
+no iSeduc. O caderno local divergia da tela, então a cópia precisava sair dos
+inputs do próprio portal (T1) para T2/T3.
+
+**Solução:** ver `apps/ISSUES.md` **AP-042**. Resumo: modo
+`--replicar-origem/--replicar-destinos` no `bot_lancar_notas.py`, leitura
+`ler_notas_trimestre()` no `RegistradorNotas`, conferência com F5 + releitura e
+regravação das células divergentes, commit por `TAB`/`blur` (`ng-blur` do
+portal) e retry no mapeamento dos RAs após troca de aba.
+
+**Execução:** I-A / Fundamentos UI/UX, T1 → T2 e T3, 17 alunos (LUARA sem nota
+no portal; “0,0” da tela é placeholder de input vazio). T3 foi reescrito após
+a correção do `TAB`.
+
+**Ficha de acompanhamento:** `data/fichas/` regerada com
+`scripts/baixar_ficha_rendimento.py --preset fundamentos-ui` (I-A e I-B); o
+PDF de I-A passou a mostrar T2/T3 iguais ao T1.
+
+**Arquivos:** `apps/bots/registrar_notas.py`,
+`apps/analise_notas/bot_lancar_notas.py`,
+`apps/analise_notas/analise_notas_streamlit.py`,
+`apps/analise_notas/core.py`, `apps/analise_notas/README.md`,
+`scripts/baixar_ficha_rendimento.py`, `data/fichas/*.pdf` (local),
+`apps/ISSUES.md`.
+
+**Como validar:** iSeduc → Notas → FUNDAMENTOS DE UI/UX (I-A) → 2º e 3º
+trimestres com os mesmos `NM1/NM2/NM3` do 1º e médias recalculadas. No app
+8511, usar o expander *🔁 Replicar notas do portal entre trimestres* em modo
+simulação.
+
+## IS-189 - Notas iSeduc: recuperações RPT a partir do SysAva 🟢
+
+**Contexto:** Fundamentos UI/UX (I-A e I-B) estava com T1=T2=T3, mas as
+colunas `RPT1/2/3` da ficha vazias. As recuperações estavam no SysAva como
+avaliações `type='RM'` no Supabase: `RECUPERAÇÃO_T1` (id 63), com ANDRESSA
+(I-A) 10, ANA KAROLLINY (I-B) 10 e MATHEUS SOUSA SILVA (I-B) 9. No portal, o
+RPT fica nas abas **`RESULTADO DO Xº TRIMESTRE`** (colunas `1RPT/2RPT/3RPT`),
+não na tabela normal de notas.
+
+**Solução:** ver `apps/ISSUES.md` **AP-043**. Resumo: seleção de aba por texto
+exato (`selecionar_aba_exata`), `lancar_recuperacao()` (lê RPT/MTF, grava,
+recalcula, F5 e confere), CLI `--recuperacao`/`--rm-assessment-id` lendo a RM
+do Supabase e recortando pela matrícula da turma.
+
+**Execução (17/11/2026):** I-B ANA 10,0→MTF 10,0 e MATHEUS 9,0→MTF 9,0; I-A
+ANDRESSA 10,0→MTF 10,0. Fichas regeradas em `data/fichas/`: MAF 7,1 / 5,7 /
+6,7 (antes 5,6 / 4,0 / 5,0).
+
+**Arquivos:** `apps/bots/registrar_notas.py`,
+`apps/analise_notas/bot_lancar_notas.py`, `apps/analise_notas/README.md`,
+`apps/tests/test_analise_notas.py`, `apps/ISSUES.md`,
+`data/fichas/*.pdf` (local).
+
+**Como validar:** iSeduc → Notas → UI/UX → `RESULTADO DO 1º TRIMESTRE`; rodar
+`bot_lancar_notas.py --turma-id 1|2 --disciplina-id 8 --trimestre 1
+--recuperacao --simular` e conferir RPT/MTF.
+
+## IS-190 - Programação Mobile: T1/T2/T3 da I-A (plugin Notas → portal) 🟢
+
+**Contexto:** o portal estava vazio em Mobile nas duas turmas. O professor
+lançou as notas da I-A no plugin **Notas** e salvou o quadro em
+`data/fichas/quadro_notas_..._ProgMobile.png`. O quadro confere com o caderno
+local (N1/N2/N3 do T1).
+
+**Execução:** `bot_lancar_notas.py --turma-id 1 --disciplina-id 5
+--trimestre 1 --incluir-zeros` → 17 alunos (FRANCISCO JOEL fora do portal;
+LUARA/[ALUNO]/GUILHERME pela lista negra). Piso AEE: **CLEISON** `6/9/6` e
+**PEDRO** `6/6/6`. ANDRESSA `4/0/2,5` (como no plugin; AV02 10,0 não usada).
+
+**T2/T3:** `--replicar-origem 1 --replicar-destinos 2 3` copiou os 17 alunos;
+conferência pós-F5 em cada destino: 17 iguais ao T1. Ficha regerada com
+T1=T2=T3 e MAF (0 divergências em 18 linhas).
+
+**Verificação:** releitura em sessão nova: 17 alunos com T1/T2/T3 e MTF;
+RPT vazio. Ficha em
+`data/fichas/2ª SÉRIE - Turma I-A (Técnico DS)_PROGRAMAÇÃO PARA DISPOSITIVOS MÓVEIS.pdf`;
+levantamento em `data/logs/mobile_notas_sysava.csv`.
+
+**Pendente:** só a I-B (há seminários/AV02 no Supabase; falta definir o N3).
+
+**Arquivos:** `apps/analise_notas/bot_lancar_notas.py`,
+`scripts/baixar_ficha_rendimento.py`, `data/fichas/*` (local),
+`data/logs/mobile_notas_sysava.csv` (local), `apps/ISSUES.md`.
+
+**Como validar:** iSeduc → Notas → Mobile (I-A) → 1º trimestre; abrir a ficha
+em `data/fichas/` e conferir as 17 linhas + LUARA sem nota.
+
+## IS-191 - Registro de aulas: Mobile I-B (23/07 a 30/07) 🟢
+
+**Contexto:** a I-B tinha 12 registros de Mobile no portal (até 20/07, todos
+“Aguardando confirmação”) e **10 planos prontos** em `aulas/prontas/` para
+23/07–30/07 (Aulas 13–22) que nunca foram registrados.
+
+**Execução:** `registrar_aulas.py --files ...` com os 10 planos; todos
+registrados e movidos para `aulas/registradas/`.
+
+**Verificação:** portal I-B passou de **12 → 22 registros** (23/07: 5; 24/07:
+1; 27/07: 2; 30/07: 2), todos “Aguardando confirmação”. I-A continua com 36.
+
+**Pendente (sábados, o robô pula por regra):**
+- I-A: 11/07 07:10 (Aula 9); 15/08 08:10/09:30 e 12/09 07:10 — os dois últimos
+  têm conteúdo da I-B e repetem Aulas 3/4/5 já registradas; conferir.
+- I-B: 11/07 08:10/09:30 (Aulas 1/2), “reservado para a coordenação”.
+
+**Arquivos:** `aulas/prontas/` (planos movidos), `aulas/registradas/`,
+`apps/bots/registrar_aulas.py`, `apps/ISSUES.md`.
+
+**Como validar:** iSeduc → Registro de aulas → Mobile I-B → 23/07 a 30/07.
+
+## IS-192 - Mobile: fechamento 40/40 e sincronização da carga anual 🟢
+
+**Contexto:** a carga anual tem **8 disciplinas modulares mensais** de 40
+aulas. Mobile estava em 36/40 na I-A e 22/40 na I-B. Sábado não pode ser
+registrado pelo professor (calendário recusa o dia), então fica para a
+coordenação.
+
+**Execução:**
+- I-B: 16 planos gerados/registrados (Aulas 23–32 e 35–40) em 31/07, 03/08,
+  06/08, 07/08, 10/08 e 13/08 → portal 22 → 38.
+- I-A: 36 (4 restantes são sábados).
+- `historico_aulas` sincronizado com os 74 registros do portal (36 I-A + 38
+  I-B), incluindo “Aguardando confirmação”.
+- `planejamento` I-A: 36 `registrada` + 4 `pendente`; I-B: 2 `pendente`
+  (11/07 Aulas 1/2). Removidas 6 linhas falsas do gerador + 1 obsoleta.
+
+**Carga (Mobile = 40):** I-A 36+4=40; I-B 38+2=40; faltantes 0.
+
+**Sábados para a coordenação (`aulas/pendentes/`):**
+- I-A: 11/07 Aula 9; 15/08 Aulas 3/4; 12/09 Aula 5 (os dois últimos com
+  conteúdo da I-B — conferir).
+- I-B: 11/07 Aulas 1/2.
+
+**Importante:** `registrar_aulas.py` voltou a **pular sábados sempre**; a
+tentativa com `--permitir-sabado` foi revertida e falhou no calendário
+(“Dia 11 não encontrado”). Não registrar sábado pelo robô.
+
+**Arquivos:** `apps/bots/registrar_aulas.py`, `aulas/pendentes/`,
+`aulas/registradas/`, `data/escola_ativa.db` (histórico/planejamento),
+`apps/ISSUES.md`.
+
+**Como validar:** app 8510 → Consolidadas → Mobile I-A/I-B = 40 (registradas
++ pendentes), faltantes 0; portal com 36/38 registros.
+
 ## Comandos úteis
 
 ```powershell
@@ -4684,6 +6061,30 @@ python scripts/reset_quiz_attempts.py --apply
 # Verificar se o cache local está ligado
 python -c "from services import local_cache as lc; print(lc.cache_enabled())"
 
+# Limpar uma chave "envenenada" do cache local (ex.: lista vazia de turmas)
+python -c "from services import local_cache as lc; lc.invalidate('classes')"
+python -c "from services import local_cache as lc; print(lc.status())"
+
+# Bandeja do SysAva (notebook): status + servidor atual descoberto na rede
+sysava_tray.bat
+powershell -NoProfile -ExecutionPolicy Bypass -File sysava_tray.ps1 -Status
+
+# Servidor auxiliar (PC do laboratorio): bandeja no logon + diagnostico
+data\repo\plugins\monitor\tray_servidor.bat
+powershell -NoProfile -ExecutionPolicy Bypass -File data\repo\plugins\monitor\tray_servidor.ps1 -Status
+data\repo\plugins\monitor\diagnostico_servidor.bat
+
+# Pacote de atualizacao servido pelo receiver (ja inclui tray + diagnostico)
+curl.exe -L -o servidor.zip http://127.0.0.1:5000/servidor.zip
+
+# Tailscale (acesso remoto ao laboratorio - ver docs/TAILSCALE.md)
+tailscale status
+tailscale ip -4
+# no PC01-LAB02 (Admin): anunciar a sub-rede do laboratorio
+tailscale up --advertise-routes=192.168.10.0/23
+# no notebook: aceitar as rotas anunciadas
+tailscale up --accept-routes
+
 # Backup limpo (sem Base64) a partir de data/escola_ativa.db
 python scripts/backup_clean.py
 
@@ -4703,11 +6104,22 @@ python scripts/migrar_excecoes_para_banco.py --dry-run
 python scripts/migrar_excecoes_para_banco.py
 
 # Bloqueio não invasivo via hosts (rodar em cada PC; pede Administrador)
-powershell -NoProfile -ExecutionPolicy Bypass -File data\repo\plugins\bloquear_hosts.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File data\repo\plugins\bloquear_hosts.ps1 -Revert
+powershell -NoProfile -ExecutionPolicy Bypass -File data\repo\plugins\monitor\bloquear_hosts.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File data\repo\plugins\monitor\bloquear_hosts.ps1 -Revert
 
 # Verificar se o receiver esta ouvindo (TCP 5000 + UDP discovery 5001)
 netstat -ano | findstr ":5000 :5001"
+
+# Contas coletivas e janela EJA (editar e reiniciar o receiver)
+data\repo\plugins\monitor\acesso_coletivos.json
+# Lista: {"coletivos": ["7anoA","8ano","1alunoEja"], "eja": {"contas": ["1alunoEja"], "inicio": 17, "fim": 23}}
+
+# PC mestre (senha admin da tela de bloqueio) - hostnames exatos ou curinga
+C:\ProgramData\SysAva\master_hosts.txt   # uma entrada por linha; padrao: PC01*
+# ou definir SYSAVA_MASTER_HOSTS="PC01,NOTE-PROF" antes de abrir a tela
+
+# Criar conta coletiva no Supabase (exemplo via REST; senha = hash bcrypt)
+# role=student, is_active=true, is_portal=true; depois incluir em acesso_coletivos.json
 ```
 
 ## Histórico de commits relacionados
@@ -4721,3 +6133,1131 @@ netstat -ano | findstr ":5000 :5001"
 | `55e94f1` | Corrige quizzes com títulos duplicados e conclusão cruzada |
 | `3e365c5` | Cache SQLite de scores no plugin de atividades diárias |
 | `0393486` | Reduz egress do Supabase com cache local e documenta issues |
+
+## IS-155 - Monitor: backup de atividades no plugin e comandos perdidos por concorr?ncia 🟢
+
+**Problema:** no plugin Monitor (Streamlit) existia s? o link ?Backups de atividades
+(recebidos)?; n?o havia bot?o para *solicitar* o ZIP aos PCs. Al?m disso, o bot?o do
+painel web ?s vezes ?no fazia nada?: o /ping e o enfileiramento de comandos faziam
+l?r-modificar-gravar separados no lab_status.json, e o /ping podia sobrescrever um
+comando rec?m-gravado (alguns PCs ?n?o recebiam?). O save_data ainda engolia erro de
+lock (	imeout=1), ent?o a UI dizia ?enviado? sem ter gravado. Por fim, o agente
+falhava com FileNotFoundError quando %USERPROFILE%\Documents\SysAva n?o existia.
+
+**Corre??o:**
+- plugins/monitor_rede/lab_monitor.py: se??o ?Backup de atividades? na aba
+  Ferramentas (multiselect de PCs + pasta base) que enfileira Enviar Atividades.
+- data/repo/plugins/lab_receiver.py: _mutate_status() (l?/grava sob um ?nico lock);
+  /ping e _write_local_commands usam esse helper; save_data at?mico (tmp+replace)
+  e timeout de lock de 5s; dispatch_commands devolve quantas m?quinas receberam o
+  comando (sem contar falhas).
+- data/repo/plugins/lab_agent.py e lab_agent.ps1: _escolher_base_atividades()
+  procura a pasta em perfis do Windows/OneDrive/Public e d? erro claro se n?o achar,
+  em vez de falhar em C:\Users\Aluno\....
+
+**Como validar:**
+1. Reiniciar o receiver (
+einiciar_servidor.bat) e atualizar os agentes
+   (Controle ? Atualizar Monitor (r?pido, sem UAC)).
+2. No plugin Monitor ? Ferramentas ? Backup de atividades, selecionar PCs e clicar
+   ?Solicitar ZIP das atividades?.
+3. Conferir lab_receiver.log (BACKUP ATIVIDADES solicitado... seguido de
+   ATIVIDADES recebidas de ...) e a p?gina /atividades.
+4. Em PC sem a pasta, o resultado do comando deve mostrar
+   erro: pasta de atividades nao encontrada (procurei: ...).
+
+## IS-156 - Tela de bloqueio: bloquear palavras fora da lista (exceto PC01) 🟢
+
+**Problema:** a tela de bloqueio (sysava_lock.ps1) aceitava a senha de
+administrador (padrao labadmin) em qualquer PC. Assim era possivel liberar os
+PCs dos alunos digitando labadmin, luno ou qualquer outra palavra. Tambem
+nao havia uma checagem local de que o texto digitado pertencia a lista de alunos
+exibida na tela.
+
+**Correcao:**
+- data/repo/plugins/sysava_lock.ps1:
+  - Test-MasterPC / Get-MasterHosts: a senha admin (Test-SenhaAdmin) so
+    funciona no **PC mestre**. Padrao: hostnames que comecam com PC01.
+    Personalize com SYSAVA_MASTER_HOSTS (ex.: PC01,NOTE-PROF) ou com
+    C:\ProgramData\SysAva\master_hosts.txt.
+  - Test-PalavraProibida: recusa palavras genericas (labadmin, luno,
+    dmin, professor,
+oot, ...) em PCs comuns, mesmo antes de a lista
+    carregar.
+  - Test-ItemDaLista: nos PCs comuns, o texto digitado precisa existir na
+    lista da tela de bloqueio (item do seletor, nome completo ou RA).
+- instalar_tela_sysava.ps1 nao muda: o script atualizado e baixado do servidor
+  por Atualizar Tela de Bloqueio (sem UAC).
+
+**Como validar:**
+1. Atualizar a tela: Controle ? Atualizar Tela de Bloqueio (sem UAC) (ou
+   reinstalar em setup/instalar_tela_sysava.ps1).
+2. Em um PC de aluno, tentar labadmin, luno, dmin ? deve recusar.
+3. Em um PC de aluno, selecionar um aluno da lista ou digitar o RA ? deve liberar.
+4. No PC01 (ou hostname configurado em master_hosts.txt), a senha admin
+   continua liberando mesmo sem servidor.
+
+## IS-157 - RA unico: nao pode logar o mesmo RA em dois PCs 🟢
+
+**Problema:** o mesmo RA podia passar pela tela de bloqueio em varios PCs ao
+mesmo tempo (o `lab_users.json` guardava a ultima maquina, mas nao impedia o
+login em outra).
+
+**Correcao (data/repo/plugins/lab_receiver.py):**
+- `_autorizar_login_ra()`: antes de associar o RA, verifica se ele esta ativo em
+  outra maquina (`_ra_em_outra_maquina`). Se estiver, devolve **400** com
+  `error` (a tela de bloqueio mostra a mensagem) e `em_uso` (hostname).
+- `_maquinas_ativas()`: considera ocupada apenas a maquina com sinal recente
+  (`OFFLINE_SECONDS`, 60s). Ao **deslogar/desligar** o PC, o agente para de
+  pingar e o RA e liberado para entrar em outro PC.
+- `_USERS_LOCK` (RLock) serializa checagem + associacao; `_save_users_map`
+  grava de forma atomica (tmp + replace) para nao perder dados em logins
+  simultaneos.
+- `SERVER_VERSION` -> `2026-11-05-ra-unico`.
+
+**Como validar:**
+1. Reiniciar o receiver (`reiniciar_servidor.bat`).
+2. Logar um RA no PC A; tentar o mesmo RA no PC B: deve aparecer
+   "O RA ... ja esta em uso em <PC>. Saia daquela maquina para entrar nesta."
+3. Fazer logoff no PC A (ou desliga-lo), esperar ~60s e repetir no PC B: deve
+   liberar. Entrar de novo no PC A com o mesmo RA continua permitido.
+
+## IS-158 - Contas coletivas e janela de acesso do EJA 🟢
+
+**Pedido:** manter as contas coletivas (ex.: `7anoA`, `7anoB`) fora da regra de
+RA unico; criar `8ano`, `9ano` e `1alunoEja`; e permitir que as contas do EJA
+entrem apenas das **17h as 23h**.
+
+**Contas criadas no Supabase (`app_users`, role `student`, `is_active=true`):**
+| username/ra | name | senha inicial |
+| ----------- | ---- | ------------- |
+| `8ano` | 8 Ano | `8ano` |
+| `9ano` | 9 Ano | `9ano` |
+| `1alunoEja` | 1 Aluno EJA | `1alunoEja` |
+
+Troque as senhas no Admin se necessario.
+
+**Mudancas (data/repo/plugins/lab_receiver.py):**
+- `acesso_coletivos.json` (novo) configura `coletivos` e `eja.contas` +
+  `eja.inicio`/`eja.fim` (padrao 17 e 23). Ha um padrao embutido caso o arquivo
+  nao exista.
+- `_e_conta_coletiva()`: contas em `coletivos` **nao** entram na regra de RA
+  unico (`_autorizar_login_ra` pula `_ra_em_outra_maquina`). Assim `7anoA`,
+  `8ano`, etc. podem estar em varios PCs ao mesmo tempo.
+- `_e_conta_eja()` + `_janela_eja_aberta()` + `_eja_pode_entrar()`: contas EJA
+  (`1alunoEja`, `Alunos_EJA_Noite`) so sao aceitas entre 17h e 23h (hora local
+  do servidor). Fora da janela o `/api/auth_ra` responde **400** com
+  "Acesso EJA permitido apenas das 17h as 23h." e a tela de bloqueio exibe.
+- `alunos_cache.json` foi apagado para o seletor recarregar as novas contas.
+
+**Observacao:** a janela bloqueia **novos logins** fora do horario. Sessoes EJA
+que ja estao abertas as 23h continuam ate o logoff (nao ha re-bloqueio
+automatico). Se quiser o re-bloqueio as 23h, isso exige um comando/agendador no
+agente.
+
+**Como validar:**
+1. Reiniciar o receiver (`reiniciar_servidor.bat`).
+2. As novas contas devem aparecer no seletor da tela de bloqueio.
+3. Entrar com `7anoA` em dois PCs ao mesmo tempo: deve permitir (coletivo).
+4. Entrar com `1alunoEja` antes das 17h ou depois das 23h: deve recusar; entre
+   17h e 23h: deve liberar.
+
+## IS-159 - MENTORIAS TEC II: duplicatas das Aulas 21–35 e ordem das aulas 🟢
+
+**Problema:** a disciplina `MENTORIAS TEC II` (`subjects.id=2`) tinha 51 aulas, com
+as Aulas 21–25 e 26–35 duplicadas (cópias com `:`/emoji no título) e as Aulas
+18/19/20 aparecendo depois da 35 na tela. A `id=70` (material de apoio de
+PowerShell) é uma aula real, com posts de alunos, e foi mantida.
+
+**Decisão "zero prejuízo":** as cópias duplicadas NÃO foram apagadas. Elas
+receberam `status='arquivada'` e ficam ocultas das listagens, mas continuam no
+banco — preservando 100% dos quizzes, mensagens do fórum e pontuações.
+
+**Mudanças:**
+- Banco: `status='arquivada'` nas aulas B `495-499` e `836-845`.
+  Script: `scripts/archive_duplicate_lessons_mentorias.py` (`--apply`).
+  Backup: `data/backups/lessons_mentorias_dedup_*.json`.
+- `services/database.py`: `_LESSON_LIST_COLUMNS`/`_LESSON_FULL_COLUMNS` passaram a
+  incluir `status`; `get_lessons_for_subject()` e `get_lessons_for_subject_full()`
+  filtram `status='arquivada'`. `get_lessons()` continua retornando tudo (mapa de
+  score).
+- `views/aulas.py` (`group_lessons`): no agrupamento `anual`, ordena pelo número de
+  "Aula N"; aulas sem número mantêm posição relativa à última numerada.
+
+**Como validar:**
+1. Abrir Aulas de "MENTORIAS TEC II": deve mostrar 36 itens (Aulas 1–35 + material
+   sem número) sem repetições, com 18/19/20 entre 17 e 21.
+2. Conferir que o fórum das Aulas 21–35 ainda mostra as mensagens e que o score dos
+   alunos não caiu (arquivadas seguem contando no fórum).
+
+## IS-160 - DevOps 2º ano: duplicatas do I-A e novas Aulas 17–20 🟢
+
+**Contexto:** "INTRODUÇÃO AO ECOSSISTEMA DEVops" existe em duas turmas de 2º ano:
+I-A (`subject_id=9`) e I-B (`subject_id=41`). As duas paravam na Aula 16.
+
+**Duplicatas do I-A (`subject_id=9`):** as Aulas 4–16 tinham duas cópias. A segunda
+cópia (ids `952-956`, `960-967`) tinha quiz genérico "📝 Quiz: Teste seu
+Conhecimento!" sem questões e pouca atividade. Estratégia zero-prejuízo: ela foi
+**arquivada** (`status='arquivada'`), mantendo quiz/fórum/pontuação. As cópias boas
+(`906-941`) permanecem visíveis.
+
+**Novas Aulas 17–20 (geradas via DeepSeek e replicadas nas duas turmas):**
+| Aula | Tema | I-A (subject 9) | I-B (subject 41) |
+| ---- | ---- | --------------- | ---------------- |
+| 17 | Cloud Computing e DevOps | lesson 984 / quiz 805 | lesson 985 / quiz 806 |
+| 18 | Pipeline CI/CD com Docker e deploy automatizado | lesson 986 / quiz 807 | lesson 987 / quiz 808 |
+| 19 | SRE e gestão de incidentes (SLI/SLO/Error Budget) | lesson 988 / quiz 809 | lesson 989 / quiz 810 |
+| 20 | Projeto Integrador DevOps | lesson 990 / quiz 811 | lesson 991 / quiz 812 |
+
+- Semana `S03` (Aulas 17–24), conteúdo em `description` no padrão atual.
+- Cada aula tem quiz próprio (`Quiz: Aula N: ...`) com **4 perguntas x 4 alternativas**.
+- Cabeçalho de turma ajustado por disciplina (I-A na 9, I-B na 41). Sem imagens/Base64.
+
+**Arquivos:**
+- `scripts/seed_devops_aulas_17_20.py` (`dedup` e `generate`, ambos com `--apply`).
+- Backups: `data/backups/devops_dedup_subject9_*.json` e
+  `data/backups/devops_17_20_generated.json` (cache do conteúdo gerado).
+
+**Como validar:**
+1. Abrir Aulas de DevOps nas duas turmas: deve listar Aulas 1–20 sem repetição.
+2. Abrir as Aulas 17–20 e confirmar conteúdo e quiz (4 questões).
+3. Conferir que o fórum/pontuação antigos do I-A continuam intactos.
+
+## IS-161 - iSeduc: planos de outubro/2026 (IA, Mentorias Tech II e PC II) 🟢
+
+**Pedido:** atualizar as aulas registradas no iSeduc das disciplinas IA,
+Mentorias Tech II e Pensamento Computacional II — setembro estava registrado e
+faltava outubro.
+
+**Diagnóstico confirmado:**
+- Setembro/2026 registrado nas duas turmas (I-A `309197` e I-B `314114`).
+- Outubro/2026 com **zero** registros em `historico_aulas`.
+- `lessons` local defasada (parava em ~28–30) fazia o gerador cair em fallback e
+  trocar o conteúdo (`AULA_NUM 31` → conteúdo da Aula 26).
+- Havia só 7 planos de outubro (todos da I-B).
+
+**Ações (fases seguras, sem tocar no portal):**
+- `scripts/sync_lessons_from_supabase.py --subject 1,2,11 --apply`
+  (backup `data/escola_ativa_backup_lessons_20261109_173728.db`).
+- `scripts/gerar_planos_outubro_iseduc.py --apply`: gera 20 planos em
+  `aulas/pendentes/` (8 na I-A, 12 na I-B) e faz upsert em `planejamento`.
+  - `AULA_NUM` = sequência da turma; conteúdo = número da aula de conteúdo
+    (que vinha atrasado), lido do Supabase ignorando `arquivada`.
+  - Frequência exata só quando é da mesma disciplina; caso contrário usa o
+    padrão (Presente, respeitando a lista negra).
+  - Relatório: `data/logs/planos_outubro_validacao.json`.
+
+**Pendente (fora desta fase):**
+- Testar **1 aula** no iSeduc para confirmar se o portal aceita registro
+  retroativo de outubro; depois rodar o lote com
+  `apps/bots/registrar_aulas.py --files ...`.
+- 9 datas ficaram com frequência padrão (sem `attendance` exata da disciplina).
+- Observação: alguns planos de **setembro** já registrados também mostram
+  `AULA_NUM` diferente do conteúdo (ex.: 31→Aula 26); revisar se necessário.
+
+**Como validar:**
+1. `python scripts/gerar_planos_outubro_iseduc.py` (dry-run) sem divergências.
+2. Conferir os 20 `.txt` em `aulas/pendentes/` e as linhas de outubro em
+   `planejamento`.
+3. Após o teste no portal, confirmar em `historico_aulas` e `aulas/registradas`.
+
+## IS-162 - iSeduc: notas de Programação Web Front-End (out/nov 2026) 🟢
+
+**Sintoma:** PROGRAMAÇÃO WEB FRONT-END aparecia "sem notas" no iSeduc.
+A investigação (somente leitura) mostrou:
+- I-A (`subject 33`): só o **1º tri** tinha notas; **2º e 3º vazios**.
+- I-B (`subject 34`): **1º, 2º e 3º vazios**.
+- Único lançamento real anterior: 03/10/2026, I-A / 1º tri (log
+  `RegistradorNotas_20261003_142108.log`). O 2º tri foi só dry-run e a I-B
+  nunca foi lançada.
+
+**Regras aplicadas (definidas pelo professor):**
+- Web Front-End é módulo de 1º tri: **T2 e T3 = cópia do T1**.
+- **Alice ([ALUNA], RA [RA])** está de **licença** →
+  status `Licença` (piso 6,0) no `master_config`; ficou **6,0 nas 3 colunas**.
+- Notas baixas permanecem (recuperação depois).
+- **I-A 1º tri não foi alterado** (já estava lançado).
+
+**Lançamentos (payloads em `data/logs/web_fe_payload_*.json`):**
+- I-B: T1, T2 e T3 (20 alunos cada).
+- I-A: T2 e T3 (16 alunos cada; bloqueados/transferidos fora).
+
+**Verificação (leitura no portal após gravar):**
+- I-B: 17/20 com nota nos **três** trimestres; Alice `6/6/6`.
+- I-A: 14/18 com nota no **2º e 3º** tri (antes 0/18).
+
+**Como validar:** abrir Notas → PROGRAMAÇÃO WEB FRONT-END nas turmas I-A e I-B
+e conferir os três trimestres.
+
+---
+
+## IS-163 - DevOps 2º ano: Aulas 21-32 (conteúdo) e 33-40 (seminários) 🟢
+
+**Contexto:** o professor está na Aula 16 e vai fechar o módulo DevOps (40h)
+com sala de aula invertida: aulas 17-32 normais (pesquisa/registro) e 33-40
+seminários de apresentação/debate dos pares de 17-32.
+
+**Execução:** `scripts/seed_devops_aulas_21_40.py generate --apply` gerou as
+Aulas 21-32 via DeepSeek (conteúdo + quiz 4x4) e criou as 33-40 como
+seminários (roteiro, temas, questões de debate e rubrica; sem quiz),
+replicando nas disciplinas `subject 9` (I-A) e `subject 41` (I-B), semana S03.
+
+**IDs:** subject 9 → lessons 992-1030 (21-40), quizzes 813-835; subject 41 →
+lessons 993-1031, quizzes 814-836. Cache:
+`data/backups/devops_21_40_generated.json`.
+
+**Verificação:** 40 aulas ativas por disciplina (1-40); quizzes 21-32 com 4
+questões em ambas.
+
+**Como validar:** abrir Aulas → INTRODUÇÃO AO ECOSSISTEMA DEVops e conferir
+as Aulas 21-40 e os quizzes.
+
+---
+
+## IS-164 - DevOps: seminários 33-40 como Avaliações e grupos por chamada 🟢
+
+**Contexto:** faltava lançar os 8 seminários de DevOps (Aulas 33-40) como
+Avaliações e compor os grupos. O Lázaro (RA [RA]) estava com
+`frequencia_status='falta'` no banco (`frequency_flags`, motivo "migracao do
+JSON"), mesmo fora do `excecoes_alunos.json`, e por isso iniciava a chamada
+como Falta.
+
+**Execução:** `scripts/create_devops_seminars_assessments.py create --apply`:
+- Corrigiu a flag do Lázaro para `normal` (`set_frequency_flag`) e sincronizou
+  o espelho `data/excecoes_alunos.json` (ele continua fora da blacklist).
+- Compôs **4 grupos por turma** (17 ativos, sem blacklist/dropouts) pela lista
+  de chamada (ordem alfabética, distribuição round-robin; 5/4/4/4).
+- Criou **8 avaliações tipo "Seminário"** por disciplina, no formato compatível
+  com o plugin Atividades (`daily_activities.py`): questão subjetiva com
+  "Integrantes do grupo" e "Pesquise e apresente as aulas abaixo".
+- IDs: subject 9 (I-A) 47-54; subject 41 (I-B) 55-62. Lázaro no Grupo 4 da I-B
+  (seminários 39 e 40).
+
+**Como validar:** Avaliações → disciplina DevOps (I-A/I-B): 8 seminários com
+grupo listado; Frequência: Lázaro inicia como Presente.
+
+---
+
+## IS-165 - Mobile (I-A): 20 aulas registradas e sábados preparados 🟢
+
+**Contexto:** o iSeduc já tinha 15 aulas de Programação Mobile (I-A) registradas;
+faltavam 20 dias úteis e os sábados (que ficam com a coordenação).
+
+**Execução:** `apps/bots/registrar_aulas.py` registrou os **20 dias úteis**
+(05/08 13:30 a 24/08 09:30) e a **Aula 1 de 03/07 às 07:10** (o portal só
+oferecia 07:10; o plano foi ajustado de 08:10). O portal passou a **36 aulas
+aguardando confirmação**. Correções no bot: seletor de data resiliente
+(`data-day`/`td`/`button` + fallback JS), pulo explícito de sábado e
+retry/abort no "Tipo de Aula" (evita falso sucesso). O 24/08 08:10, que havia
+sido movido por falso sucesso, foi devolvido e re-registrado.
+
+**Sábados (coordenação):** I-A 11/07 (1), 15/08 (2; equiv. segunda) e 12/09 (1)
+= 4 planos em `aulas/pendentes`; I-B 11/07 (3) em `aulas/prontas`. Gerados por
+`scripts/gerar_planos_sabados_mobile.py`.
+
+**Como validar:** iSeduc → Registro de aulas (309197): 36 aguardando; 4 sábados
+da I-A não registrados.
+
+---
+
+## IS-166 - Mobile (I-B): 2 primeiras aulas registradas em 13/07 🟢
+
+**Contexto:** a I-B (turma `314114`) tinha Fundamentos UI com 40 aulas
+confirmadas; a última em **11/07/2026 14:30–15:30**. Os planos antigos de
+Mobile estavam em 11/07 08:10/09:30/13:30, mas o iSeduc **bloqueia 11/07**
+(sábado) no formulário, inclusive para Aula Normal/Extra/Reposição.
+
+**Execução:** o próximo slot livre era **segunda 13/07**, com 14:30 e 15:50
+livres. Os planos foram ajustados para
+`plano_314114_5_2026-07-13_1430.txt` (Aula 01) e
+`plano_314114_5_2026-07-13_1550.txt` (Aula 02) e registrados por
+`apps/bots/registrar_aulas.py --files ...`.
+
+**Resultado:** 2 registros em 13/07 (14:30 e 15:50) como "Aguardando
+confirmação"; os planos foram movidos para `aulas/registradas/`. O terceiro
+plano antigo (11/07 13:30) ficou em
+`aulas/prontas/_backup_mobile_ib_11-07/` até ser reagendado. O bot também foi
+corrigido para não marcar falha falsa quando o print pós-salvamento quebra no
+console cp1252 (AP-040).
+
+**Como validar:** iSeduc → Registro de aulas (`314114`) → Programação Mobile:
+2 aulas em 13/07 aguardando confirmação.
+
+---
+
+## IS-167 - Mobile (I-B): Aulas 33/34 antecipadas para a Feira das Profissões 🟢
+
+**Contexto:** fechar a carga de Mobile I-B e reduzir o impacto do recesso,
+usando buracos no passado. Foram localizados 13 horários livres nas sextas de
+abril–junho (09:30–10:30) e 3 aulas excluídas pelo Núcleo Gestor (Front-End
+11/04 07:10; IA 21/04 10:30; Mentorias 03/04 10:30).
+
+**Execução:** Aulas **33 e 34** de Mobile antecipadas como **Reposição** para a
+**Feira das Profissões**:
+- 03/04/2026 09:30–10:30 (Aula 33)
+- 10/04/2026 09:30–10:30 (Aula 34)
+
+Planos em `aulas/registradas/plano_314114_5_2026-04-03_0930.txt` e
+`plano_314114_5_2026-04-10_0930.txt`, com `TIPO_AULA: Reposição`.
+
+**Resultado:** portal com 4 aulas de Mobile I-B aguardando confirmação
+(03/04, 10/04, 13/07 14:30 e 13/07 15:50). O bot passou a aceitar
+`TIPO_AULA` no plano (AP-041).
+
+**Como validar:** iSeduc → Registro de aulas (`314114`) → Mobile → Visualizar
+Aula: Tipo "Reposição" e conteúdo "Feira das Profissões — Aula 33/34
+(antecipada como reposição)".
+
+---
+
+## IS-168 - Mobile (I-B): Aulas 3–12 registradas e 1/2 reservadas para 11/07 🟢
+
+**Contexto:** as duas aulas de 13/07 (antigas Aulas 1/2) foram removidas do
+portal. As **Aulas 1 e 2** ficam reservadas para o sábado **11/07** (coordenação
+registra), e a sequência regular recomeça em **13/07** com as **Aulas 3–12**.
+
+**Execução:** 10 planos registrados por `apps/bots/registrar_aulas.py --files`:
+- 13/07: 14:30 (Aula 3) e 15:50 (Aula 4)
+- 16/07: 07:10, 08:10, 09:30, 13:30 e 14:30 (Aulas 5–9)
+- 17/07: 09:30 (Aula 10)
+- 20/07: 14:30 e 15:50 (Aulas 11–12)
+
+Frequência: todos presentes no plano; o bot marca **3 faltas** da blacklist
+(Gustavo, Isadora e Janayra).
+
+**Resultado:** portal com **12 aulas** de Mobile I-B aguardando confirmação
+(2 de abril + 10 de julho). Os dois planos de 11/07 seguem em
+`aulas/pendentes/` com o aviso `RESERVADO PARA A COORDENACAO REGISTRAR`.
+
+**Como validar:** iSeduc → Registro de aulas (`314114`) → Mobile: 12 aulas
+aguardando confirmação; as de 20/07 aparecem na segunda página.
+
+---
+
+## IS-169 - Arquitetura de Microsserviços: Aulas 01–08 geradas 🟢
+
+**Contexto:** o portal iSeduc está instável; as 8 primeiras aulas foram geradas
+localmente a partir dos PDFs SeducTec (material da I-A, aulas 1–8).
+
+**Conteúdo:** em
+`data/Turmas/2ª SÉRIE - Turma I-B (Técnico DS)/ARQUITETURA DE MICROSSERVIÇOS/S01/`:
+- 01 Introdução aos Testes de Software
+- 02 Garantia da Qualidade (QA) e Controle da Qualidade (QC)
+- 03 Princípios Fundamentais dos Testes
+- 04 Ciclo de Vida de Teste de Software
+- 05 Categorias e Tipos de Testes
+- 06 Níveis de Teste: unitário, integração, sistema e aceitação
+- 07 Teste de Caixa Branca
+- 08 Domain-Driven Design (DDD) e a transição para microsserviços
+
+Cada aula tem objetivos, conteúdo, atividade e quiz 4x4 (parser validado:
+4 questões e 4 alternativas). Links em `links_aulas.md`; índice em `README.md`.
+
+**Pendência:** gerar os planos TXT e registrar no iSeduc quando o portal
+normalizar; o conteúdo ainda não foi gravado no Supabase nem no portal.
+
+**Como validar:** abrir `README.md`/`Aula_01.md`...`Aula_08.md` e rodar o
+parser de quiz.
+
+---
+
+## IS-173 - Gerador de aulas: "Pasta não encontrada" em Microsserviços (Turma I-A) 🟢
+
+**Sintoma:** no Gerador de Planos de Aula, a Rota 2 exibia
+`Pasta não encontrada: ...\2ª SÉRIE - Turma I-A (Técnico DS)\ARQUITETURA DE MICROSSERVIÇOS\S01`
+e o rodapé mostrava o mesmo erro, apesar de a pasta existir.
+
+**Causa:** a pasta física da Turma I-A estava gravada como
+`ARQUITETURA DE MICROSSERIÇOS` (sem o "V"), enquanto o Supabase
+(`subjects.name`) e a pasta da Turma I-B usam `ARQUITETURA DE MICROSSERVIÇOS`.
+A busca resiliente de `services/contexto_aulas.py` só cobria igualdade/substring
+do nome normalizado; sem correspondência, voltava ao nome do banco e a Rota 2
+falhava.
+
+**Correção:** pasta renomeada para `ARQUITETURA DE MICROSSERVIÇOS` em
+`data/Turmas/2ª SÉRIE - Turma I-A (Técnico DS)/`. Em
+`services/contexto_aulas.py`, `resolver_pasta_turma` e
+`resolver_pasta_disciplina` ganharam fallback por similaridade
+(`difflib.SequenceMatcher`, limiar 0.9) para tolerar erros de digitação futuros.
+
+**Arquivos:** `data/Turmas/2ª SÉRIE - Turma I-A (Técnico DS)/ARQUITETURA DE MICROSSERVIÇOS/`
+(renomeada) e `services/contexto_aulas.py`.
+
+**Como validar:** no Gerador de Aulas, selecionar a Turma I-A + Arquitetura de
+Microsserviços e clicar em "Listar Arquivos Disponíveis" — deve listar os
+arquivos do `S01` sem o aviso de pasta não encontrada.
+
+---
+
+## IS-174 - Monitor: preferência de servidor pelo PC01 do laboratório 🟢
+
+**Pedido:** o PC01 do laboratório deve ter preferência quando o notebook e o PC
+fixo estão online ao mesmo tempo.
+
+**Solução:**
+- `lab_receiver.py`: novo `SYSAVA_PREFERRED_SERVERS` (padrão `PC01*`) e
+  `is_preferred_server()`. `current_role()` agora coloca o hostname preferido
+  como **primário** mesmo que o notebook tenha subido antes; sem o PC01, vale
+  quem iniciou primeiro. `/health` publica `hostname`/`preferred` e
+  `/api/peer/state` acrescenta `preferred`.
+- A descoberta UDP (`SYSAVA_SERVER ip:port`) não mudou: cada cliente consulta
+  o `/health` de cada respondedor e escolhe o `preferred`/hostname `PC01*`.
+- `lab_agent.py`/`lab_agent.ps1` (**build 18**): cache só é usado na hora se for
+  o PC01; caso contrário, guarda o notebook como reserva, consulta o UDP e
+  escolhe o servidor preferido (`preferred`/hostname).
+- `sysava_lock.ps1`, `sysava_tray.ps1`, `tray_aluno.ps1` e `tray_servidor.ps1`:
+  escolhem primeiro o `/health` com `preferred`/hostname `PC01*`; sem ele, usam
+  o servidor que já estava configurado/cache. A bandeja do servidor abre o
+  peer preferido no item do 2º servidor.
+
+**Arquivos:** `data/repo/plugins/monitor/lab_receiver.py`,
+`data/repo/plugins/monitor/lab_agent.py`,
+`data/repo/plugins/monitor/lab_agent.ps1`,
+`data/repo/plugins/monitor/sysava_lock.ps1`,
+`data/repo/plugins/monitor/tray_aluno.ps1`,
+`data/repo/plugins/monitor/tray_servidor.ps1`, `sysava_tray.ps1`,
+`data/repo/plugins/monitor/config.env.example`,
+`plugins/monitor_rede/README.md`, `data/repo/plugins/monitor/lab_monitor_doc.md`,
+`AGENTS.md`.
+
+**Como validar:**
+1. Reiniciar o receiver do notebook e o do PC01 (`reiniciar_servidor.bat`).
+2. `http://<pc01>:5000/health` e `http://<notebook>:5000/health`: o PC01 deve
+   responder `"role": "primary"` e `"preferred": true`; o notebook,
+   `"role": "assistant"`.
+3. Em um PC de aluno, apagar `C:\Local\SysVa_lab\server_cache.txt` e reiniciar
+   o agente: o log deve registrar o servidor preferido via UDP/cache.
+4. Na tela de bloqueio/bandejas, o painel/RA deve abrir no PC01 enquanto ele
+   estiver online; desligar o PC01 e repetir para o notebook assumir.
+5. Para customizar: `SYSAVA_PREFERRED_SERVERS=PC01*,PC02*` no `.env`/ambiente
+   dos dois receivers.
+
+---
+
+## IS-175 - Arquitetura de Microsserviços: PDFs do S01 tratam de testes de software 🟢
+
+**Sintoma:** a disciplina **Arquitetura de Microsserviços** (2ª série, Turmas
+I-A e I-B) exibia aulas sobre *testes de software* (fundamentos, QA/QC,
+princípios, ciclo de vida, tipos, níveis, caixa branca e DDD), sem relação com a
+ementa oficial. Os PDFs em `S01/seductec/` (`texto_aprofundamento_aula_1..8.pdf`)
+são de outra disciplina e foram usados como base das `Aula_01..08.md` antigas.
+
+**Correção:** geradas 8 aulas novas alinhadas aos itens 1–8 da ementa, em
+formato completo com emojis (objetivos, introdução, conteúdo teórico com
+tabelas, glossário, atividade prática e **quiz 4x4** com `[x]`/`[ ]`):
+- Aula 01 — Conceitos Fundamentais de Microsserviços
+- Aula 02 — Arquitetura Monolítica vs. Microsserviços
+- Aula 03 — Design de Microsserviços: Módulos, Serviços Independentes e APIs
+- Aula 04 — Comunicação entre Microsserviços: REST, gRPC e Eventos
+- Aula 05 — Implementação e Gerenciamento de Microsserviços
+- Aula 06 — Escalabilidade e Redundância com Microsserviços
+- Aula 07 — Monitoramento e Testes de Microsserviços
+- Aula 08 — Desafios e Vantagens da Arquitetura de Microsserviços
+
+Arquivos criados em `S01` das duas turmas, **sem apagar** as aulas antigas.
+
+**Arquivos:** `data/Turmas/2ª SÉRIE - Turma I-A (Técnico DS)/ARQUITETURA DE MICROSSERVIÇOS/S01/Aula 01..08*.md`
+e o equivalente em `Turma I-B`.
+
+**Como validar:**
+1. Conferir que os novos `.md` estão em `S01` de cada turma.
+2. Importar/replicar as aulas no Gerador de Aulas e verificar 4 perguntas com 4
+   alternativas e gabarito correto em cada quiz.
+3. Os PDFs antigos do `seductec` continuam errados para a ementa: devem ser
+   substituídos pelo material oficial da disciplina quando disponível.
+
+---
+
+## IS-176 - Monitor: campo "Texto e Comando" na aba Ferramentas 🟢
+
+**Pedido:** ter na aba Ferramentas um campo para enviar textos (alertas) e
+comandos aos PCs selecionados, sem precisar ir até a aba Controle.
+
+**Solução:**
+- Painel web (`lab_receiver.py`): nova sub-aba **Ferramentas → 💬 Texto e
+  Comando**, com:
+  - **Texto / mensagem** (textarea) e botão **💬 Enviar texto**, que dispara
+    `Enviar Alerta Visual` com o texto digitado.
+  - **Comando** (input com `datalist` das ações do Controle) e botão
+    **🚀 Executar comando**, que enfileira o comando digitado; se houver texto,
+    também envia o alerta antes (o texto acompanha o comando quando ele é um
+    alerta).
+  - Usa a mesma seleção de PCs e a opção **Aplicar em todas** do topo da aba.
+  - Nova rota `POST /ferramenta_texto_comando` (login obrigatório) e helper
+    `_maquinas_do_form()`.
+- Plugin Streamlit (`plugins/monitor_rede/lab_monitor.py`): seção **💬 Texto e
+  comando** no início da aba Ferramentas, com multiselect de PCs, texto,
+  comando, **Enviar texto** e **Executar comando**, gravando no histórico do
+  professor.
+
+**Arquivos:** `data/repo/plugins/monitor/lab_receiver.py`,
+`plugins/monitor_rede/lab_monitor.py`, `plugins/monitor_rede/README.md`,
+`data/repo/plugins/monitor/lab_monitor_doc.md`, `docs/ISSUES_LOCAIS.md`.
+
+**Como validar:**
+1. Reiniciar o receiver (`reiniciar_servidor.bat`) e abrir o painel web.
+2. Aba **Ferramentas → 💬 Texto e Comando**, marcar um PC, digitar um texto e
+   clicar **Enviar texto** — deve aparecer o alerta no PC e o comando em
+   **Último comando por PC**.
+3. Digitar `Desligar PC (Shutdown)` no comando (com um texto opcional) e
+   confirmar; o agente deve receber a ação e o histórico registrar o envio.
+4. No plugin Streamlit, repetir pela seção **💬 Texto e comando** da aba
+   Ferramentas.
+
+---
+
+## IS-177 - PC01: `ATUALIZAR_PC01.bat` usava IP antigo do notebook 🟢
+
+**Sintoma:** o atalho de atualização do PC01 tentava baixar o `servidor.zip` de
+um IP fixo antigo do notebook e falhava quando o DHCP mudava o endereço.
+
+**Solução:**
+- Removido o IP fixo do `ATUALIZAR_PC01.bat`.
+- Novo `descobrir_servidor.ps1` (na pasta `monitor/`) encontra o servidor de
+  origem sem IP fixo:
+  1. `SYSAVA_UPDATE_SERVER`, se definida;
+  2. caches `%LOCALAPPDATA%\SysAva\servidor_tray.txt`,
+     `C:\Local\SysVa_lab\server_cache.txt` e `peers.txt`;
+  3. broadcast UDP 5001 (`SYSAVA_DISCOVER`).
+  Ele descarta o próprio PC (IPs/hostname locais), valida `/health` e devolve
+  as URLs em uma linha (`-Inline`) para o `.bat`.
+- O `.bat` usa a URL descoberta; se nada for encontrado, pede a URL ao usuário
+  e aceita tanto `http://ip:5000` quanto apenas `ip:5000` (prefixa `http://`
+  automaticamente, inclusive no argumento da linha de comando).
+- `descobrir_servidor.ps1` entrou no `DOWNLOAD_WHITELIST` e no `servidor.zip`.
+
+**Arquivos:** `data/repo/plugins/monitor/ATUALIZAR_PC01.bat`,
+`data/repo/plugins/monitor/ATUALIZAR_PC01.txt`,
+`data/repo/plugins/monitor/descobrir_servidor.ps1`,
+`data/repo/plugins/monitor/lab_receiver.py`, `docs/ISSUES_LOCAIS.md`.
+
+**Como validar:**
+1. No PC01, rodar o `ATUALIZAR_PC01.bat` sem argumentos: ele deve mostrar
+   `Servidor de origem: http://<ip-atual-do-notebook>:5000`.
+2. Se a descoberta falhar, rodar informando a URL:
+   `ATUALIZAR_PC01.bat http://<ip-atual>:5000`.
+3. Conferir que o `servidor.zip` extraído contém `descobrir_servidor.ps1`.
+
+---
+
+## IS-178 - PC01: acesso ao 5000 pelo Tailscale/LAN 🟢
+
+**Sintoma:** o receiver aparecia online no próprio PC, mas `http://<ip>:5000`
+não respondia de outro computador (Tailscale). O `ATUALIZAR_PC01.bat` também
+falhava ao informar apenas `ip:5000`.
+
+**Diagnóstico feito no notebook:**
+- Tailscale online e `tailscale ping` direto para o PC01.
+- Porta 445 do PC01 acessível pelo Tailscale, mas porta 5000 sem resposta.
+- Isso indica firewall/receiver no PC01, não a rede Tailscale em si.
+
+**Solução:**
+- `ATUALIZAR_PC01.bat` passou a aceitar `ip:5000` sem `http://`.
+- Novo `CORRIGIR_ACESSO_PC01.bat` + `corrigir_acesso_pc01.ps1` (rodar como
+  Administrador no PC01):
+  - inicia o serviço Tailscale e muda a rede Tailscale para **Private**;
+  - cria/atualiza regras de firewall **TCP 5000**, **TCP 8501** e **UDP 5001**
+    para qualquer perfil;
+  - confere o listener em `0.0.0.0:5000` e tenta reiniciar o receiver se estiver
+    offline;
+  - testa o próprio PC e o notebook e grava
+    `%TEMP%\sysava_diagnostico_tailscale.txt`.
+- Os dois arquivos entram no `servidor.zip` e no `DOWNLOAD_WHITELIST`.
+
+**Arquivos:** `data/repo/plugins/monitor/CORRIGIR_ACESSO_PC01.bat`,
+`data/repo/plugins/monitor/corrigir_acesso_pc01.ps1`,
+`data/repo/plugins/monitor/ATUALIZAR_PC01.bat`,
+`data/repo/plugins/monitor/lab_receiver.py`, `docs/ISSUES_LOCAIS.md`.
+
+**Como validar:**
+1. No PC01, execute `CORRIGIR_ACESSO_PC01.bat` como Administrador.
+2. No relatório, confira: regras criadas, `0.0.0.0:5000` escutando e
+   `Teste notebook` = OK.
+3. De outro PC da tailnet: `curl.exe http://<ip-do-pc01>:5000/health`.
+
+---
+
+## IS-179 - PC01 autônomo quando o notebook está desligado 🟢
+
+**Problema:** com o notebook desligado, as máquinas ficavam bloqueadas. O PC01
+não assumia a validação do RA, e a tela caía no modo offline até bloquear.
+
+**Causa provável:** o PC01 não tinha o receiver rodando no boot (tarefa
+`SysAva Servidor` ausente/apontando para outra pasta), `.env` sem
+`SUPABASE_URL/SUPABASE_KEY` e/ou `alunos_cache.json` ausente. Sem a lista em
+cache, o `/api/auth_ra` dependia só do Supabase/notebook.
+
+**Solução:**
+- `_buscar_usuario()` e `_buscar_aluno_por_nome()` agora usam
+  `alunos_cache.json` como fallback quando o Supabase está indisponível. Assim o
+  PC01 valida RA/nome mesmo sem internet/notebook, desde que o cache exista.
+- `/api/alunos` já usava o cache; agora ele também é distribuído.
+- `SERVIDOR_ZIP_ITENS`/`DOWNLOAD_WHITELIST` passaram a incluir
+  `alunos_cache.json`, `lab_users.json` e `acesso_coletivos.json`.
+- `diagnostico_servidor.ps1` mostra a quantidade de alunos em `/api/alunos` e
+  avisa quando `alunos_cache.json` está ausente.
+- `ATUALIZAR_PC01.txt` ganhou a seção **“PC01 SEM O NOTEBOOK (autônomo)”**.
+
+**Para o PC01 assumir sozinho (fazer uma vez, com o notebook ligado):**
+1. `ATUALIZAR_PC01.bat` (baixa/extrai o `servidor.zip` novo).
+2. `instalar_servidor_auto.bat` como Administrador (tarefa no boot + firewall).
+3. `diagnostico_servidor.bat`: confirmar `/health OK`, tarefa, `.env` e
+   `/api/alunos` com alunos.
+4. Desligar o notebook e testar um RA em um PC de aluno.
+
+**Arquivos:** `data/repo/plugins/monitor/lab_receiver.py`,
+`data/repo/plugins/monitor/diagnostico_servidor.ps1`,
+`data/repo/plugins/monitor/ATUALIZAR_PC01.txt`, `docs/ISSUES_LOCAIS.md`.
+
+---
+
+## IS-180 - Tela de bloqueio: mensagens maiores e status real do servidor 🟢
+
+**Pedido:** aumentar as letras de mensagem na tela de bloqueio e parar de pedir
+para "ligar o PC01" quando ele está ligado, mas o servidor está sem resposta.
+
+**Solução (`sysava_lock.ps1`):**
+- `$lblMsg` (mensagens/erros) passou de Segoe UI **11** para **14 Bold**, com
+  quebra de linha em 472 px.
+- `$lblServidor` (status) passou de **10** para **12 Bold**.
+- O card cresceu de 320 para **360 px** para acomodar as mensagens maiores.
+- Texto do status desconectado mudou para:
+  **"Servidor sem resposta - verifique/reinicie o PC01"**.
+- O monitor de status agora, quando o cache aponta para o notebook desligado,
+  faz **descoberta UDP 5001** e mostra "Servidor conectado" se o PC01 responder
+  (antes ele só olhava cache/localhost e podia exibir "ligue o PC01" mesmo com o
+  PC01 servindo a rede).
+
+**Arquivos:** `data/repo/plugins/monitor/sysava_lock.ps1`,
+`docs/ISSUES_LOCAIS.md`.
+
+**Como validar:** aplicar a tela nova nos PCs (Controle → Atualizar Tela de
+Bloqueio) e conferir as letras maiores. Com o notebook desligado e o PC01
+servindo, a linha deve mudar para **"Servidor conectado"** em ~6 s.
+
+---
+
+## IS-181 - Bandeja: não deixava iniciar o servidor do PC01 com o notebook online 🟢
+
+**Sintoma:** depois de mexer no buscador de servidores da bandeja do notebook, o
+servidor do PC01 não voltava a subir. A bandeja mostrava o notebook online e
+desabilitava o item **Iniciar servidor**, mesmo com a porta 5000 do PC01 livre.
+
+**Causa:** `sysava_tray.ps1` usava `$srvOn = servidor local OU remoto` para
+habilitar/desabilitar o botão. Se qualquer servidor fosse encontrado na rede
+(notebook), **Iniciar servidor** ficava desabilitado no PC01. O botão existe
+para subir o servidor **deste PC**, então o remoto não deveria bloquear.
+
+**Solução:**
+- **Iniciar servidor neste PC** agora habilita quando a porta 5000 **local**
+  está livre (`-not $srvLocalOn`), independente de haver outro servidor online.
+- **Parar servidor deste PC** continua habilitado só quando o servidor local
+  está rodando.
+- O menu passa a diferenciar: **online NESTE PC** / **Servidor encontrado:
+  <host> (este PC offline)** / **offline neste PC**.
+- Com o PC01 iniciado, a preferência já existente (`PC01*`) faz ele assumir como
+  primário, e o agente build 18/tela/bandejas o escolhem primeiro.
+
+**Arquivos:** `sysava_tray.ps1`, `docs/ISSUES_LOCAIS.md`.
+
+**Como validar:**
+1. No PC01, abra a bandeja com o notebook ligado: o item **Iniciar servidor
+   neste PC** deve estar habilitado.
+2. Clique; confirme `http://127.0.0.1:5000/health` e o papel `primary`.
+3. Desligue o notebook e valide um RA em um PC de aluno.
+
+---
+
+## IS-182 - Bandeja: encontrar o PC01 pelo Tailscale (fora da LAN) 🟢
+
+**Pedido:** a bandeja do notebook deveria encontrar o servidor e abrir o painel
+de controle dele mesmo estando em casa, para escolher/gerenciar o PC01.
+
+**Solução (`sysava_tray.ps1`):**
+- Novo `Get-TailscaleCandidatos`: lê `tailscale status --json` e adiciona os
+  IPs `100.x` dos peers online como candidatos `http://<ip>:5000`.
+- `Get-ServidorCandidatos`/`Find-Servidores`/`Find-ServidorUrl` e o monitor em
+  segundo plano passaram a incluir esses candidatos. A verificação continua
+  sendo `/health` (só entra na lista quem realmente está servindo).
+- O menu mostra **online NESTE PC**, **Servidor encontrado: <host> (este PC
+  offline)** ou **offline neste PC**, e **Iniciar servidor neste PC** funciona
+  mesmo com outro servidor online (IS-181).
+
+**Diagnóstico no momento:** o notebook estava em outra rede (`192.168.0.9`) e
+o `tailscale status` mostrava o **PC01 offline**; por isso a bandeja não achava
+nenhum servidor. Quando o PC01 voltar ao Tailscale, a busca o encontrará.
+
+**Arquivos:** `sysava_tray.ps1`, `docs/ISSUES_LOCAIS.md`.
+
+**Como validar:** no notebook (casa/4G), abrir a bandeja → **Buscar servidores
+na rede** com o PC01 online; ele deve aparecer e **Abrir painel** deve carregar
+`http://100.113.128.78:5000/`.
+
+---
+
+## IS-183 - Arquitetura de Microsserviços: aulas 09-10 de laboratório 🟢
+
+**Pedido:** as aulas 01-08 são conceituais; criar as aulas 09 e 10 como
+atividades práticas de laboratório, com instalação de ferramentas e um projeto
+que exercite os assuntos das aulas 02 a 08, já que o calendário foi comprimido.
+
+**Solução:** duas aulas práticas em torno do projeto **SysLoja** (FastAPI):
+- **Aula 09:** instalação de Python/VS Code/Git, ambiente virtual, estrutura do
+  projeto e primeiro microsserviço (**Catálogo**, porta 8001) com `/health`,
+  `/produtos` e `/produtos/{id}`, testes no `/docs` e commit no Git.
+- **Aula 10:** serviços de **Pagamentos** (8003) e **Pedidos** (8002) integrados
+  por REST com `httpx`, timeout, tratamento de erro e idempotência simples;
+  fluxo completo, health checks, resiliência (derrubar Pagamentos), escala com
+  `--workers 2` e teste de fumaça (`teste_smoke.py`).
+
+As aulas retomam os itens 2-8 da ementa na prática (monólito x serviços,
+design/APIs, comunicação, implementação, escala/redundância, monitoramento e
+testes, trade-offs). Cada uma mantém o **quiz 4x4**.
+
+**Arquivos:** `data/Turmas/2ª SÉRIE - Turma I-A (Técnico DS)/ARQUITETURA DE MICROSSERVIÇOS/S01/Aula 09*.md`
+e `Aula 10*.md`, com cópias em `Turma I-B`; `README.md` do S01 (I-B) atualizado.
+
+**Como validar:**
+1. Conferir as aulas 09 e 10 em `S01` das duas turmas.
+2. Importar no Gerador de Aulas e verificar 4 perguntas × 4 alternativas.
+3. Seguir o laboratório: Catálogo em 8001, Pagamentos em 8003 e Pedidos em 8002;
+   criar um pedido deve resultar em pagamento aprovado.
+4. Derrubar Pagamentos e confirmar que Pedidos devolve erro controlado.
+
+---
+
+## IS-184 - Arquitetura de Microsserviços: aulas 11-13 de laboratório 🟢
+
+**Pedido:** após as aulas 09-10 (ambiente e integração do SysLoja), criar as
+aulas 11, 12 e 13 dando continuidade prática aos itens de implementação,
+gerenciamento, escala e entrega da ementa.
+
+**Solução:** três laboratórios sequenciais:
+- **Aula 11 — Containers com Docker:** imagem x container x registry, instalação
+  do Docker Desktop, `requirements.txt` e `.dockerignore` por serviço,
+  `Dockerfile` do Catálogo, `docker build`/`run`, boas práticas (slim, cache de
+  camadas, HEALTHCHECK).
+- **Aula 12 — Docker Compose:** variáveis `CATALOGO_URL`/`PAGAMENTOS_URL` no
+  Pedidos, Dockerfiles de Pagamentos/Pedidos e `docker-compose.yml` com os três
+  serviços, rede por nome, `depends_on`, healthchecks e troubleshooting.
+- **Aula 13 — CI/CD com GitHub Actions:** testes com `pytest` + `TestClient`,
+  workflow `.github/workflows/ci.yml` (jobs `testes` e `build`), cache de pip,
+  GitHub Secrets e proteção de branch.
+
+As três mantêm o padrão das demais (emojis, tabelas, atividade, entregável,
+desafio e **quiz 4x4**). A linha `Turma` é genérica (“Turmas I-A e I-B”) para o
+`upsert` por `subject_id,title` não sobrescrever o conteúdo entre turmas.
+
+**Arquivos:** `data/Turmas/2ª SÉRIE - Turma I-A (Técnico DS)/ARQUITETURA DE MICROSSERVIÇOS/S01/Aula 11*.md`,
+`Aula 12*.md` e `Aula 13*.md`, com cópias em `Turma I-B`.
+
+**Como validar:**
+1. Conferir as aulas 11-13 em `S01` das duas turmas.
+2. Rodar o `seed_lessons.bat` (logs da disciplina foram limpos) e verificar que
+   cada uma importou com 4 perguntas × 4 alternativas.
+3. Aula 11: `docker build` e `docker run` do Catálogo em 8001.
+4. Aula 12: `docker compose up --build` e criar um pedido em 8002.
+5. Aula 13: `pytest -q` local e pipeline verde na aba Actions do GitHub.
+
+---
+
+## IS-185 - Arquitetura de Microsserviços: bloco 1 fechado e plano da disciplina 🟢
+
+**Pedido:** fechar as 40h de forma balanceada: temas 1-4 até a AV1 (aula 20),
+temas 5-8 nas aulas 21-32 com AV2 na 32, e seminário nas aulas 33-40 (AV3).
+Registrar o combinado em `plano.txt` na pasta da disciplina.
+
+**Solução:**
+- **Aulas 14-19** reorganizadas para o bloco 1 (temas 1-4): DDD/decomposição,
+  contratos de API, mensageria/eventos, REST x gRPC na prática, API Gateway/BFF
+  e estudo de caso/revisão.
+- **Aula 20** reescrita como **AV1** (temas 1-4): quiz 4x4 + parte prática com
+  rubrica.
+- Os rascunhos das aulas 17-19 anteriores (Resiliência, Observabilidade,
+  Segurança/Custos) e a avaliação integradora foram movidos para
+  `S01/_rascunhos_bloco2/` (I-A) para reaproveitamento no bloco 2.
+- **`plano.txt`** criado em `ARQUITETURA DE MICROSSERVIÇOS/` das duas turmas,
+  com o combinado, mapa de aulas 01-40, o que já está pronto e pendências.
+
+**Arquivos:** `S01/Aula 14..20*.md` (I-A e I-B),
+`S01/_rascunhos_bloco2/` (I-A),
+`ARQUITETURA DE MICROSSERVIÇOS/plano.txt` (I-A e I-B) e este registro.
+
+**Como validar:**
+1. Conferir `plano.txt` e as aulas 14-20 em `S01` das duas turmas.
+2. Rodar o parser do seed: 20 aulas por turma, cada uma com 4 perguntas × 4
+   alternativas (AV1 inclusa).
+3. Rodar `seed_lessons.bat` e conferir as 20 aulas no portal.
+4. Aplicar a AV1 e seguir para o planejamento das aulas 21-32.
+
+---
+
+## IS-186 - Alerta do Monitor com texto copiável 🟢
+
+**Pedido:** o texto enviado por **Ferramentas → Texto e Comando** precisava ser
+copiável no PC que recebe o alerta; o MessageBox do Windows não permite
+selecionar o texto.
+
+**Solução (`lab_agent.py` + `lab_agent.ps1`, build 19):**
+- Novo `mostrar_alerta()`: janela própria, sempre no topo, com o texto em caixa
+  somente leitura (selecionável), botão **Copiar texto** e **Fechar**.
+- Ao abrir, o texto já é colocado na área de transferência (Ctrl+V funciona).
+- Roda em thread separada, sem travar o loop do agente.
+- Fallback para `MessageBoxW` se o Tkinter não estiver disponível.
+- O histórico do painel registra `ok: alerta exibido (texto copiavel)`.
+- `AGENT_BUILD` passou para **19**; o `lab_agent.ps1` foi sincronizado.
+- No painel web, **Ferramentas → Texto e Comando** ganhou o botão
+  **📋 Copiar texto** (Clipboard API com fallback `execCommand`).
+
+**Arquivos:** `data/repo/plugins/monitor/lab_agent.py`,
+`data/repo/plugins/monitor/lab_agent.ps1`, `AGENTS.md`,
+`docs/ISSUES_LOCAIS.md`.
+
+**Como aplicar:** no painel do PC01, **Controle → Atualizar Monitor (rápido,
+sem UAC)** nos PCs; envie um texto de teste e use **Copiar texto** ou Ctrl+V.
+
+---
+
+## IS-187 - Monitor: instruções via HTTP e alerta com texto selecionável 🟢
+
+**Contexto:** o alerta ainda aparecia como janela do Python (agente antigo) e
+não era possível copiar; além disso, as instruções eram difíceis de transportar
+para o PC01.
+
+**Solução:**
+- `mostrar_alerta()` (build 20) agora abre uma janela Tk **640x380**, centralizada,
+  com a fonte maior, o texto **editável/selecionável** (Ctrl+C funciona) e o
+  botão **Copiar texto** copiando o conteúdo atual da caixa. O texto continua
+  indo automaticamente para a área de transferência.
+- Nova rota **`/instrucoes`** no receiver: página HTML com os passos e botões
+  **Copiar** para: atualizar o agente build 20, reiniciar/conferir o servidor,
+  preparar o PC01 sozinho, Tailscale e parar/religar. Sem senhas.
+- Link **📋 Instruções para copiar** em **Ferramentas → Texto e Comando**.
+
+**Importante:** se o alerta ainda abre como “janela do Python” sem copiar, o
+agente do PC ainda é o **build 18**; rode **Controle → Atualizar Monitor
+(rápido, sem UAC)** e confirme o badge **build 20**.
+
+**Arquivos:** `data/repo/plugins/monitor/lab_receiver.py`,
+`data/repo/plugins/monitor/lab_agent.py`,
+`data/repo/plugins/monitor/lab_agent.ps1`, `docs/ISSUES_LOCAIS.md`.
+
+**Como validar:**
+1. Abrir `http://127.0.0.1:5000/instrucoes` e usar os botões Copiar.
+2. Atualizar um PC para build 20 e enviar um texto.
+3. Na janela do alerta, selecionar o texto ou clicar em **Copiar texto**.
+
+---
+
+## IS-193 — Bandeja do aluno: sair da conta, reabrir a tela de bloqueio e liberar o RA 🟢
+
+**Pedido:** a bandeja do aluno (`tray_aluno.ps1`) tinha poucos recursos. Era
+preciso conseguir **sair da conta** e **abrir a tela de bloqueio novamente**
+sem esperar o próximo logon.
+
+**Solução:**
+- Novos itens no menu: **Atualizar meus dados agora**, **Abrir SysAva com meu
+  RA**, **Abrir tela de bloqueio**, **Sair da conta (voltar a tela de bloqueio)**
+  e **Sair do Windows (logoff)**. O antigo **Sair** virou **Fechar bandeja
+  (continuar logado)** para não confundir com o logout.
+- O menu mostra também o estado da tela (**bloqueada**, **liberada pelo
+  professor até HH:mm** ou **sem bloqueio**).
+- **Sair da conta:** confirma, remove `%LOCALAPPDATA%\SysAva\tela_ok.json`,
+  `ultimo_ra.txt` e `meu_email.txt`, chama `POST /api/logout_ra` e reabre o
+  `sysava_lock.ps1` na hora. A conta do Windows continua logada (para deslogar
+  de verdade use **Sair do Windows**).
+- **Receiver:** nova rota `POST /api/logout_ra` remove a associação da máquina
+  em `lab_users.json` (respeitando o RA informado, para não apagar um login
+  novo) e propaga aos peers por `POST /api/peer/logout`. Assim o RA fica livre
+  para outro PC imediatamente, sem esperar `OFFLINE_SECONDS`.
+- **Servidor fora:** o logout fica em `logout_pendente.json` e é sincronizado
+  quando o servidor voltar; enquanto isso a bandeja não repõe o aluno antigo.
+- Se a tela estiver liberada pelo professor (`tela_liberada.json`), a bandeja
+  avisa que o bloqueio volta no próximo logon em vez de forçar a tela.
+
+**Importante:** reinicie o receiver do servidor (PC01/notebook) para a rota
+`/api/logout_ra` entrar em vigor. Até lá a bandeja guarda o pedido em
+`logout_pendente.json` e conclui sozinha quando o servidor atualizado responder.
+
+**Arquivos:** `data/repo/plugins/monitor/tray_aluno.ps1`,
+`data/repo/plugins/monitor/lab_receiver.py`, `AGENTS.md`,
+`plugins/monitor_rede/README.md`, `docs/ISSUES_LOCAIS.md`.
+
+**Como validar:**
+1. Reiniciar a bandeja do aluno (`tray_aluno.bat`) e conferir os novos itens.
+2. Clicar em **Sair da conta**, confirmar e ver a tela de bloqueio reabrir.
+3. Conferir que `lab_users.json` não tem mais a máquina associada e que o mesmo
+   RA consegue entrar em outro PC na hora.
+4. Com o servidor desligado, sair da conta e religar o servidor: o
+   `logout_pendente.json` deve ser enviado e removido sozinho.
+5. Testar **Abrir tela de bloqueio** e **Sair do Windows (logoff)**.
+
+---
+
+## IS-194 — Monitor: Atualizar Bandeja do Aluno reinicia a instância antiga 🟢
+
+**Problema:** o comando **Controle → Atualizar Bandeja do Aluno** baixava os
+arquivos novos para `%LOCALAPPDATA%\SysAva`, mas a bandeja antiga continuava
+rodando (o mutex `SysAvaTrayAluno` fazia a instância nova sair na hora). Na
+prática a atualização só valia depois de logoff/reboot.
+
+**Solução:** `_instalar_bandeja_aluno()` agora chama `_encerrar_bandeja_aluno()`
+antes de abrir a nova cópia. Ela encerra somente `powershell.exe`/`wscript.exe`
+cuja linha de comando aponta para `tray_aluno.ps1`/`tray_aluno.vbs` dentro do
+`%LOCALAPPDATA%\SysAva` do usuário atual, espera 1 s e inicia pelo `.vbs`. O
+resultado do comando informa quantas instâncias antigas foram fechadas.
+
+**Arquivos:** `data/repo/plugins/monitor/lab_agent.py`, `AGENTS.md`,
+`plugins/monitor_rede/README.md`, `docs/ISSUES_LOCAIS.md`.
+
+**Como validar:**
+1. **Controle → Atualizar Monitor (rápido, sem UAC)** e confirmar build 20.
+2. **Controle → Atualizar Bandeja do Aluno** nos PCs marcados.
+3. Conferir no histórico do painel o resultado
+   `ok: bandeja do aluno instalada (... instancia(s) antiga(s) fechada(s))`.
+4. Abrir o menu da bandeja e ver os itens novos (Sair da conta etc.).
+
+---
+
+## IS-195 — Gestão de Usuários: adicionar, desativar acesso e remover contas 🟢
+
+**Pedido:** uma aba de gestão de usuários para o professor adicionar,
+desativar e remover contas.
+
+**Problema encontrado:** a aba antiga (Admin → Usuários) usava `is_active`
+para "desativar", mas esse campo passou a significar **Falta** na frequência
+(IS-040). O login nem consultava `is_active`, então a conta continuava entrando
+no portal.
+
+**Solução:**
+- Nova página **Gestão de Usuários** no menu lateral (admin e professor).
+- Abas **Contas cadastradas** (busca, filtros, tabela) e **Adicionar conta**
+  (nome, login, RA, senha, função e turma opcional).
+- **Desativar/Reativar acesso** grava `app_users.status = 'blocked'` /
+  `'active'`; não mexe em `is_active`/`is_portal`, preservando a frequência.
+- **Remover conta** apaga o cadastro e a matrícula (com confirmação por
+  checkbox); o histórico já registrado permanece.
+- **Redefinir senha** grava novo hash bcrypt.
+- Segurança: professor só gerencia alunos; ninguém desativa/remove a própria
+  conta; o último administrador ativo não pode ser desativado/removido.
+  Sessões ativas do usuário desativado são encerradas.
+- Login (`views/login.py`) e restauração de sessão (`app.py`) passaram a
+  recusar `status='blocked'`. `get_user()`/`get_all_users()` agora leem
+  `status` com fallback para bancos antigos.
+- `set_frequency_flag()` preserva `status='blocked'` ao alterar Falta/Inativo.
+- Admin → Usuários ganhou um aviso indicando que a gestão de acesso fica na
+  nova aba e que os botões de lá são de frequência.
+
+**Arquivos:** `views/usuarios.py` (novo), `views/login.py`, `app.py`,
+`services/database.py`, `services/auth.py`, `views/admin.py`,
+`docs/FEATURES.md`, `docs/ISSUES_LOCAIS.md`.
+
+**Como validar:**
+1. Entrar como professor/admin e abrir **Gestão de Usuários** no menu.
+2. Criar uma conta de aluno com turma; confirmar que ela aparece na tabela.
+3. **Desativar acesso** e tentar logar com ela: deve mostrar "Conta desativada".
+4. **Reativar acesso** e logar novamente: deve entrar.
+5. **Remover conta** e confirmar que o RA fica livre para um novo cadastro.
+6. Como professor, confirmar que só aparecem/ são gerenciáveis contas de aluno.
+
+---
+
+## IS-196 — Painel do monitor: aba Usuários (criar, desativar, remover) 🟢
+
+**Pedido:** a gestão de usuários também no painel web do monitor (porta 5000),
+para o professor não precisar abrir o portal.
+
+**Solução (`lab_receiver.py`):**
+- Nova aba **Usuários** ao lado de Monitor/Controle/Ferramentas.
+- **Adicionar conta** (nome, login, RA, função e senha) com hash bcrypt; professor
+  cria apenas aluno, administrador cria qualquer função.
+- **Desativar/Reativar acesso** e **Remover** por linha, com confirmação.
+- Usa `app_users.status='blocked'` (mesma regra do portal), sem alterar
+  `is_active`/`is_portal`; lista com cache de 30 s para reduzir egress.
+- Proteções: não desativa/remove a própria conta; último administrador ativo não
+  pode ser desativado; último administrador não pode ser removido; professor só
+  gerencia alunos.
+- O login do painel (`_validar_professor`) também recusa contas bloqueadas.
+- Novas rotas: `POST /usuarios_criar`, `POST /usuarios_bloquear`,
+  `POST /usuarios_reativar` e `POST /usuarios_remover`; helpers
+  `_rest_update`/`_rest_delete`.
+- Filtro de busca na tabela (JavaScript) e Enter nos campos de cadastro envia para
+  `/usuarios_criar`.
+
+**Arquivos:** `data/repo/plugins/monitor/lab_receiver.py`, `AGENTS.md`,
+`plugins/monitor_rede/README.md`, `docs/FEATURES.md`, `docs/ISSUES_LOCAIS.md`.
+
+**Como validar:**
+1. Reiniciar o receiver (`reiniciar_servidor.bat`) e abrir `http://127.0.0.1:5000`.
+2. Entrar como professor/admin e abrir a aba **Usuários**.
+3. Criar uma conta de aluno; usar o filtro para encontrá-la.
+4. **Desativar** e tentar logar no portal (deve recusar); **Reativar** e logar.
+5. **Remover** e confirmar que o RA fica livre.
+6. Como professor, confirmar que só aparecem contas de aluno e que a opção
+   Professor/Administrador não aparece no cadastro.
+
+---
+
+## IS-197 — Tela de bloqueio: professora Adriana liberada no PC01 🟢
+
+**Pedido:** permitir que a professora **adriana** (`role=teacher`,
+RA `[RA]`) desbloqueie a tela do **PC01**.
+
+**Solução:**
+- `acesso_coletivos.json` ganhou a chave `professores` (`["adriana"]`).
+- `/api/auth_ra` aceita professor/admin da lista por **login, RA ou nome**
+  (`adriana`, `Adriana`, RA ou nome completo), associa ao PC e devolve
+  `role=teacher`. Professores não entram na regra de RA único.
+- O acesso de professor é permitido **somente em PCs mestres** (`PC01*` via
+  `SYSAVA_MASTER_HOSTS`/`master_hosts.txt`); em outros PCs o endpoint responde
+  **400** e a tela continua exigindo aluno da lista ou senha admin.
+- `/api/alunos?maquina=...` inclui os professores liberados no seletor **somente
+  no PC mestre**; o `sysava_lock.ps1` passou a enviar `maquina` na consulta.
+- Contas bloqueadas (`status='blocked'`) não liberam a tela.
+- O login do painel web já recusa contas bloqueadas (IS-196).
+
+**Arquivos:** `data/repo/plugins/monitor/acesso_coletivos.json`,
+`data/repo/plugins/monitor/lab_receiver.py`,
+`data/repo/plugins/monitor/sysava_lock.ps1`, `AGENTS.md`,
+`plugins/monitor_rede/README.md`, `docs/ISSUES_LOCAIS.md`.
+
+**Como validar:**
+1. Reiniciar o receiver no PC01 (ele lê `acesso_coletivos.json`).
+2. Na tela de bloqueio do PC01, digitar `adriana`, `Adriana`, o RA
+   `[RA]` ou o nome completo; a tela deve liberar e abrir o portal.
+3. Em um PC que não seja `PC01*`, tentar o mesmo nome: deve recusar.
+4. Atualizar a tela (`Atualizar Tela de Bloqueio`) para Adriana aparecer também
+   no seletor do PC01.
+5. Se a conta for desativada em **Usuários**, a tela deixa de liberar.
+
+---
+
+## IS-198 - Aulas: status não ficava verde por quizzes duplicados 🟢
+
+**Sintoma:** na disciplina **Arquitetura de Microsserviços**, o aluno acessava a
+aula, respondia ao quiz e o indicador continuava **amarelo** ("Visitada, quiz
+pendente"), sem virar verde.
+
+**Causa:** o `seed_lessons.py` criava um quiz novo a cada importação, sem remover
+os anteriores. As aulas 01–20 ficaram com **dois quizzes** (ex.: lesson 1058 com
+852 e 862). A tela de status montava `quiz_map = {lesson_id: último quiz}` (862),
+mas `get_quiz_for_lesson` exibe o **primeiro** (852) e o histórico gravava
+`quiz_id:852`. O id não batia e o status ficava amarelo.
+
+**Correção:**
+- `views/aulas.py`: status passa a considerar **todos** os quizzes da aula
+  (`quizzes_by_lesson`) e também registra o **título** do quiz do histórico
+  (mesmo quando há `quiz_id`), além de filtrar o histórico pelo `subject_id`.
+- `scripts/seed_lessons.py`: chama `delete_quizzes_for_lesson(lesson_id)` antes
+  de criar o quiz, evitando novas duplicatas.
+- Limpeza no banco: mantido **um quiz por aula** (o de menor id, que é o exibido)
+  e removidos os duplicados sem respostas no histórico (50 quizzes no total,
+  incluindo 20 desta disciplina).
+
+**Arquivos:** `views/aulas.py`, `scripts/seed_lessons.py` e este registro.
+
+**Como validar:**
+1. Abrir a disciplina, acessar uma aula e responder ao quiz.
+2. Voltar à lista: o círculo deve ficar **verde**.
+3. Aula apenas visitada, sem quiz respondido: permanece **amarela**.
+4. Conferir em `quizzes` que cada aula tem apenas um quiz ativo.

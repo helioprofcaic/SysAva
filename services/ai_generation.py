@@ -259,6 +259,34 @@ def generate_content_with_fallback(prompt, model_names=None):
     return MockResponse(f"**ERRO GERAL DO GEMINI**\n\nFalha ao gerar conteúdo após tentar todos os modelos.\n\n*Último erro: {last_error}*")
 
 
+def generate_content_with_deepseek(prompt: str, api_key: str, model_name: str = "deepseek-chat"):
+    """Gera conteúdo usando a API da DeepSeek (compatível com OpenAI)."""
+    try:
+        client = openai.OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+        response = client.chat.completions.create(
+            model=model_name,
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=8192
+        )
+        text = response.choices[0].message.content or ""
+        text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL | re.IGNORECASE).strip()
+        return MockResponse(text)
+    except Exception as e:
+        error_message = (
+            f"**ERRO DE AUTENTICAÇÃO OU CHAMADA COM A DEEPSEEK**\n\n"
+            f"Falha ao chamar a API da DeepSeek.\n\n"
+            f"**Ações de Verificação:**\n"
+            f"1. Verifique se a sua chave `DEEPSEEK_API_KEY` está correta.\n"
+            f"2. Certifique-se de que sua conta da DeepSeek tem créditos/saldo válido.\n"
+            f"3. Confirme o modelo selecionado (`deepseek-chat` ou `deepseek-reasoner`).\n\n"
+            f"*Detalhes técnicos: {e}*"
+        )
+        return MockResponse(error_message)
+
+
 def generate_content_with_openai(prompt: str, api_key: str, model_name: str = "gpt-4o-mini"):
     """Gera conteúdo usando a API oficial da OpenAI (ChatGPT)."""
     try:

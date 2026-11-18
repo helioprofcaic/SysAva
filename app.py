@@ -12,7 +12,7 @@ APP_LOGO = os.path.join(project_root, "assets", "logo_sysava.png")
 
 # Importa as funções que renderizam cada página
 
-from views import home, aulas, forum, quiz, avaliacoes, admin, login, register, gerador_aulas, plugins, portal
+from views import home, aulas, forum, quiz, avaliacoes, admin, login, register, gerador_aulas, plugins, portal, usuarios
 from services import database, auth
 import config
 
@@ -101,13 +101,44 @@ def main():
             if session_id:
                 user_session = auth.get_session(session_id)
                 if user_session:
-                    st.session_state['logado'] = True
-                    st.session_state['usuario'] = user_session['name']
-                    st.session_state['username'] = user_session['username']
-                    st.session_state['role'] = user_session['role']
-                    st.session_state.page = 'Home'
+                    usuario_atual = None
+                    if database.is_db_connected():
+                        usuario_atual = database.get_user(user_session['username'])
+                    if usuario_atual and database.is_user_blocked(usuario_atual):
+                        auth.logout_session(session_id)
+                    else:
+                        st.session_state['logado'] = True
+                        st.session_state['usuario'] = user_session['name']
+                        st.session_state['username'] = user_session['username']
+                        st.session_state['role'] = user_session['role']
+                        st.session_state.page = 'Home'
         except Exception:
             pass
+
+    # Conta desativada pelo professor: derruba a sessao na hora (sem consultar
+    # o banco a cada rerun; usa a lista em memoria compartilhada do processo).
+    if st.session_state.get('logado') and auth.is_session_revoked(
+            st.session_state.get('username')):
+        try:
+            from services import audit_log
+            audit_log.registrar(
+                "Sessão encerrada (conta desativada)",
+                username=st.session_state.get('username', ''),
+                name=st.session_state.get('usuario', ''),
+                role=st.session_state.get('role', ''),
+                pagina='Sessão',
+            )
+        except Exception:
+            pass
+        st.session_state['logado'] = False
+        st.session_state['usuario'] = ''
+        st.session_state['role'] = 'student'
+        st.session_state['page'] = 'login'
+        try:
+            st.query_params.clear()
+        except Exception:
+            pass
+        st.rerun()
 
     if 'page' not in st.session_state:
         st.session_state.page = 'login'
@@ -133,6 +164,11 @@ def main():
             else:
                 st.markdown("## 🎓 SysAva")
             st.title(f"Olá, {st.session_state['usuario']}")
+            try:
+                from services import database as _db
+                st.caption(f"🗄️ Banco: {_db.get_backend_label()}")
+            except Exception:
+                pass
 
             # Menu base (O Fórum agora é condicional à visualização de uma aula)
             opcoes_menu = ["Home", "Aulas"]
@@ -145,6 +181,7 @@ def main():
 
             if st.session_state.get('role') in ['admin', 'teacher']:
                 opcoes_menu.append("Portal")
+                opcoes_menu.append("Gestão de Usuários")
                 opcoes_menu.append("Admin")
                 opcoes_menu.append("Plugins")
                 opcoes_menu.append("Gerador de Aulas")
@@ -239,6 +276,8 @@ def main():
             quiz.show_page()
         elif page_to_show == "Avaliações":
             avaliacoes.show_page()
+        elif page_to_show == "Gestão de Usuários":
+            usuarios.show_page()
         elif page_to_show == "Admin":
             admin.show_page()
         elif page_to_show == "Plugins":

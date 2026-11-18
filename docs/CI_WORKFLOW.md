@@ -16,7 +16,7 @@ Cypress + Actions), adaptada ao ecossistema Python/Streamlit.
 | Passo | O quê | Falha quando... |
 |---|---|---|
 | **Sintaxe** | `git ls-files -z "*.py" \| xargs -0 -r python -m py_compile` — compila **só os `.py` versionados** (59 na data da escrita) | qualquer arquivo Python rastreado tiver erro de sintaxe |
-| **Testes (pytest)** | `pip install -r requirements.txt pytest` + `pytest -q` | **passo só aparece quando houver `tests/**/*.py`** (`if: hashFiles(...)`) — hoje ele está oculto por design |
+| **Testes (pytest)** | `pip install -r requirements-dev.txt` + `pytest -q` | **passo só aparece quando houver `tests/**/*.py`** (`if: hashFiles(...)`) — o `requirements-dev.txt` é enxuto de propósito (evita `llama-cpp-python` etc. no CI) |
 
 Python 3.11 = mesma versão do venv local `.sysenv`.
 

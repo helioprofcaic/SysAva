@@ -39,18 +39,22 @@ apps/
 data/Turmas/**
 !data/Turmas/Escola.txt
 
+data/fichas/**
+data/backups/**
 data/rascunhos/*
 data/repo/*
 data/repo/plugins/*json
-!data/repo/plugins/lab_status.json
-!data/repo/plugins/scan_config.json
 data/repo/plugins/*log
 data/repo/plugins/*.db
 !data/repo/plugins/
 data/repo/plugins/aulas/
+data/repo/plugins/backup_SysAva/*
+data/repo/plugins/bkup/*.*
 plugins/aulas/prontas/*.txt
 docs/*.txt
 data/credentials.json
+data/repo/plugins/monitor/.relatorios/**
+data/repo/plugins/monitor/.atividades/*.zip
 
 # Service account do Google Drive (conta bot) — nunca versionar
 drive_credentials.json
@@ -83,3 +87,34 @@ scripts/*
 .idea/
 *.swp
 *.swo
+
+# ZIPs de atividades enviados pelos PCs (dados dos alunos) - nunca versionar
+data/repo/plugins/.atividades/
+data/repo/plugins/.relatorios/
+
+# Runtime do monitor e dados sensíveis (máquinas, alunos, logs, segredos)
+data/repo/plugins/monitor/
+data/repo/plugins/*.key
+data/repo/plugins/receiver_secret.key
+data/repo/plugins/lab_status.json
+data/repo/plugins/scan_config.json
+data/repo/plugins/kitSysAva_log.txt
+data/repo/plugins/relatorio_auditoria.md
+data/repo/plugins/bkup/
+data/repo/plugins/categorias/
+data/repo/plugins/audit_log.py
+data/repo/plugins/INICIAR_SERVIDOR.*
+data/repo/plugins/aplicar_dns_seguro.ps1
+data/repo/plugins/aplicar_papel_parede.ps1
+data/repo/plugins/bloquear_hosts.*
+data/repo/plugins/gerar_logo_sysava.py
+data/repo/plugins/instalar_tela_sysava.ps1
+data/repo/plugins/lab_monitor.py
+data/repo/plugins/lab_monitor_doc.md
+data/repo/plugins/logo_sysava.png
+data/repo/plugins/wallpaper_sysava.png
+data/repo/plugins/sysava_lock.ps1
+data/repo/plugins/*.png
+
+# Log de build local
+Log_Build.txt

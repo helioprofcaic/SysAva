@@ -19,6 +19,12 @@ def process_quiz_content(lesson_id: int, quiz_content: str, lesson_title: str):
     quiz_title_match = re.search(r'^#+\s*(.*)', quiz_content, re.MULTILINE)
     quiz_title = quiz_title_match.group(1).strip() if quiz_title_match else f"Quiz: {lesson_title}"
 
+    # Remove quizzes anteriores da aula para evitar duplicatas a cada seed.
+    try:
+        db.delete_quizzes_for_lesson(lesson_id)
+    except Exception:
+        pass
+
     quiz_data, error = db.create_quiz(lesson_id, quiz_title)
     if error or not quiz_data:
         print(f"      -> ❌ Erro ao criar quiz: {error}")

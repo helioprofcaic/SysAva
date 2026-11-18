@@ -35,6 +35,18 @@ def show_page():
                     user_data = db.get_user_ci(user)
                 if user_data:
                     if auth.check_password(password, user_data['password']):
+                        if db.is_user_blocked(user_data):
+                            st.error("Conta desativada pelo professor. Procure a coordenação para reativar o acesso.")
+                            try:
+                                from services import audit_log
+                                audit_log.registrar("Login bloqueado", username=user_data.get('username', user),
+                                                    name=user_data.get('name', user),
+                                                    role=user_data.get('role', 'student'),
+                                                    pagina='Login', ip=remote_ip)
+                            except Exception:
+                                pass
+                            return
+                        auth.allow_user_sessions(user_data.get('username', user))
                         st.session_state['logado'] = True
                         st.session_state['usuario'] = user_data.get('name', user)
                         # Armazena o username (RA) para consultas de matrícula

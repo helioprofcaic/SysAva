@@ -201,11 +201,16 @@ def show_page():
 
     # --- Aba de Monitoramento de Laboratório ---
     elif selected_tab == "Monitor":
-        monitor_path = os.path.join("data", "repo", "plugins", "lab_monitor.py")
+        monitor_path = os.path.join("plugins", "monitor_rede", "lab_monitor.py")
+        if not os.path.exists(monitor_path):
+            # Runtime novo (data/repo/plugins/monitor) e compatibilidade com o antigo.
+            monitor_path = os.path.join("data", "repo", "plugins", "monitor", "lab_monitor.py")
+            if not os.path.exists(monitor_path):
+                monitor_path = os.path.join("data", "repo", "plugins", "lab_monitor.py")
         if os.path.exists(monitor_path):
             render_plugin_integrated(monitor_path)
         else:
-            st.info("O plugin de monitoramento não foi encontrado em `data/repo/plugins/lab_monitor.py`.")
+            st.info("O plugin de monitoramento não foi encontrado em `plugins/monitor_rede/lab_monitor.py`.")
 
     # --- Aba de Agenda (Dedicada) ---
     elif selected_tab == "Agenda":

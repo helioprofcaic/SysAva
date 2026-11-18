@@ -1,6 +1,7 @@
 import os
 import glob
 import re
+import difflib
 import unicodedata
 from typing import Optional, List
 
@@ -19,6 +20,18 @@ def normalizar_para_matching(texto: str) -> str:
     nfkd = unicodedata.normalize('NFKD', str(texto))
     sem_acento = "".join([c for c in nfkd if not unicodedata.combining(c)])
     return re.sub(r'[^A-Z0-9]', '', sem_acento.upper())
+
+def _melhor_correspondencia_aproximada(pastas, alvo_normalizado: str, limiar: float = 0.9) -> Optional[str]:
+    """Última tentativa: pasta com nome mais parecido (tolera erros de digitação, ex.: MICROSSERIÇOS)."""
+    if not alvo_normalizado:
+        return None
+    melhor = None
+    melhor_score = 0.0
+    for p in pastas:
+        score = difflib.SequenceMatcher(None, alvo_normalizado, normalizar_para_matching(p)).ratio()
+        if score > melhor_score:
+            melhor, melhor_score = p, score
+    return melhor if melhor_score >= limiar else None
 
 def resolver_pasta_turma(base_turmas_path: str, nome_turma: str, folder_name: str = None) -> str:
     """Encontra a pasta física da turma mesmo com variações de nomenclatura ou caracteres."""
@@ -45,6 +58,9 @@ def resolver_pasta_turma(base_turmas_path: str, nome_turma: str, folder_name: st
         norm_p = normalizar_para_matching(p)
         if norm_alvo and (norm_alvo in norm_p or norm_p in norm_alvo):
             return p
+    aproximada = _melhor_correspondencia_aproximada(pastas, norm_alvo)
+    if aproximada:
+        return aproximada
     return folder_name or nome_turma
 
 def resolver_pasta_disciplina(base_turma_path: str, nome_disciplina: str, folder_name: str = None) -> str:
@@ -74,6 +90,9 @@ def resolver_pasta_disciplina(base_turma_path: str, nome_disciplina: str, folder
         norm_p = normalizar_para_matching(p)
         if norm_alvo and (norm_alvo in norm_p or norm_p in norm_alvo):
             return p
+    aproximada = _melhor_correspondencia_aproximada(pastas, norm_alvo)
+    if aproximada:
+        return aproximada
     return folder_name or nome_disciplina.replace('/', '  ').replace('\\', '  ')
 
 class GerenciadorContextoAula:
@@ -142,6 +161,12 @@ class GerenciadorContextoAula:
         
         sugeridos = []
         for arq in todos_arquivos:
+            nome = os.path.basename(arq).lower()
+            # `links_aulas.md` guarda os vídeos da semana: deve entrar sempre,
+            # mesmo quando o nome não contém o número da aula/semana.
+            if nome == 'links_aulas.md':
+                sugeridos.append(arq)
+                continue
             # Se tiver apenas 1 arquivo, sugere ele. Se tiver regex match, sugere também.
             if len(todos_arquivos) == 1 or padrao.search(os.path.basename(arq)):
                 sugeridos.append(arq)
@@ -151,7 +176,42 @@ class GerenciadorContextoAula:
             "sugeridos": sorted(sugeridos)
         }, None
 
-    def _rota_2_pasta_arquivos(self, turma, disciplina, semana):
+    def obter_link_video_aula(self, turma, disciplina, semana, numero_aula):
+        """Lê `links_aulas.md` e devolve o vídeo correspondente à aula informada."""
+        try:
+            path_semana = self.obter_caminho_aula(turma, disciplina, semana)
+        except Exception:
+            return None
+
+        candidatos = [
+            os.path.join(path_semana, "seductec", "links_aulas.md"),
+            os.path.join(path_semana, "links_aulas.md"),
+        ]
+        md_path = next((p for p in candidatos if os.path.isfile(p)), None)
+        if not md_path:
+            return None
+
+        atual = None
+        try:
+            with open(md_path, "r", encoding="utf-8") as f:
+                for linha in f:
+                    linha = linha.strip()
+                    if linha.startswith("### "):
+                        atual = linha[4:].strip()
+                        continue
+                    if not atual or not linha.startswith("- ["):
+                        continue
+                    match_aula = re.search(r'(?i)aula[\s_-]*0*(\d+)', atual)
+                    if not match_aula or int(match_aula.group(1)) != int(numero_aula):
+                        continue
+                    match_url = re.search(r'\((https?://[^)]+)\)', linha)
+                    if match_url:
+                        return match_url.group(1).strip()
+        except Exception:
+            return None
+        return None
+
+    def _rota_2_pasta_arquivos(self, turma, disciplina, semana, numero_aula=None):
         """
         ROTA 2: Busca PDFs e Links na estrutura de pastas data/Turmas/...
         Estrutura esperada: data/Turmas/<turma>/<disciplina>/S<semana>/ (ou com subpasta seductec/)
@@ -230,6 +290,20 @@ class GerenciadorContextoAula:
             todos_textos = glob.glob(os.path.join(path_semana, "*.md")) + glob.glob(os.path.join(path_semana, "*.txt"))
         mds = selecionar_arquivos_relevantes(todos_textos)
 
+        # `links_aulas.md` é sempre lido, mesmo que o filtro por número o descarte.
+        links_md = [p for p in todos_textos if os.path.basename(p).lower() == 'links_aulas.md']
+        for p in links_md:
+            if p not in mds:
+                mds.append(p)
+
+        # Reforça no contexto qual é o vídeo da aula que está sendo gerada.
+        if numero_aula is not None:
+            video_url = self.obter_link_video_aula(turma, disciplina, semana, numero_aula)
+            if video_url:
+                texto_acumulado.append(
+                    f"--- VÍDEO OBRIGATÓRIO DA AULA {int(numero_aula)} ---\n{video_url}\n"
+                )
+
         for md_file in mds:
             try:
                 with open(md_file, 'r', encoding='utf-8') as f:
@@ -307,9 +381,10 @@ class GerenciadorContextoAula:
                 return "Erro: Rota 2 exige 'turma', 'disciplina' e 'semana'."
             
             return self._rota_2_pasta_arquivos(
-                kwargs['turma'], 
-                kwargs['disciplina'], 
-                kwargs['semana']
+                kwargs['turma'],
+                kwargs['disciplina'],
+                kwargs['semana'],
+                kwargs.get('numero_aula')
             )
         else:
             if not all(k in kwargs for k in ('arquivo_lista_path', 'numero_aula')):

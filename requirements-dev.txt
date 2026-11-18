@@ -1,0 +1,5 @@
+# Dependências mínimas para os testes — o CI instala SÓ isto (evita builds
+# pesados do requirements.txt, ex.: llama-cpp-python).
+pytest
+streamlit
+supabase

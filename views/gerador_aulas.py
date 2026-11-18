@@ -4,15 +4,58 @@ import re
 import time
 import shutil
 from services.generate_lessons_gemini import GeradorAulaGemini, DATA_DIR
-from services.ai_generation import generate_content_with_fallback, generate_content_local_openai_compatible, configure_api, generate_content_with_mimo, generate_content_with_openai
+from services.ai_generation import generate_content_with_fallback, generate_content_local_openai_compatible, configure_api, generate_content_with_mimo, generate_content_with_openai, generate_content_with_deepseek
 from services import database as db
 from services import quiz_parser
 from services.contexto_aulas import resolver_pasta_turma, resolver_pasta_disciplina, normalizar_para_matching
 from services.pdf_extractor import convert_markdown_images_to_svg, strip_base64_images
 from views.aulas import clean_svg_content
 
+
+def _is_local_mode() -> bool:
+    """Detecta execução local (fora do Streamlit Cloud) pela ausência de marcadores de nuvem e presença do .env."""
+    cloud_markers = ("STREAMLIT_SHARING_MODE", "IS_STREAMLIT_CLOUD", "STREAMLIT_CLOUD")
+    if any(os.environ.get(marker) for marker in cloud_markers):
+        return False
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.exists(os.path.join(project_root, ".env"))
+
+
+def _deepseek_default_key() -> str:
+    """Retorna DEEPSEEK_API_KEY apenas em modo local, evitando expor a chave na nuvem."""
+    if not _is_local_mode():
+        return ""
+    key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
+    if key:
+        return key
+    try:
+        return str(st.secrets.get("DEEPSEEK_API_KEY", "") or "").strip()
+    except Exception:
+        return ""
+
+
+def _ensure_video_link(markdown: str, video_url: str) -> str:
+    """Garante que o link do vídeo da aula apareça em Recursos e Links."""
+    if not markdown or not video_url:
+        return markdown
+    if video_url in markdown:
+        return markdown
+
+    link_line = f"- 🎥 **Vídeo da aula:** {video_url}"
+    heading = re.search(r"(?im)^##\s*(?:🧰\s*)?Recursos e Links\s*$", markdown)
+    if heading:
+        restante = markdown[heading.end():].lstrip("\n")
+        return markdown[:heading.end()] + "\n\n" + link_line + "\n\n" + restante
+
+    quiz = re.search(r"(?im)^##\s*(?:📝\s*)?Quiz\b", markdown)
+    bloco = f"## 🧰 Recursos e Links\n\n{link_line}\n\n"
+    if quiz:
+        return markdown[:quiz.start()] + bloco + markdown[quiz.start():]
+    return markdown.rstrip() + "\n\n" + bloco
+
+
 def show_page():
-    st.header("🎓 Gerador de Planos de Aula (Gemini)")
+    st.header("🎓 Gerador de Planos de Aula (Multi-IA)")
     st.markdown("---")
 
     # Inicializa o estado para armazenar o contexto antes de usar no stepper
@@ -58,13 +101,15 @@ def show_page():
         
         ia_source_option = st.radio(
             "Escolha o modelo de IA:",
-            ("Google Gemini (Nuvem)", "ChatGPT - OpenAI (Nuvem)", "MiMo (Assistente)", "Modelo Local (LM Studio)", "Modelo Local (Llama Serve)", "Modelo Local (Jan)"),
-            help="Use o Gemini ou ChatGPT para qualidade, MiMo para geração via terminal, ou um modelo local para privacidade."
+            ("Google Gemini (Nuvem)", "ChatGPT - OpenAI (Nuvem)", "DeepSeek Cloud (Nuvem)", "MiMo (Assistente)", "Modelo Local (LM Studio)", "Modelo Local (Llama Serve)", "Modelo Local (Jan)"),
+            help="Use Gemini, ChatGPT ou DeepSeek Cloud para qualidade, MiMo para geração via terminal, ou um modelo local para privacidade."
         )
 
         ia_source = "gemini" # Default
         if "ChatGPT" in ia_source_option:
             ia_source = "openai"
+        elif "DeepSeek" in ia_source_option:
+            ia_source = "deepseek"
         elif "MiMo" in ia_source_option:
             ia_source = "mimo"
         elif "LM Studio" in ia_source_option:
@@ -76,13 +121,31 @@ def show_page():
 
         api_key_gemini = None
         api_key_openai = None
+        api_key_deepseek = None
         openai_model_name = "gpt-4o-mini"
+        deepseek_model_name = "deepseek-chat"
         local_model_port = 1234  # Default
         if ia_source == "gemini":
             api_key_gemini = st.text_input("Chave de API do Google Gemini", type="password", help="Necessária para usar o Gemini.")
         elif ia_source == "openai":
             api_key_openai = st.text_input("Chave de API da OpenAI", type="password", help="Chave sk-proj-...")
             openai_model_name = st.selectbox("Modelo ChatGPT:", ["gpt-4o-mini", "gpt-4o"], index=0, help="gpt-4o-mini é super veloz e econômico, gpt-4o é o mais avançado.")
+        elif ia_source == "deepseek":
+            deepseek_default = _deepseek_default_key()
+            api_key_deepseek = st.text_input(
+                "Chave de API da DeepSeek",
+                type="password",
+                value=deepseek_default,
+                help="Chave sk-... da DeepSeek. Em modo local, é preenchida automaticamente a partir da variável DEEPSEEK_API_KEY."
+            )
+            if deepseek_default:
+                st.caption("🔑 Chave carregada automaticamente de `DEEPSEEK_API_KEY` (modo local).")
+            deepseek_model_name = st.selectbox(
+                "Modelo DeepSeek:",
+                ["deepseek-chat", "deepseek-reasoner"],
+                index=0,
+                help="deepseek-chat é rápido e econômico; deepseek-reasoner é focado em raciocínio avançado."
+            )
         elif ia_source == "mimo":
             st.info("💡 O MiMo será chamado via terminal. Executável: `~/.mimocode/bin/mimo.exe`")
         else:
@@ -231,10 +294,14 @@ def show_page():
                 st.error("Por favor, insira sua Chave de API do Google Gemini na barra lateral.")
             elif ia_source == "openai" and not api_key_openai:
                 st.error("Por favor, insira sua Chave de API da OpenAI na barra lateral.")
+            elif ia_source == "deepseek" and not api_key_deepseek:
+                st.error("Por favor, insira sua Chave de API da DeepSeek na barra lateral.")
             else:
                 spinner_text = f"Analisando contexto e gerando aula com {ia_source_option}..."
                 if ia_source == "mimo":
                     spinner_text = "Gerando aula com MiMo..."
+                elif ia_source == "deepseek":
+                    spinner_text = "Gerando aula com DeepSeek Cloud..."
                 elif ia_source == "lm-studio":
                     spinner_text = "Conectando ao LM Studio e gerando aula..."
                 elif ia_source == "llama-serve":
@@ -258,15 +325,15 @@ def show_page():
                             # e garantir que a IA não repita os blocos no plano final
                             contexto_para_ia = remover_base64_do_texto(contexto_para_ia)
 
-                        # Limite inteligente para modelos em nuvem (Gemini e ChatGPT) para economizar tokens/custos de API
+                        # Limite inteligente para modelos em nuvem (Gemini, ChatGPT e DeepSeek) para economizar tokens/custos de API
                         # 32.000 caracteres equivalem a aproximadamente 8.000 a 10.000 tokens (cerca de 15 páginas de texto puro)
                         MAX_CHARS_CONTEXTO_NUVEM = 32000
-                        if ia_source in ("gemini", "openai") and len(contexto_para_ia) > MAX_CHARS_CONTEXTO_NUVEM:
+                        if ia_source in ("gemini", "openai", "deepseek") and len(contexto_para_ia) > MAX_CHARS_CONTEXTO_NUVEM:
                             st.info(f"⚡ Para economizar seus tokens e reduzir custos de API, o material base foi otimizado para os primeiros {MAX_CHARS_CONTEXTO_NUVEM} caracteres (suficiente para a aula).")
                             contexto_para_ia = contexto_para_ia[:MAX_CHARS_CONTEXTO_NUVEM] + "\n\n[... CONTEÚDO OTIMIZADO PARA CRÉDITOS DE API ...]"
 
-                        # Adiciona lógica de truncamento para modelos locais (não se aplica a Gemini, ChatGPT nem MiMo)
-                        if ia_source not in ("gemini", "openai", "mimo"):
+                        # Adiciona lógica de truncamento para modelos locais (não se aplica a Gemini, ChatGPT, DeepSeek nem MiMo)
+                        if ia_source not in ("gemini", "openai", "deepseek", "mimo"):
                             # Modelos locais geralmente têm janelas de contexto menores (ex: 4096 tokens).
                             # O prompt em si consome tokens, então limitamos o contexto para evitar erros.
                             # 1 token ~ 3-4 caracteres. 2500 tokens de contexto ~ 9000 caracteres.
@@ -275,6 +342,14 @@ def show_page():
                                 st.warning(f"⚠️ O contexto era muito longo para o modelo local e foi truncated para {MAX_CHARS_CONTEXTO_LOCAL} caracteres para evitar erros.")
                                 contexto_para_ia = contexto_para_ia[:MAX_CHARS_CONTEXTO_LOCAL] + "\n\n[... CONTEÚDO TRUNCADO ...]"
                         
+                        video_url = None
+                        try:
+                            video_url = gerador.contexto_mgr.obter_link_video_aula(
+                                turma_selecionada, disciplina_selecionada, semana, numero_aula
+                            )
+                        except Exception:
+                            video_url = None
+
                         prompt = gerador.gerar_prompt_aula(
                             turma=turma_selecionada,
                             disciplina=disciplina_selecionada,
@@ -286,8 +361,9 @@ def show_page():
                             persona=ai_persona,
                             metodologia=metodologia,
                             estrutura=estrutura_aula,
-                            is_local_model=(ia_source not in ("gemini", "openai")),
-                            sem_ilustracoes=remover_ilustracoes
+                            is_local_model=(ia_source not in ("gemini", "openai", "deepseek")),
+                            sem_ilustracoes=remover_ilustracoes,
+                            video_url=video_url
                         )
                         
                         st.session_state['last_prompt'] = prompt
@@ -297,6 +373,8 @@ def show_page():
                             response = generate_content_with_fallback(prompt)
                         elif ia_source == "openai":
                             response = generate_content_with_openai(prompt, api_key_openai, openai_model_name)
+                        elif ia_source == "deepseek":
+                            response = generate_content_with_deepseek(prompt, api_key_deepseek, deepseek_model_name)
                         elif ia_source == "mimo":
                             response = generate_content_with_mimo(prompt)
                         else: # Modelos locais
@@ -325,6 +403,9 @@ def show_page():
 
                             # Barreira final: nunca deixa Base64 chegar ao banco (ver AGENTS.md)
                             texto_convertido = strip_base64_images(texto_convertido)
+
+                            # Garante o vídeo da aula mesmo se o modelo o omitir.
+                            texto_convertido = _ensure_video_link(texto_convertido, video_url)
 
                             st.session_state['aula_gerada'] = texto_convertido
                             st.session_state['generated_subject_id'] = subject_id
@@ -452,10 +533,24 @@ def show_page():
                                    normalizar_para_matching(s['name']) in norm_curr_disc
                             ]
                             if matching_subjs:
+                                # Prefere a disciplina específica da turma de destino
+                                # (ex.: "... (2ª SÉRIE - Turma I-B ...)") em vez da
+                                # disciplina compartilhada entre as turmas.
+                                norm_classe = normalizar_para_matching(c_name)
+
+                                def _score_subject(s):
+                                    norm_nome = normalizar_para_matching(s['name'])
+                                    if norm_classe and norm_classe in norm_nome:
+                                        return 0
+                                    if norm_nome == norm_curr_disc:
+                                        return 1
+                                    return 2
+
+                                escolhida = sorted(matching_subjs, key=_score_subject)[0]
                                 outras_turmas[c_name] = {
                                     'class_id': c_id,
-                                    'subject_id': matching_subjs[0]['id'],
-                                    'subject_name': matching_subjs[0]['name'],
+                                    'subject_id': escolhida['id'],
+                                    'subject_name': escolhida['name'],
                                     'source': 'db'
                                 }
                         except Exception:

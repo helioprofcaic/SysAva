@@ -1,15 +1,10 @@
 import streamlit as st
 
 def get_supabase_client():
-    """Obtém o cliente Supabase a partir dos segredos do Streamlit."""
-    try:
-        # Acessa o cliente Supabase que já foi inicializado em database.py
-        # e armazenado no estado da sessão pelo hack nos scripts de seed.
-        return st.session_state.supabase_client
-    except (AttributeError, KeyError):
-        # Fallback se o cliente não estiver no estado da sessão
-        from services.database import init_connection
-        return init_connection()
+    """Obtém o cliente do banco (Supabase ou SQLite local)."""
+    # O backend já é resolvido por services.database (SYSAVA_DB_MODE).
+    from services.database import get_supabase
+    return get_supabase()
 
 def simple_upsert_subject(name: str):
     """

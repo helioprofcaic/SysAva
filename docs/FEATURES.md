@@ -63,35 +63,48 @@ O dashboard é a primeira tela exibida após o login para professores e administ
 
 ## 👥 Gerenciamento de Usuários
 
-A aba "Usuários" no painel administrativo oferece controle completo sobre as contas.
+A aba **Gestão de Usuários** (menu lateral, para professores e administradores)
+oferece controle completo sobre as contas. O painel antigo **Admin > Usuários**
+continua disponível para frequência (Falta/Inativo).
 
 ### Funcionalidades
 
 1. **Cadastro de Usuários:**
    - Formulário para criar novos usuários com nome, login, RA, senha e função.
+   - Aluno pode já sair matriculado na turma escolhida.
+   - Professor cria apenas contas de aluno; administrador cria qualquer função.
 
-2. **Filtros:**
-   - Filtrar por função: Todos, Alunos, Professores, Administradores.
-   - Filtrar por turma (quando "Alunos" está selecionado).
+2. **Filtros e busca:**
+   - Busca por nome, usuário ou RA.
+   - Filtrar por função, por acesso (Ativo/Desativado) e por turma.
+   - Tabela com nome, usuário, RA, função, turma e acesso.
 
-3. **Visualização Agrupada (Alunos):**
-   - Quando "Todas as Turmas" está selecionado, os alunos são exibidos **agrupados por turma** em expanders.
-   - Cada turma mostra a quantidade de alunos entre parênteses.
+3. **Controle de Contas:**
+   - **Desativar acesso / Reativar acesso:** grava `app_users.status = 'blocked'`
+     e bloqueia o login no portal imediatamente. Não altera `is_active`/`is_portal`
+     (frequência), então o aluno continua na chamada.
+   - **Redefinir senha:** troca o hash bcrypt sem precisar do cadastro antigo.
+   - **Excluir:** remoção permanente do cadastro e da matrícula, com confirmação.
+   - **Proteção:** o usuário atual não pode desativar/remover a própria conta e
+     o último administrador ativo não pode ser desativado/removido.
+   - Sessões ativas do usuário desativado são encerradas no processo do servidor.
 
-4. **Controle de Contas:**
-   - **Ativar/Desativar:** Botão para desativar contas sem excluí-las. Contas desativadas podem ser reativadas posteriormente.
-   - **Excluir:** Remoção permanente da conta (com confirmação implícita).
-   - **Proteção:** O usuário atual não pode excluir ou desativar a própria conta.
+4. **Coluna de Status:**
+   - Indica **Ativo** ou **Desativado** (acesso ao portal), separado do status de
+     frequência.
 
-5. **Coluna de Status:**
-   - Indica se a conta está "Ativa" ou "Inativa".
+A mesma gestão está disponível no **painel web do monitor** (porta 5000), na aba
+**Usuários**: criar conta, desativar/reativar acesso e remover. As regras de
+permissão e proteção são as mesmas do portal.
 
-### Migracao do Banco
+### Banco de Dados
 
-Para usar a funcionalidade de ativar/desativar, execute no SQL Editor do Supabase:
+O bloqueio usa a coluna `app_users.status` (valores `active`, `inactive` e
+`blocked`). Se a coluna não existir no banco antigo, execute no SQL Editor do
+Supabase:
 
 ```sql
-ALTER TABLE public.app_users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+ALTER TABLE public.app_users ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
 NOTIFY pgrst, 'reload schema';
 ```
 

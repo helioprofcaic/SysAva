@@ -46,9 +46,19 @@ def process_quiz_content(lesson_id: int, quiz_content: str, lesson_title: str):
     #    "**[x]**" -> "[x]", "**a)**" -> "a)", "**(x)**" -> "(x)"
     content = re.sub(r'\*{2}\s*([\[\(])\s*([xX]?)\s*([\]\)])\s*\*{2}', r'\1\2\3', quiz_content, flags=re.IGNORECASE)
     content = re.sub(r'\*{2}([a-eA-E][\.\)])\*{2}', r'\1', content)
+    # Gabarito em negrito: "**B**" -> "B" e "**1. B**" -> "1. B"
+    content = re.sub(r'\*{2}\s*(\d+)\s*[\.\)]\s*([a-eA-E])\s*\*{2}', r'\1. \2', content, flags=re.IGNORECASE)
+    content = re.sub(r'\*{2}\s*([a-eA-E])\s*\*{2}', r'\1', content, flags=re.IGNORECASE)
+
+    # Numeração com emoji (1️⃣, 2️⃣, ...) -> "1."
+    for _n in range(10):
+        content = content.replace(f"{_n}\ufe0f\u20e3", f"{_n}.")
+        content = content.replace(f"{_n}\u20e3", f"{_n}.")
 
     # 1. Substitui Pergunta/Questão por "1." de forma resiliente e remove zeros à esquerda
     content = re.sub(r'(?:Pergunta|Quest[aã]o|Question)\s+0*(\d+)', r'\1.', content, flags=re.IGNORECASE)
+    # Cabeçalho "### ❓ 1." / "### Questão 1" -> "### 1."
+    content = re.sub(r'(?m)^###\s*[^\w\d\n]*\s*(\d+)\s*[\.\)]\s*$', r'### \1.', content)
     content = re.sub(r'(\d+)\.', r'\1.', content) # normaliza o número da pergunta
 
     # 2. Quebra antes de numeros de questao (1. 2. 3.)
@@ -75,6 +85,8 @@ def process_quiz_content(lesson_id: int, quiz_content: str, lesson_title: str):
 
     def flush_current_question():
         nonlocal current_question, current_options, current_correct_index, current_question_number
+        if current_question:
+            current_question = re.sub(r'\s*\*+\s*$', '', current_question).strip()
         if current_question and current_options:
             questions_buffer.append({
                 'question_text': current_question,
@@ -117,7 +129,7 @@ def process_quiz_content(lesson_id: int, quiz_content: str, lesson_title: str):
                                 break
             continue
 
-        question_regex_str = r'^(?:###\s*)?[\*]*(\d+)[\*]*[\.\)\-]\s+(.*)'
+        question_regex_str = r'^(?:###\s*)?[\*]*(\d+)[\*]*[\.\)\-]\s*(.*)$'
 
         # Ignora titulos
         if clean_line.startswith('#') and not re.match(question_regex_str, clean_line):

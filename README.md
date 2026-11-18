@@ -42,6 +42,7 @@ Este é um protótipo de uma Plataforma de Ensino (LMS - Learning Management Sys
     -   **Auditoria de Questões:** Verificação automática de problemas em questões de quizzes e avaliações.
     -   **Revisor de Gabaritos:** Interface para revisar e corrigir gabaritos rapidamente.
 -   **Treinamentos:** Disciplinas flutuantes que podem ser vinculadas a múltiplas turmas (ideal para olimpíadas e preparatórios).
+-   **Monitor de Laboratório:** radar de atividade dos PCs e comandos remotos (bloquear sites/jogos, alertas, volume, logoff/desligar/reiniciar). Inclui **tela de bloqueio** com seletor de aluno, **RA único** por PC (exceto contas coletivas como `7anoA`/`8ano`), **janela EJA 17h–23h** e **backup das atividades** dos alunos. Detalhes em `plugins/monitor_rede/README.md`.
 -   **Banco de Dados Persistente:** Utiliza o Supabase para armazenar todas as informações.
 
 ## 🧅 Arquitetura

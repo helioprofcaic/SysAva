@@ -25,6 +25,15 @@ def get_local_ips():
     return [snic.address for interface, snics in psutil.net_if_addrs().items() 
             for snic in snics if snic.family == socket.AF_INET and not snic.address.startswith("127.")]
 
+def get_plugin_dir():
+    """Pasta de runtime do monitor (data/repo/plugins/monitor) com fallback antigo."""
+    base = os.path.dirname(os.path.abspath(__file__))
+    novo = os.path.join(base, "data", "repo", "plugins", "monitor")
+    antigo = os.path.join(base, "data", "repo", "plugins")
+    if os.path.exists(os.path.join(novo, "lab_receiver.bat")) or os.path.exists(os.path.join(novo, "lab_receiver.py")):
+        return novo
+    return antigo
+
 def get_receiver_process():
     for proc in psutil.process_iter(['name', 'cmdline']):
         try:
@@ -155,7 +164,7 @@ def run_diagnostics(watch=False):
         print(f"   [i] Iniciado às: {create_time}")
         print(f"   [i] Consumo: CPU: {cpu}% | RAM: {ram:.2f} MB")
     else:
-        plugin_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "repo", "plugins")
+        plugin_dir = get_plugin_dir()
         receiver_script_path = os.path.join(plugin_dir, "lab_receiver.bat")
 
         print(f"   [{Colors.FAIL}!!{Colors.ENDC}] {Colors.FAIL}ERRO: O processo 'lab_receiver.py' NÃO está rodando.{Colors.ENDC}")
@@ -207,7 +216,7 @@ def run_diagnostics(watch=False):
 
     # 3. Monitoramento de Atividade (Novo!)
     print(f"\n🖥️  {Colors.BOLD}Atividade das Máquinas:{Colors.ENDC}")
-    plugin_dir = os.path.join(os.path.dirname(__file__), "data", "repo", "plugins")
+    plugin_dir = get_plugin_dir()
     status_path = os.path.join(plugin_dir, "lab_status.json")
     activity_log = os.path.join(plugin_dir, "lab_receiver.log")
     

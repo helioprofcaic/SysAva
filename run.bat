@@ -85,8 +85,15 @@ if %errorlevel% == 1 (
 REM ==========================================
 REM 5. INICIALIZAÇÃO DAS APLICAÇÕES
 REM ==========================================
-echo [INFO] Iniciando API de gerenciamento de modelos em segundo plano...
-start "Model Manager API" /B "%VENV_PATH%\Scripts\python.exe" scripts/model_manager_api.py
+REM Evita duplicar a API de modelos (porta 8001) quando uma instancia antiga segue ativa.
+set "MM_PORT_BUSY="
+for /f "tokens=*" %%a in ('powershell -NoProfile -Command "if (Get-NetTCPConnection -LocalPort 8001 -State Listen -ErrorAction SilentlyContinue) { 'busy' }" 2^>nul') do set "MM_PORT_BUSY=%%a"
+if not defined MM_PORT_BUSY (
+    echo [INFO] Iniciando API de gerenciamento de modelos em segundo plano...
+    start "Model Manager API" /B "%VENV_PATH%\Scripts\python.exe" scripts/model_manager_api.py
+) else (
+    echo [INFO] API de gerenciamento de modelos ja ativa na porta 8001 (instancia anterior reaproveitada).
+)
 
 REM Força o Streamlit a escutar em todas as interfaces de rede
 set STREAMLIT_SERVER_ADDRESS=0.0.0.0
@@ -112,21 +119,23 @@ echo [2] Iniciar o Verificador de Duplicatas (historico_aulas)
 echo [3] Iniciar o Monitor de Consumo do Supabase (Egress)
 echo [4] Iniciar o Acompanhamento de Planejamento e Registro
 echo [5] Iniciar o Down SeducTec (PDFs e videos do portal - porta 8504)
-echo [6] Abrir a documentacao dos Apps (README)
-echo [7] Abrir o repositorio dos Apps no GitHub
-echo [8] Sair do Painel
+echo [6] Iniciar a Analise de Notas (dashboard e robot iSeduc - porta 8511)
+echo [7] Abrir a documentacao dos Apps (README)
+echo [8] Abrir o repositorio dos Apps no GitHub
+echo [9] Sair do Painel
 echo.
 echo ========================================================
-set /p escolha="Digite a opção desejada (1-8): "
+set /p escolha="Digite a opção desejada (1-9): "
 
 if "%escolha%"=="1" goto start_app
 if "%escolha%"=="2" goto start_dup
 if "%escolha%"=="3" goto start_mon
 if "%escolha%"=="4" goto start_plan
 if "%escolha%"=="5" goto start_sed
-if "%escolha%"=="6" goto start_docs
-if "%escolha%"=="7" goto start_repo
-if "%escolha%"=="8" exit /b 0
+if "%escolha%"=="6" goto start_notas
+if "%escolha%"=="7" goto start_docs
+if "%escolha%"=="8" goto start_repo
+if "%escolha%"=="9" exit /b 0
 goto menu
 
 :start_app
@@ -161,6 +170,13 @@ goto menu
 echo.
 echo Iniciando o Down SeducTec (porta 8504)...
 call "%VENV_PATH%\Scripts\streamlit.exe" run apps/down_seductec/down_seductec_streamlit.py --server.port 8504
+pause
+goto menu
+
+:start_notas
+echo.
+echo Iniciando a Analise de Notas (porta 8511)...
+call "%VENV_PATH%\Scripts\streamlit.exe" run apps/analise_notas/analise_notas_streamlit.py --server.port 8511
 pause
 goto menu
 

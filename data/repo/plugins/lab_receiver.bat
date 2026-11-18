@@ -52,6 +52,21 @@ if %errorlevel% == 0 (
     )
 )
 
+:: Verificacao da regra UDP 5001 (descoberta automatica do servidor)
+echo [INFO] Verificando regra de Firewall para a porta UDP 5001...
+netsh advfirewall firewall show rule name="SysAva Lab Receiver (UDP 5001)" >nul
+if %errorlevel% == 0 (
+    echo [OK] Regra de firewall (UDP 5001) ja existe.
+) else (
+    echo [AVISO] Regra (UDP 5001) nao encontrada. Tentando criar...
+    netsh advfirewall firewall add rule name="SysAva Lab Receiver (UDP 5001)" dir=in action=allow protocol=UDP localport=5001 profile=any >nul 2>&1
+    if !errorlevel! neq 0 (
+        echo [!] Falha ao criar regra UDP 5001. Os agentes ainda encontram o servidor por MAC/varredura.
+    ) else (
+        echo [OK] Regra de firewall (UDP 5001) criada com sucesso.
+    )
+)
+
 :: Loop de Auto-Recuperacao (Watchdog)
 :RESTART
 echo [%TIME%] Iniciando Receptor SysAva...

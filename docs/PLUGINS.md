@@ -1,6 +1,6 @@
-# 🔌 Guia de Plugins do SysAva
+﻿# 🔌 Guia de Plugins do SysAva
 
-Este documento descreve os plugins disponíveis na **Central de Plugins**, suas funcionalidades, regras de negócio e integrações. Os plugins estão localizados em `data/repo/plugins/`.
+Este documento descreve os plugins disponíveis na **Central de Plugins**, suas funcionalidades, regras de negócio e integrações. Os plugins estão em `data/repo/plugins/` (o runtime do monitor fica em `data/repo/plugins/monitor/` e o código em `plugins/monitor_rede/`).
 
 ---
 
@@ -54,13 +54,20 @@ Painel de controle diário para o professor e alunos.
 
 ---
 
-## 🖥️ Monitoramento de Laboratório (`lab_monitor.py`)
-Radar de atividade em tempo real para controle de sala.
+## 🖥️ Monitoramento de Laboratório (`plugins/monitor_rede/lab_monitor.py`)
+Radar de atividade em tempo real + painel web do receiver para controle de sala.
 
 - **Objetivo:** Identificar desvios de foco (Roblox, Games, Redes Sociais) e intervir remotamente.
 - **Funcionalidades Principais:**
     - **Heatmap de Atividade:** Lista colorida de PCs indicando quem está jogando ou produzindo.
-    - **Comandos Remotos:** Botões para fechar janelas indesejadas ou enviar alertas aos alunos.
+    - **Comandos Remotos:** Fechar/bloquear sites e jogos, volume, alertas, logoff/desligar/reiniciar, abrir Prova Motriz, faxina, kit Lab DS e atualização do agente.
+    - **Ferramentas:** estrutura de pastas de atividades (`<base>\<turma>\<disciplina>\<aluno>\Aula_NN`), listas de e-mails e **backup de atividades** (solicita o ZIP dos PCs e baixa em `/atividades`).
+    - **Radares e rótulos:** `lab_labels.json` para nomes amigáveis; `lab_users.json` associa o RA ao PC pela tela de bloqueio.
+- **Regras de acesso (tela de bloqueio):**
+    - **RA único:** o mesmo RA comum não pode entrar em dois PCs ao mesmo tempo; ao deslogar/desligar a origem (~60s) ele é liberado.
+    - **Contas coletivas:** `7anoA`, `7anoB`, `8ano`, `9ano`, `1alunoEja`, `Alunos_EJA_Noite` são exceção e podem estar em vários PCs (config em `data/repo/plugins/monitor/acesso_coletivos.json`).
+    - **EJA:** contas EJA só entram das **17h às 23h** (receiver e `sysava_lock.ps1`).
+    - **PC mestre:** a senha administrativa da tela de bloqueio só funciona em hostnames `PC01*` (ajustável em `master_hosts.txt`/`SYSAVA_MASTER_HOSTS`); nos demais só nome/RA da lista libera.
 
 ## �️ Plugins de Manutenção e Auditoria
 
@@ -84,4 +91,4 @@ Radar de atividade em tempo real para controle de sala.
 3.  **Integração:** O arquivo `views/plugins.py` faz a ponte, carregando dinamicamente o código de cada arquivo `.py` quando o usuário clica na aba correspondente.
 
 ---
-*Documentação atualizada em: 08/05/2026*
+*Documentação atualizada em: 05/11/2026*

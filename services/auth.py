@@ -36,3 +36,31 @@ def logout_session(session_id):
     sessions = get_active_sessions()
     if session_id in sessions:
         del sessions[session_id]
+
+@st.cache_resource
+def get_revoked_users():
+    """Usuarios cujo acesso foi bloqueado neste processo (checagem barata)."""
+    return set()
+
+def logout_user_sessions(username):
+    """Encerra as sessoes ativas de um usuario neste processo."""
+    alvo = str(username or "").strip().lower()
+    if not alvo:
+        return 0
+    sessions = get_active_sessions()
+    alvos = [sid for sid, dados in sessions.items()
+             if str((dados or {}).get("username") or "").strip().lower() == alvo]
+    for sid in alvos:
+        sessions.pop(sid, None)
+    get_revoked_users().add(alvo)
+    return len(alvos)
+
+def allow_user_sessions(username):
+    """Libera o usuario apos reativar o acesso."""
+    alvo = str(username or "").strip().lower()
+    if alvo:
+        get_revoked_users().discard(alvo)
+
+def is_session_revoked(username):
+    alvo = str(username or "").strip().lower()
+    return bool(alvo) and alvo in get_revoked_users()

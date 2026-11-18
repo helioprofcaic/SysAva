@@ -36,9 +36,22 @@ def load_json(file_path):
         except: return {}
     return {}
 
+def _sem_nan(valor):
+    """Converte NaN/Infinity em null (NaN não é JSON válido - IS-048)."""
+    if isinstance(valor, float):
+        if valor != valor or valor in (float("inf"), float("-inf")):
+            return None
+        return valor
+    if isinstance(valor, dict):
+        return {k: _sem_nan(v) for k, v in valor.items()}
+    if isinstance(valor, list):
+        return [_sem_nan(v) for v in valor]
+    return valor
+
 def save_json(file_path, data):
     with open(file_path, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)
+        json.dump(_sem_nan(data), f, indent=4, ensure_ascii=False,
+                  allow_nan=False)
 
 def _empty_score():
     return {'total': 0.0, 'lesson': 0, 'quiz': 0, 'forum': 0}

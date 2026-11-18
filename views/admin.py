@@ -278,6 +278,14 @@ def show_page():
                 """)
 
     elif selected_tab == "Usuários":
+            st.info(
+                "Para criar contas, desativar o acesso ao portal e remover cadastros, "
+                "use a aba **Gestão de Usuários** no menu lateral. Os botões de "
+                "desativar/desligar abaixo controlam a frequência (Falta/Inativo)."
+            )
+            if st.button("Abrir Gestão de Usuários", key="abrir_gestao_usuarios", type="primary"):
+                st.session_state.page = "Gestão de Usuários"
+                st.rerun()
             with st.expander("➕ Cadastrar Novo Usuário", expanded=False):
                 with st.form("register_user_form", clear_on_submit=True):
                     col_a, col_b = st.columns(2)

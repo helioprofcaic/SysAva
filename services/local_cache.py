@@ -132,10 +132,24 @@ def _set_blob(cache_key: str, data):
         conn.commit()
 
 
-def get_or_fetch(cache_key: str, fetch_fn, ttl: int = TTL_BASE, force: bool = False):
+def _has_data(value) -> bool:
+    """True quando o resultado vale a pena ir para o cache (não é vazio)."""
+    if value is None:
+        return False
+    if isinstance(value, (list, tuple, dict, str)):
+        return len(value) > 0
+    return True
+
+
+def get_or_fetch(cache_key: str, fetch_fn, ttl: int = TTL_BASE, force: bool = False,
+                 cache_empty: bool = True):
     """Devolve do cache se fresco; senão busca no Supabase, grava e devolve.
 
     Em qualquer erro, delega para `fetch_fn()` (fallback seguro).
+
+    `cache_empty=False` evita "envenenar" o cache com uma lista/dict vazio
+    resultado de uma falha transitória de rede (ex.: `get_classes` devolvia []
+    e o vazio ficava 6h em cache — ver IS-128).
     """
     if not cache_enabled():
         return fetch_fn()
@@ -148,10 +162,18 @@ def get_or_fetch(cache_key: str, fetch_fn, ttl: int = TTL_BASE, force: bool = Fa
                 return data
 
         fresh = fetch_fn()
-        try:
-            _set_blob(cache_key, fresh)
-        except Exception:
-            pass
+        if cache_empty or _has_data(fresh):
+            try:
+                _set_blob(cache_key, fresh)
+            except Exception:
+                pass
+            return fresh
+
+        # Resultado vazio: não grava. Se houver cache anterior não vazio,
+        # prefere-o para não esconder dados válidos por uma oscilação.
+        stale, _ = _get_blob(cache_key)
+        if _has_data(stale):
+            return stale
         return fresh
     except Exception:
         # Se a busca falhar, tenta devolver o que estiver em cache (mesmo vencido).
