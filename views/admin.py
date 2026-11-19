@@ -1313,23 +1313,30 @@ def show_page():
                                 else:
                                     # Mapeia questões para seleção
                                     q_options = {f"{q['id']} - {q['question_text']}": q for q in quiz_questions}
+                                    all_keys = list(q_options.keys())
 
-                                    # Sorteio prévio de 10 questões (com chave única)
-                                    session_key_rand = f"rand_q_{assessment['id']}_{workload_val}_{start_lesson}_{end_lesson}"
-                                    if session_key_rand not in st.session_state:
-                                        all_keys = list(q_options.keys())
+                                    # Chaves dependem do escopo: trocar modo/intervalo recria o sorteio e o seletor
+                                    scope_sig = f"{scope_mode}_{workload_val}_{start_lesson}_{end_lesson}"
+                                    session_key_rand = f"rand_q_{assessment['id']}_{scope_sig}"
+                                    msel_key = f"msel_import_av_{assessment['id']}_{scope_sig}"
+
+                                    if session_key_rand not in st.session_state or any(k not in q_options for k in st.session_state[session_key_rand]):
                                         st.session_state[session_key_rand] = random.sample(all_keys, min(10, len(all_keys)))
 
                                     if st.button("🎲 Sortear Novamente (10 questões)", key=f"reroll_av_{assessment['id']}"):
-                                        all_keys = list(q_options.keys())
                                         st.session_state[session_key_rand] = random.sample(all_keys, min(10, len(all_keys)))
+                                        st.session_state[msel_key] = list(st.session_state[session_key_rand])
                                         st.rerun()
+
+                                    if msel_key not in st.session_state:
+                                        st.session_state[msel_key] = [k for k in st.session_state[session_key_rand] if k in q_options]
+                                    else:
+                                        st.session_state[msel_key] = [k for k in st.session_state[msel_key] if k in q_options]
 
                                     selected_keys = st.multiselect(
                                         "Selecione as questões para importar:",
-                                        options=list(q_options.keys()),
-                                        default=list(st.session_state.get(session_key_rand, [])),
-                                        key=f"msel_import_av_{assessment['id']}"
+                                        options=all_keys,
+                                        key=msel_key
                                     )
 
                                     if st.button(f"📥 Importar {len(selected_keys)} Questões Selecionadas", key=f"btn_import_av_{assessment['id']}"):

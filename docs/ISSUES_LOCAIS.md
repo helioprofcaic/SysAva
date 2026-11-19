@@ -215,6 +215,14 @@ Formato de ID: `IS-NNN`.
 | IS-190 | Notas iSeduc: Programação Mobile I-A — T1/T2/T3 do plugin Notas lançados e ficha | 🟢 | 2026-11-17 |
 | IS-191 | Registro de aulas: Mobile I-B — 10 aulas de 23/07 a 30/07 (Aulas 13–22) | 🟢 | 2026-11-17 |
 | IS-192 | Registro de aulas: Mobile 40/40 (I-A/I-B) + sync do histórico e limpeza da fila | 🟢 | 2026-11-17 |
+| IS-193 | Registro de aulas: Mentorias I-A — 3 aulas de novembro (04, 11 e 18/11) | 🟢 | 2026-11-18 |
+| IS-194 | Registro de aulas: Mentorias I-B — 3 aulas (30/10, 06/11 e 13/11) | 🟢 | 2026-11-18 |
+| IS-195 | Registro de aulas: P.C. II — 4 aulas (I-A 09/11 e 16/11; I-B 05/11 e 12/11) | 🟢 | 2026-11-18 |
+| IS-196 | Registro de aulas: IA — 5 aulas passadas + Revisão de Atividades da I-A | 🟢 | 2026-11-18 |
+| IS-197 | Notas IA I-B — 3º trimestre: NM1/NM2 dos 20 alunos (arredondado 1 casa) | 🟢 | 2026-11-18 |
+| IS-198 | Notas T3: Mentorias e P.C. II — replicação/correção pela maior nota + fichas | 🟢 | 2026-11-18 |
+| IS-199 | Notas IA I-A — 3º trimestre: NM1/NM2 (17 alunos) + ficha | 🟢 | 2026-11-18 |
+| IS-200 | IA I-A: piso AEE (CLEISON/PEDRO) + revisão da RPT de Mentorias | 🟢 | 2026-11-18 |
 | IS-137 | Projeto Feira das Profissões: 6 aulas em `plugins/atividades/Atividades_florestan/` | 🟢 | 2026-10-29 |
 | IS-193 | Bandeja do aluno: sair da conta, reabrir a tela de bloqueio e liberar o RA | 🟢 | 2026-11-18 |
 | IS-194 | Monitor: Atualizar Bandeja do Aluno reinicia a instância antiga | 🟢 | 2026-11-18 |
@@ -222,6 +230,8 @@ Formato de ID: `IS-NNN`.
 | IS-196 | Painel do monitor: aba Usuários (criar, desativar, remover contas) | 🟢 | 2026-11-18 |
 | IS-197 | Tela de bloqueio: professora Adriana liberada no PC01 | 🟢 | 2026-11-18 |
 | IS-198 | Aulas: status não ficava verde por quizzes duplicados (Microsserviços) | 🟢 | 2026-11-18 |
+| IS-199 | Bandeja do servidor: painel em janela de app e atalho SysAva Professor | 🟢 | 2026-11-18 |
+| IS-201 | Admin/Avaliações: importar do banco de questões ficava vazio no escopo Manual e "Sortear Novamente" não atualizava o seletor | 🟢 | 2026-11-19 |
 
 ---
 
@@ -6041,6 +6051,200 @@ tentativa com `--permitir-sabado` foi revertida e falhou no calendário
 **Como validar:** app 8510 → Consolidadas → Mobile I-A/I-B = 40 (registradas
 + pendentes), faltantes 0; portal com 36/38 registros.
 
+## IS-193 - Mentorias I-A: 3 aulas de novembro 🟢
+
+**Contexto:** faltavam as quartas-feiras de novembro na disciplina anual
+Mentorias Tec II (I-A). Horário confirmado: **quarta 09:30**.
+
+**Execução:** 3 planos gerados (Aulas 36–38, Projeto Integrador) e registrados
+em **04/11, 11/11 e 18/11/2026, 09:30–10:30**; arquivos em
+`aulas/registradas/`; status “Aguardando confirmação”.
+
+**Verificação:** portal I-A Mentorias com 40 registros (38 válidos + 2 “Aula
+Excluída Núcleo Gestor”: 02/04 e 28/07). `historico_aulas` sincronizado e
+`planejamento` I-A Mentorias sem pendências.
+
+**Atenção:** a carga válida no app fica **38/40** (as 2 excluídas não contam);
+a coordenação precisa decidir se serão repostas.
+
+**Arquivos:** `aulas/registradas/plano_309197_2_2026-11-0*.txt`,
+`data/escola_ativa.db`, `apps/ISSUES.md`.
+
+**Como validar:** iSeduc → Registro de aulas → Mentorias I-A → 04, 11 e 18/11
+às 09:30; app 8510 → Consolidadas.
+
+## IS-194 - Mentorias I-B: 3 aulas (30/10, 06/11 e 13/11) 🟢
+
+**Contexto:** a I-B estava sem as sextas-feiras de Mentorias após 23/10 (Aula
+34). Faltavam **30/10, 06/11 e 13/11**, no horário **sexta 10:30**.
+
+**Execução:** 3 planos gerados (Aulas 35–37) e registrados em 30/10, 06/11 e
+13/11/2026, 10:30–11:30; arquivos em `aulas/registradas/`; status “Aguardando
+confirmação”.
+
+**Verificação:** portal I-B Mentorias com 38 registros (37 válidos + 1 “Aula
+Excluída Núcleo Gestor” em 03/04). `historico_aulas` sincronizado (38 linhas);
+fila da I-B Mentorias só com 27/11 (Aula 38) pendente. Faltam 20/11 e 27/11
+para fechar 40.
+
+**Arquivos:** `aulas/registradas/plano_314114_2_2026-10-30_1030.txt` e
+similares; `data/escola_ativa.db`; `apps/ISSUES.md`.
+
+**Como validar:** iSeduc → Registro de aulas → Mentorias I-B → 30/10, 06/11 e
+13/11 às 10:30; app 8510 → Consolidadas.
+
+## IS-195 - P.C. II: 4 aulas passadas (I-A e I-B) 🟢
+
+**Contexto:** P.C. II estava sem as últimas semanas passadas: I-A após 26/10
+(seg 07:10) e I-B após 29/10 (qui 15:50). Decisão do professor: não registrar
+o futuro.
+
+**Execução:** 4 planos gerados/registrados:
+- I-A: 09/11 (Aula 35) e 16/11 (Aula 36), 07:10–08:10.
+- I-B: 05/11 (Aula 36) e 12/11 (Aula 37), 15:50–16:50.
+Arquivos em `aulas/registradas/`.
+
+**Verificação:** I-A com 36 registros (35 válidos + 1 “Aula Excluída” em
+15/08) e fila zero; I-B com 35 válidos e 2 sábados pendentes (11/04 Aula 26 e
+27/06 Aula 27) para a coordenação. `historico_aulas` sincronizado.
+
+**Pendente:** apenas as aulas futuras (após 18/11), não registradas por
+decisão do professor.
+
+**Arquivos:** `aulas/registradas/plano_309197_1_2026-11-09_0710.txt`,
+`plano_309197_1_2026-11-16_0710.txt`,
+`plano_314114_1_2026-11-05_1550.txt`,
+`plano_314114_1_2026-11-12_1550.txt`; `data/escola_ativa.db`;
+`apps/ISSUES.md`.
+
+**Como validar:** iSeduc → Registro de aulas → PENSAMENTO COMPUTACIONAL II →
+I-A 09/16-11 e I-B 05/12-11; app 8510 → Consolidadas.
+
+## IS-196 - IA: 5 aulas passadas + Revisão de Atividades I-A 🟢
+
+**Contexto:** IA I-A estava com 33 confirmadas; IA I-B com 37 registros (1
+excluído em 21/04). Faltavam as semanas passadas de novembro.
+
+**Execução:** 5 planos gerados/registrados:
+- I-A: 09/11 (Aula 35) e 16/11 (Aula 36), 10:30–11:30.
+- I-B: 03/11 (Aula 37), 10/11 (Aula 38) e 17/11 (Aula 39), 10:30–11:30.
+
+**Verificação:** I-A com 35 registros (33 confirmadas + 2 aguardando) e fila
+zero; I-B com 40 registros (39 válidos + 1 excluído em 21/04) e fila zero;
+`historico_aulas` sincronizado.
+
+**Revisão de Atividades (I-A):**
+`data/fichas/Revisao_de_Atividades_Inteligencia_Artificial_IA_2026-11-18.pdf`
+(+ `.html`/`.md`). I-A em 35/40; as 4 segundas restantes (23/11, 30/11, 07/12 e
+14/12) levam a 39; a 40ª depende de 15/08 ou 24/10 (sábados com horário de
+segunda) ou nova reposição. O intervalo 26/10→09/11 é o feriado de 02/11
+(Finados). A I-B fecha 40 com a futura 24/11.
+
+**Arquivos:** `aulas/registradas/plano_309197_11_2026-11-09_1030.txt` e
+similares; `data/fichas/Revisao_de_Atividades_Inteligencia_Artificial_IA_2026-11-18.*`;
+`data/escola_ativa.db`; `apps/ISSUES.md`.
+
+**Como validar:** iSeduc → Registro de aulas → IA → I-A 09/16-11 e I-B
+03/10/17-11; app 8510 → Consolidadas; abrir a Revisão em `data/fichas/`.
+
+## IS-197 - IA I-B: 3º trimestre NM1/NM2 (20 alunos) 🟢
+
+**Contexto:** o quadro do plugin (IA, 3º tri, I-B) tinha NM1/NM2 para os 20
+alunos e NM3 = 0,0. Pedido: lançar apenas NM1/NM2, podendo arredondar.
+
+**Execução:** payload `data/logs/ia_ib_t3_payload.json` enviado por
+`bot_lancar_notas.py --turma-id 2 --disciplina-id 11 --trimestre 3 --alvos
+NM1 NM2 --payload ...`; 20/20 concluídos e média recalculada.
+
+**Arredondamento (1 casa):** 7,47→7,5; 6,38→6,4; 8,65→8,7; 2,47→2,5;
+1,24→1,2; 6,12→6,1; 6,76→6,8; 9,76→9,8; 4,06→4,1.
+
+**Verificação:** releitura no portal: 20 alunos com NM1/NM2 iguais aos valores
+arredondados; NM3 permaneceu vazio. Zeros gravados para ISADORA, ANA LARISSA,
+GUSTAVO e JANAYRA.
+
+**Arquivos:** `data/logs/ia_ib_t3_payload.json`,
+`C:\Temp\opencode\verifica_ia_ib_t3.py`,
+`C:\Temp\opencode\ia_ib_t3_lido.json`, `apps/ISSUES.md`.
+
+**Como validar:** iSeduc → Notas → INTELIGÊNCIA ARTIFICIAL (I-B) → 3º
+trimestre; conferir NM1/NM2 e o NM3 em aberto.
+
+## IS-198 - Notas T3: Mentorias/P.C. II pela maior nota + fichas 🟢
+
+**Contexto:** auditoria do portal mostrou P.C. II com T3 vazio (I-A 18, I-B
+20) e Mentorias com T3 divergente (I-A 16, I-B 1). Pedido: replicar o que falta
+e corrigir cada NM1/NM2 pela **maior nota** entre T1/T2/T3.
+
+**Execução (payloads em `data/logs/`):**
+- P.C. II I-A: 17 alunos (LUARA transferida filtrada); T3=max(T1,T2).
+- P.C. II I-B: 20 alunos; T3=max(T1,T2).
+- Mentorias I-A: 9 alunos / 17 células elevadas; T3=18 (LUARA ficou 0,0 por
+  ser transferida).
+- Mentorias I-B: 0 alterações (MANOEL já estava 3,0/8,0; 19 iguais).
+
+**Fichas em `data/fichas/`:** Mentorias I-A/I-B, P.C. II I-A/I-B e IA I-B.
+Conferidas: T3 NM1/NM2 corretos; P.C. II I-A 17/I-B 20; Mentorias I-A 18/I-B
+20; IA I-B 20. O NM3 do T3 segue vazio, então o MTF/MAF do 3º tri fica em
+branco até o lançamento do NM3.
+
+**Observações:** o plugin/caderno ainda está com T3 zerado em Mentorias e sem
+P.C. II; a correção foi no portal. IA I-A não foi tocada (em preparação).
+
+**Arquivos:** `data/logs/I-A_1_t3_payload.json`,
+`I-A_2_t3_payload.json`, `I-B_1_t3_payload.json`,
+`data/logs/mentorias_pcii_trimestres.json`,
+`data/logs/auditoria_tecnico_portal_20261118.json`,
+`data/fichas/*` (PDFs locais), `apps/ISSUES.md`.
+
+**Como validar:** iSeduc → Notas → Mentorias/P.C. II (I-A/I-B) → 3º tri;
+conferir NM1/NM2; abrir as fichas em `data/fichas/`.
+
+## IS-199 - IA I-A: 3º trimestre NM1/NM2 (17 alunos) + ficha 🟢
+
+**Contexto:** quadro do plugin IA 3º tri I-A com 22 linhas; NM3 = 0,0. Pedido:
+lançar só NM1/NM2, podendo arredondar.
+
+**Execução:** payload `data/logs/ia_ia_t3_payload.json`; 4 filtrados pela Config
+(LUARA/GUILHERME transferidos; FABIANO/ALUNO TESTE fora do portal); 17 alunos
+gravados (FRANCISCO não está na turma do portal). Recálculo executado.
+
+**Arredondamento (1 casa):** 8,95→8,9; 9,62→9,6; 7,39→7,4; 4,61→4,6;
+8,39→8,4; 8,81→8,8; 6,59→6,6; 3,73→3,7; 3,89→3,9.
+
+**Verificação:** 17 alunos com NM1/NM2; NM3 vazio. Ficha em
+`data/fichas/2ª SÉRIE - Turma I-A (Técnico DS)_INTELIGÊNCIA ARTIFICIAL.pdf`
+(18 linhas; T3 com 17, LUARA sem nota). CLEISON/PEDRO (AEE) foram como no
+quadro, sem piso 6.
+
+**Arquivos:** `data/logs/ia_ia_t3_payload.json`,
+`C:\Temp\opencode\verifica_ia_ia_t3.py`,
+`C:\Temp\opencode\ia_ia_t3_lido.json`, `data/fichas/*` (local),
+`apps/ISSUES.md`.
+
+**Como validar:** iSeduc → Notas → INTELIGÊNCIA ARTIFICIAL (I-A) → 3º
+trimestre; NM1/NM2 gravados; NM3 em aberto.
+
+## IS-200 - IA I-A piso AEE + revisão da RPT de Mentorias 🟢
+
+**Contexto:** confirmado o piso AEE (CLEISON/PEDRO) no T3 de IA I-A; revisão da
+recuperação de Mentorias, que o professor achava não lançada.
+
+**Piso AEE:** CLEISON `0,0/3,9` → **6,0/6,0**; PEDRO `0,0/7,4` →
+**6,0/7,4**; recálculo e ficha da IA I-A regerada.
+
+**RPT Mentorias:** o portal **já tinha** a RPT1 — I-A ANDRESSA 9,0; ANTONIO
+7,0; GILVAN 9,0; JULIA 8,0; PEDRO 9,0 (1MTF=RPT); I-B MANOEL 8,0 e MATHEUS
+6,0. RPT2/RPT3 vazios. A ficha de Mentorias I-A confirma; nada relançado.
+
+**Arquivos:** `data/logs/ia_ia_t3_piso_aee.json`,
+`data/logs/rpt_mentorias_20261118.json`,
+`C:\Temp\opencode\verifica_rpt_mentorias.py`,
+`data/fichas/*` (fichas locais), `apps/ISSUES.md`.
+
+**Como validar:** iSeduc → Notas → IA I-A (T3) e Mentorias I-A → RESULTADO DO
+1º TRIMESTRE; conferir as fichas em `data/fichas/`.
+
 ## Comandos úteis
 
 ```powershell
@@ -7261,3 +7465,67 @@ mas `get_quiz_for_lesson` exibe o **primeiro** (852) e o histórico gravava
 2. Voltar à lista: o círculo deve ficar **verde**.
 3. Aula apenas visitada, sem quiz respondido: permanece **amarela**.
 4. Conferir em `quizzes` que cada aula tem apenas um quiz ativo.
+
+---
+
+## IS-199 — Bandeja do servidor: painel em janela de app e atalho SysAva Professor 🟢
+
+**Pedido:** melhorar a usabilidade do painel do servidor no PC01, com uma
+experiência mais parecida com aplicativo nativo para os professores.
+
+**Solução (`tray_servidor.ps1`):**
+- Novo item **Abrir painel em janela (app)**: abre
+  `http://127.0.0.1:5000/` no Edge/Chrome em modo aplicativo
+  (`--app`), sem barra de endereço, com perfil próprio em
+  `%LOCALAPPDATA%\SysAva\ProfessorApp`.
+- Novo item **Criar atalho 'SysAva Professor'**: cria o atalho na área de
+  trabalho e no menu Iniciar, com ícone gerado a partir do `logo_sysava.png`.
+- Novo parâmetro `-AtalhoProfessor` para criar o atalho sem abrir a bandeja
+  (funciona mesmo com a bandeja já aberta).
+- Fallback: se Edge/Chrome não existir, abre no navegador padrão.
+- O menu `-Status` mostra se o atalho do professor está instalado.
+
+**Arquivos:** `data/repo/plugins/monitor/tray_servidor.ps1`, `AGENTS.md`,
+`plugins/monitor_rede/README.md`, `docs/ISSUES_LOCAIS.md`.
+
+**Como validar:**
+1. Fechar e reabrir a bandeja do servidor (`tray_servidor.bat`) ou rodar
+   `powershell -File tray_servidor.ps1 -AtalhoProfessor` uma vez.
+2. Clicar no atalho **SysAva Professor**: deve abrir uma janela do Edge/Chrome
+   sem barra de endereço, já no login do painel.
+3. Confirmar no tray o item **Abrir painel em janela (app)**.
+4. Fazer login; fechar e reabrir o atalho e conferir que a sessão do painel
+   continua (perfil próprio).
+5. Em PC sem Edge/Chrome, confirmar o fallback para o navegador padrão.
+
+---
+
+## IS-201 — Admin/Avaliações: importar do banco de questões vazio no escopo Manual 🟢
+
+**Pedido:** na aba Admin → Avaliações, ao marcar **Manual (por intervalo de
+aulas)** e clicar em **Sortear Novamente**, a lista de questões do banco não era
+gerada (o `multiselect` ficava vazio e o botão de importar mostrava 0).
+
+**Causa:** o sorteio era gravado em uma chave de `session_state` que incluía
+modo/intervalo, mas o `st.multiselect` usava uma chave fixa
+(`msel_import_av_{id}`). Ao trocar de Automático para Manual (ou mudar o
+intervalo), o widget mantinha a seleção antiga — inválida para as novas opções —
+e o Streamlit a descartava, deixando o campo vazio. O botão **Sortear
+Novamente** também só trocava a chave do sorteio, sem atualizar o widget.
+
+**Solução:** a chave do `multiselect` passou a incluir a assinatura do escopo
+(`scope_mode/workload/start/end`), o sorteio é recriado quando o escopo muda, a
+seleção é saneada contra as opções atuais e o **Sortear Novamente** grava o
+novo sorteio diretamente no estado do seletor antes do `st.rerun()`.
+
+**Arquivos:** `views/admin.py`, `docs/ISSUES_LOCAIS.md`.
+
+**Como validar:**
+1. Admin → Avaliações → escolher uma avaliação → abrir **Importar do Banco de
+   Questões (Quizzes)**.
+2. Em **Manual (por intervalo de aulas)**, informar ex.: 1 → 16: o seletor deve
+   já vir com 10 questões marcadas.
+3. Clicar **🎲 Sortear Novamente**: a lista marcada deve mudar na hora.
+4. Alternar entre Automático/Manual e alterar o intervalo: o seletor deve ser
+   recriado com questões do novo escopo (nunca vazio sem motivo).
+5. Importar: as questões escolhidas devem aparecer em "Questões cadastradas".
